@@ -223,7 +223,6 @@ CORS_ALLOW_CREDENTIALS = True
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://localhost:8000',
-    'https://mengedmate-web.onrender.com',
 ]
 
 # Allow all methods
@@ -307,9 +306,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Frontend URL for password reset links
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://mengedmate-web.onrender.com')
-if DEBUG:
-    FRONTEND_URL = 'http://localhost:3000'
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
 
 # Admin email for notifications
 ADMIN_EMAIL = 'admin@example.com'

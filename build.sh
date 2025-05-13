@@ -2,7 +2,7 @@
 # exit on error
 set -o errexit
 
-echo "Starting backend build process..."
+echo "Starting Django setup process..."
 
 # Install dependencies
 echo "Installing dependencies..."
@@ -25,6 +25,6 @@ python manage.py check
 # Apply migrations
 echo "Applying migrations..."
 # Use --run-syncdb to create tables for apps without migrations
-python manage.py migrate --noinput --run-syncdb
+python manage.py migrate --run-syncdb
 
-echo "Backend build completed successfully!"
+echo "Django setup completed successfully!"

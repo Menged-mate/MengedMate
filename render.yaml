@@ -1,36 +1,33 @@
 services:
-  # Combined service for both frontend and backend using Docker
   - type: web
-    name: mengedmate
+    name: mengedmate-backend
+    env: python
+    buildCommand: ./build.sh
+    startCommand: gunicorn mengedmate.wsgi:application
     plan: free
-    env: docker
-    dockerfilePath: ./Dockerfile
-    dockerCommand: gunicorn mengedmate.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
       - key: SECRET_KEY
-        generateValue: true
+        value: "<your-django-secret-key>"
       - key: DEBUG
-        value: false
+        value: "False"
       - key: ALLOWED_HOSTS
-        value: "mengedmate.onrender.com,.onrender.com,localhost,127.0.0.1"
-      - key: DATABASE_URL
-        fromDatabase:
-          name: mengedmate-db
-          property: connectionString
+        value: "<your-backend-domain>,.onrender.com"
       - key: CORS_ALLOWED_ORIGINS
-        value: "https://mengedmate.onrender.com,http://localhost:3000"
+        value: "https://<your-frontend-domain>.onrender.com"
       - key: FRONTEND_URL
-        value: "https://mengedmate.onrender.com"
+        value: "https://<your-frontend-domain>.onrender.com"
       - key: EMAIL_HOST_USER
-        sync: false
+        value: "<your-gmail-address>"
       - key: EMAIL_HOST_PASSWORD
-        sync: false
-    # Ensure the database is created before the service starts
-    dependsOn:
-      - mengedmate-db
+        value: "<your-gmail-app-password>"
+    autoDeploy: true
 
-databases:
-  - name: mengedmate-db
-    plan: free
-    # Ensure the database is created with the correct settings
-    ipAllowList: [] # only allow internal connections
+  - type: static
+    name: mengedmate-frontend
+    env: node
+    buildCommand: cd frontend && npm install && npm run build
+    staticPublishPath: frontend/build
+    envVars:
+      - key: REACT_APP_API_URL
+        value: "https://<your-backend-domain>.onrender.com"
+    autoDeploy: true 

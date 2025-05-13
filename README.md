@@ -142,87 +142,60 @@ To add new features to the frontend:
 2. Add routes in `App.js`
 3. Create services for API calls in `frontend/src/services` directory
 
-## Deployment on Render
+## Deployment
 
-This application is configured for deployment on Render using the `render.yaml` file, which sets up a combined service for both frontend and backend at https://mengedmate.onrender.com/.
+This application consists of a Django backend and a React frontend that need to be deployed separately.
 
 ### Prerequisites
 
-1. A Render account
-2. A GitHub repository with your code
+1. A web hosting service for the Django backend (e.g., Heroku, DigitalOcean, AWS)
+2. A static site hosting service for the React frontend (e.g., Netlify, Vercel, AWS S3)
+3. A PostgreSQL database service
 
-### Deployment Steps
+### Backend Deployment
 
-1. Push your code to GitHub
-2. Log in to your Render account
-3. Click on "New" and select "Blueprint"
-4. Connect your GitHub repository
-5. Render will automatically detect the `render.yaml` file and set up the services:
-   - `mengedmate`: The combined Django backend and React frontend
-   - `mengedmate-db`: The PostgreSQL database
-6. Configure the environment variables:
-   - `SECRET_KEY`: A secure random string
-   - `EMAIL_HOST_USER`: Your Gmail address
-   - `EMAIL_HOST_PASSWORD`: Your Gmail app password
-7. Deploy the services
-
-### How the Combined Deployment Works
-
-The combined deployment approach:
-
-1. Builds the React frontend during the deployment process
-2. Copies the built frontend files to Django's static directory
-3. Configures Django to serve the React app from its static files
-4. Uses relative API URLs in the frontend to communicate with the backend
-5. Avoids CORS issues since everything is served from the same domain
-
-### Deployment Options
-
-There are two deployment options available:
-
-#### Option 1: Docker Deployment (Default)
-
-Uses the provided Dockerfile to build and run the application in a container.
-This is the recommended approach as it provides a more consistent and reliable build environment.
-
-#### Option 2: Build Script
-
-Uses the `build_combined.sh` script to build both frontend and backend.
-To use this option, edit the `render.yaml` file to comment out the Docker configuration and uncomment the script-based configuration.
-
-### Manual Deployment
-
-If you prefer to set up the services manually:
-
-#### Combined Service
-
-1. Create a new Web Service on Render
-2. Connect your GitHub repository
-3. Set the build command to `./build_combined.sh`
-4. Set the start command to `gunicorn mengedmate.wsgi:application`
-5. Add the required environment variables:
+1. Set up a PostgreSQL database
+2. Configure the environment variables:
    - `SECRET_KEY`: A secure random string
    - `DEBUG`: Set to 'False' for production
-   - `ALLOWED_HOSTS`: Add your Render domains (e.g., `mengedmate.onrender.com,.onrender.com`)
-   - `DATABASE_URL`: Your PostgreSQL connection string
-   - `FRONTEND_URL`: Your application URL (e.g., `https://mengedmate.onrender.com`)
-   - `EMAIL_HOST_USER`: Your Gmail address
-   - `EMAIL_HOST_PASSWORD`: Your Gmail app password
-6. Deploy the service
+   - `ALLOWED_HOSTS`: Add your domain names
+   - `DATABASE_URL`: PostgreSQL connection string
+   - `CORS_ALLOWED_ORIGINS`: Your frontend URL
+   - `FRONTEND_URL`: URL of the frontend application
+   - `EMAIL_HOST_USER`: Gmail address for sending emails
+   - `EMAIL_HOST_PASSWORD`: Gmail app password
+3. Run the build script: `./build.sh`
+4. Start the Django application with Gunicorn: `gunicorn mengedmate.wsgi:application`
 
-#### Database (PostgreSQL)
+### Frontend Deployment
 
-1. Create a new PostgreSQL database on Render
-2. Note the connection details to use in your service
+1. Set the backend API URL in `.env.production`:
+   ```
+   REACT_APP_API_URL=https://your-backend-domain.com
+   ```
+2. Build the React application:
+   ```
+   cd frontend
+   npm install
+   npm run build
+   ```
+3. Deploy the contents of the `frontend/build` directory to your static site hosting service
 
-### Troubleshooting
+### Separate vs. Combined Deployment
 
-If you encounter issues with the deployment:
+You can deploy the frontend and backend separately (recommended) or together:
 
-1. Check the build logs for any errors during the frontend build or backend setup
-2. Verify that the static files are being served correctly
-3. Check the browser console for specific error messages
-4. Ensure that the Django settings are correctly configured to serve the React app
+#### Separate Deployment (Recommended)
+
+- Deploy the Django backend to a web server
+- Deploy the React frontend to a static site host
+- Configure CORS settings to allow communication between the two
+
+#### Combined Deployment
+
+- Serve the React frontend as static files from Django
+- Configure Django to serve the React app for non-API routes
+- This approach requires additional configuration not included in this repository
 
 ## Environment Variables
 
@@ -244,3 +217,31 @@ If you encounter issues with the deployment:
 ## License
 
 [MIT License](LICENSE)
+
+# 🚀 Render Deployment Instructions
+
+## 1. Setup
+- Ensure you have a `render.yaml` file in your project root (already provided).
+- Create a PostgreSQL database on Render and copy its connection string.
+
+## 2. Backend (Django)
+- Deploy as a Web Service on Render.
+- Set build command: `./build.sh`
+- Set start command: `gunicorn mengedmate.wsgi:application`
+- Set environment variables as in `render.yaml` (SECRET_KEY, DEBUG, ALLOWED_HOSTS, DATABASE_URL, CORS_ALLOWED_ORIGINS, FRONTEND_URL, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD).
+
+## 3. Frontend (React)
+- Deploy as a Static Site on Render.
+- Set build command: `cd frontend && npm install && npm run build`
+- Set publish directory: `frontend/build`
+- Create a file `frontend/.env.production` with:
+  ```
+  REACT_APP_API_URL=https://<your-backend-domain>.onrender.com
+  ```
+- Set the same value in the Render dashboard as an environment variable for the static site if needed.
+
+## 4. CORS
+- In Django settings, ensure `CORS_ALLOWED_ORIGINS` includes your frontend Render URL.
+
+## 5. Static/Media Files
+- Django will serve static files using WhiteNoise. Media files will be served from `/media/`.
