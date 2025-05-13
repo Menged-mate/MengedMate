@@ -24,6 +24,9 @@ services:
         sync: false
       - key: EMAIL_HOST_PASSWORD
         sync: false
+    # Ensure the database is created before the backend service starts
+    dependsOn:
+      - mengedmate-db
 
   # Frontend service
   - type: web
@@ -42,3 +45,5 @@ services:
 databases:
   - name: mengedmate-db
     plan: free
+    # Ensure the database is created with the correct settings
+    ipAllowList: [] # only allow internal connections
