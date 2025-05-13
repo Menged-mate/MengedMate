@@ -5,6 +5,17 @@ services:
     env: python
     buildCommand: "./build.sh"
     startCommand: "gunicorn mengedmate.wsgi:application"
+    # Ensure templates directory is included in the build
+    buildFilter:
+      paths:
+        - templates/**
+        - static/**
+        - media/**
+        - "*.py"
+        - "*.sh"
+        - "*.txt"
+        - "*.yaml"
+        - "*.json"
     envVars:
       - key: SECRET_KEY
         generateValue: true

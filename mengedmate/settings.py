@@ -211,12 +211,11 @@ REST_FRAMEWORK = {
 # CORS settings - maximum permissiveness for troubleshooting
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
-CORS_ORIGIN_ALLOW_ALL = True
 
-# Explicitly list allowed origins as well
+# Explicitly list allowed origins as well (used if CORS_ALLOW_ALL_ORIGINS is False)
 CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
-    'https://mengedmate-frontend.onrender.com',
+    'http://localhost:8000',
     'https://mengedmate.onrender.com',
 ]
 
@@ -230,13 +229,20 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
-# Allow all headers
+# Allow all headers - use a list of strings, not '*'
 CORS_ALLOW_HEADERS = [
-    '*',  # Allow all headers
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
 ]
 
 # Additional CORS settings
-CORS_REPLACE_HTTPS_REFERER = True
 CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
 
 # Security settings for production - all disabled for troubleshooting
@@ -274,7 +280,7 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'xnat ysee sjed esma
 DEFAULT_FROM_EMAIL = 'support@mengedmate.com'
 
 
-# Django-allauth settings
+# Django-allauth settings - using new format
 ACCOUNT_LOGIN_METHODS = {'email'}
 ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 ACCOUNT_UNIQUE_EMAIL = True
@@ -283,10 +289,10 @@ ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 
-# Keep these for backward compatibility
-ACCOUNT_AUTHENTICATION_METHOD = 'email'
-ACCOUNT_EMAIL_REQUIRED = True
-ACCOUNT_USERNAME_REQUIRED = False
+# Remove deprecated settings
+# ACCOUNT_AUTHENTICATION_METHOD = 'email'  # Deprecated
+# ACCOUNT_EMAIL_REQUIRED = True  # Deprecated
+# ACCOUNT_USERNAME_REQUIRED = False  # Deprecated
 
 # Media files
 MEDIA_URL = '/media/'
