@@ -1,0 +1,92 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your EV Charging Station Owner Account</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            margin: 0;
+            padding: 0;
+        }
+        .container {
+            max-width: 600px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .header {
+            text-align: center;
+            padding: 20px 0;
+        }
+        .logo {
+            font-size: 24px;
+            font-weight: bold;
+            color: #4a6cf7;
+        }
+        .content {
+            background-color: #f9f9f9;
+            padding: 30px;
+            border-radius: 5px;
+        }
+        .verification-code {
+            font-size: 32px;
+            font-weight: bold;
+            text-align: center;
+            letter-spacing: 5px;
+            margin: 20px 0;
+            color: #4a6cf7;
+        }
+        .button {
+            display: inline-block;
+            background-color: #4a6cf7;
+            color: white;
+            text-decoration: none;
+            padding: 12px 24px;
+            border-radius: 5px;
+            margin: 20px 0;
+            font-weight: bold;
+        }
+        .footer {
+            text-align: center;
+            margin-top: 20px;
+            font-size: 12px;
+            color: #666;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="header">
+            <div class="logo">EV Finder</div>
+        </div>
+        <div class="content">
+            <h2>Verify Your Station Owner Account</h2>
+            <p>Hello {{ user.first_name }},</p>
+            <p>Thank you for registering as a charging station owner on EV Finder. To complete your registration, please use the verification code below:</p>
+            
+            <div class="verification-code">{{ verification_code }}</div>
+            
+            <p>Enter this code on the verification page to confirm your email address and continue setting up your station owner profile.</p>
+            
+            <p>After verifying your email, you'll need to complete your profile by uploading the required documents:</p>
+            <ul>
+                <li>Business license</li>
+                <li>ID proof</li>
+                <li>Utility bill</li>
+            </ul>
+            
+            <p>Once your profile is complete, our team will review your information and verify your account.</p>
+            
+            <p>If you have any questions, please contact our support team.</p>
+            <p>Best regards,<br>The EV Finder Team</p>
+        </div>
+        <div class="footer">
+            <p>&copy; 2023 EV Finder. All rights reserved.</p>
+            <p>This email was sent to {{ user.email }}</p>
+        </div>
+    </div>
+</body>
+</html>
