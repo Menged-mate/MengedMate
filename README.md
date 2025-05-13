@@ -144,7 +144,7 @@ To add new features to the frontend:
 
 ## Deployment on Render
 
-This application is configured for deployment on Render using the `render.yaml` file.
+This application is configured for deployment on Render using the `render.yaml` file, which sets up separate services for the frontend and backend.
 
 ### Prerequisites
 
@@ -157,7 +157,10 @@ This application is configured for deployment on Render using the `render.yaml` 
 2. Log in to your Render account
 3. Click on "New" and select "Blueprint"
 4. Connect your GitHub repository
-5. Render will automatically detect the `render.yaml` file and set up the services
+5. Render will automatically detect the `render.yaml` file and set up the services:
+   - `mengedmate-api`: The Django backend
+   - `mengedmate-web`: The React frontend
+   - `mengedmate-db`: The PostgreSQL database
 6. Configure the environment variables:
    - `SECRET_KEY`: A secure random string
    - `EMAIL_HOST_USER`: Your Gmail address
@@ -168,23 +171,49 @@ This application is configured for deployment on Render using the `render.yaml` 
 
 If you prefer to set up the services manually:
 
-#### Backend
+#### Backend (Django API)
 
 1. Create a new Web Service on Render
 2. Connect your GitHub repository
 3. Set the build command to `./build.sh`
 4. Set the start command to `gunicorn mengedmate.wsgi:application`
-5. Add the required environment variables
+5. Add the required environment variables:
+   - `SECRET_KEY`: A secure random string
+   - `DEBUG`: Set to 'False' for production
+   - `ALLOWED_HOSTS`: Add your Render domains (e.g., `.onrender.com`)
+   - `DATABASE_URL`: Your PostgreSQL connection string
+   - `CORS_ALLOWED_ORIGINS`: Your frontend URL (e.g., `https://mengedmate-web.onrender.com`)
+   - `FRONTEND_URL`: Your frontend URL (e.g., `https://mengedmate-web.onrender.com`)
+   - `EMAIL_HOST_USER`: Your Gmail address
+   - `EMAIL_HOST_PASSWORD`: Your Gmail app password
 6. Deploy the service
 
-#### Frontend
+#### Frontend (React Web App)
 
 1. Create a new Static Site on Render
 2. Connect your GitHub repository
 3. Set the build command to `cd frontend && npm install && npm run build`
 4. Set the publish directory to `frontend/build`
-5. Add the `REACT_APP_API_URL` environment variable pointing to your backend URL
-6. Deploy the service
+5. Add the environment variables:
+   - `REACT_APP_API_URL`: Your backend URL (e.g., `https://mengedmate-api.onrender.com`)
+6. Add a redirect rule:
+   - Source: `/*`
+   - Destination: `/index.html`
+7. Deploy the service
+
+#### Database (PostgreSQL)
+
+1. Create a new PostgreSQL database on Render
+2. Note the connection details to use in your backend service
+
+### Troubleshooting
+
+If you encounter a 400 Bad Request error:
+
+1. Check the CORS settings in the backend
+2. Verify that the frontend is using the correct API URL
+3. Check the browser console for specific error messages
+4. Ensure that the backend is properly configured to accept requests from the frontend domain
 
 ## Environment Variables
 
