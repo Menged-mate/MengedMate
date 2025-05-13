@@ -3,8 +3,9 @@
   "version": "1.0.0",
   "description": "Root package.json for Mengedmate project",
   "scripts": {
-    "build": "cd frontend && npm install && npm run build",
-    "start": "cd frontend && npm start"
+    "postinstall": "if [ -d \"frontend\" ] && [ -f \"frontend/package.json\" ]; then cd frontend && npm install; fi",
+    "build:frontend": "if [ -d \"frontend\" ] && [ -f \"frontend/package.json\" ]; then cd frontend && npm run build; fi",
+    "start:frontend": "if [ -d \"frontend\" ] && [ -f \"frontend/package.json\" ]; then cd frontend && npm start; fi"
   },
   "engines": {
     "node": ">=14.0.0"

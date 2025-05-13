@@ -12,6 +12,12 @@ ls -la
 # Step 1: Build the frontend
 echo "Building frontend..."
 
+# Temporarily rename the root package.json to avoid infinite loops
+if [ -f "package.json" ]; then
+  echo "Temporarily moving root package.json to avoid infinite loops"
+  mv package.json package.json.bak
+fi
+
 # Check for the main frontend directory
 if [ -d "frontend" ]; then
   echo "Frontend directory found, checking for package.json..."
@@ -38,33 +44,26 @@ if [ -d "frontend" ]; then
     npm run build
     echo "Frontend build completed."
     cd ../..
-  # Try the root directory as a last resort
-  elif [ -f "package.json" ]; then
-    echo "Found package.json in root directory"
-    echo "Installing dependencies..."
-    npm install
-    echo "Building frontend..."
-    npm run build
-    echo "Frontend build completed."
+  # No suitable package.json found
   else
-    echo "ERROR: package.json not found in any expected location!"
+    echo "No suitable package.json found for frontend build"
     echo "Contents of frontend directory:"
     ls -la frontend
-    echo "Contents of nested frontend directory (if exists):"
     if [ -d "frontend/frontend" ]; then
+      echo "Contents of nested frontend directory:"
       ls -la frontend/frontend
     fi
-    echo "Contents of root directory:"
-    ls -la
-    # Continue anyway, we'll create a fallback page later
-    echo "Will continue with backend setup only."
   fi
 else
   echo "ERROR: frontend directory not found!"
   echo "Contents of current directory:"
   ls -la
-  # Continue anyway, we'll create a fallback page later
-  echo "Will continue with backend setup only."
+fi
+
+# Restore the root package.json
+if [ -f "package.json.bak" ]; then
+  echo "Restoring root package.json"
+  mv package.json.bak package.json
 fi
 
 # Step 2: Create necessary directories for Django

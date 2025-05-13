@@ -24,15 +24,26 @@ COPY . /app/
 RUN echo "Checking for frontend package.json in various locations..." && \
     if [ -d "frontend" ] && [ -f "frontend/package.json" ]; then \
     echo "Found package.json in main frontend directory" && \
-    cd frontend && npm install && npm run build && cd ..; \
+    cd frontend && \
+    # Temporarily rename the root package.json to avoid infinite loops
+    mv ../package.json ../package.json.bak 2>/dev/null || true && \
+    npm install && \
+    npm run build && \
+    # Restore the root package.json
+    mv ../package.json.bak ../package.json 2>/dev/null || true && \
+    cd ..; \
     elif [ -d "frontend/frontend" ] && [ -f "frontend/frontend/package.json" ]; then \
     echo "Found package.json in nested frontend directory" && \
-    cd frontend/frontend && npm install && npm run build && cd ../..; \
-    elif [ -f "package.json" ]; then \
-    echo "Found package.json in root directory" && \
-    npm install && npm run build; \
+    cd frontend/frontend && \
+    # Temporarily rename the root package.json to avoid infinite loops
+    mv ../../package.json ../../package.json.bak 2>/dev/null || true && \
+    npm install && \
+    npm run build && \
+    # Restore the root package.json
+    mv ../../package.json.bak ../../package.json 2>/dev/null || true && \
+    cd ../..; \
     else \
-    echo "Frontend package.json not found in any expected location"; \
+    echo "Frontend package.json not found in expected locations"; \
     fi
 
 # Create necessary directories
