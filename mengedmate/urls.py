@@ -16,16 +16,13 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path, include, re_path
+from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.http import JsonResponse, HttpResponse, FileResponse
-from django.shortcuts import render
-from django.views.generic import TemplateView
+from django.http import JsonResponse, HttpResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from django.views.decorators.csrf import csrf_exempt
-import os
 
 # Simple test view with explicit permission
 @api_view(['GET', 'POST'])
@@ -46,21 +43,70 @@ def register_view(request):
 def health_check(request):
     return HttpResponse("OK", content_type="text/plain")
 
-# Landing page view
-def landing_page(request):
-    # Serve React build index.html in production
-    react_index = os.path.join(settings.BASE_DIR, 'frontend', 'build', 'index.html')
-    if os.path.exists(react_index):
-        return FileResponse(open(react_index, 'rb'))
-    return render(request, 'index.html')
-
-# Serve React frontend for all non-matching routes
-def serve_react_app(request):
-    # Serve React build index.html in production
-    react_index = os.path.join(settings.BASE_DIR, 'frontend', 'build', 'index.html')
-    if os.path.exists(react_index):
-        return FileResponse(open(react_index, 'rb'))
-    return render(request, 'index.html')
+# Simple API information page
+def api_info(request):
+    html_content = """
+    <!DOCTYPE html>
+    <html>
+    <head>
+        <title>Mengedmate API</title>
+        <style>
+            body {
+                font-family: Arial, sans-serif;
+                margin: 0;
+                padding: 20px;
+                text-align: center;
+                background-color: #f5f7fa;
+            }
+            h1 {
+                color: #4a6cf7;
+            }
+            .container {
+                max-width: 800px;
+                margin: 0 auto;
+                padding: 20px;
+                background-color: white;
+                border-radius: 8px;
+                box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+            }
+            a {
+                display: inline-block;
+                margin: 10px;
+                padding: 10px 20px;
+                background-color: #4a6cf7;
+                color: white;
+                text-decoration: none;
+                border-radius: 4px;
+            }
+            code {
+                background-color: #f0f0f0;
+                padding: 2px 5px;
+                border-radius: 3px;
+            }
+        </style>
+    </head>
+    <body>
+        <div class="container">
+            <h1>Mengedmate API</h1>
+            <p>This is the backend API for the Mengedmate EV Charging Station Locator.</p>
+            <p>The frontend is hosted separately at <a href="https://mengedmate.vercel.app" target="_blank">https://mengedmate.vercel.app</a></p>
+            <div>
+                <a href="/admin/">Admin Dashboard</a>
+                <a href="/api/health/">API Health Check</a>
+            </div>
+            <div style="margin-top: 20px; text-align: left;">
+                <h2>API Endpoints:</h2>
+                <ul>
+                    <li><code>/api/auth/</code> - Authentication endpoints</li>
+                    <li><code>/api/</code> - Charging stations endpoints</li>
+                    <li><code>/api/health/</code> - API health check</li>
+                </ul>
+            </div>
+        </div>
+    </body>
+    </html>
+    """
+    return HttpResponse(html_content)
 
 urlpatterns = [
     # API endpoints
@@ -76,13 +122,10 @@ urlpatterns = [
     # Health check
     path("health/", health_check, name="health"),
 
-    # Landing page
-    path("", landing_page, name="landing"),
-
-    # Serve React app for all other routes
-    re_path(r'^(?!api/|admin/|health/|static/|media/).*$', serve_react_app, name='react-app'),
+    # API info page (root URL)
+    path("", api_info, name="api-info"),
 ]
 
-# Serve media files in development
-if settings.DEBUG:
-    urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
+# Serve static and media files
+urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
+urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)

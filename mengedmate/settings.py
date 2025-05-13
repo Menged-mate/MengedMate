@@ -162,15 +162,10 @@ static_dir = os.path.join(BASE_DIR, 'static')
 if not os.path.exists(static_dir):
     os.makedirs(static_dir)
 
-# Add frontend build directory to STATICFILES_DIRS
-frontend_build = os.path.join(BASE_DIR, 'frontend', 'build')
+# Static files directories
 STATICFILES_DIRS = [
     static_dir,
-    # Include frontend build directory if it exists
-    frontend_build if os.path.exists(frontend_build) else None,
 ]
-# Filter out None values
-STATICFILES_DIRS = [dir for dir in STATICFILES_DIRS if dir]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/dev/ref/settings/#default-auto-field
@@ -266,13 +261,20 @@ CSRF_COOKIE_NAME = 'csrftoken'
 CSRF_COOKIE_SAMESITE = None
 
 # Email settings for Gmail
-EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
-EMAIL_HOST = 'smtp.gmail.com'
-EMAIL_PORT = 587
-EMAIL_USE_TLS = True
-EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER', 'halazab16@gmail.com')
-EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'xnat ysee sjed esma')
-DEFAULT_FROM_EMAIL = 'support@mengedmate.com'
+if DEBUG:
+    # Use console backend for development
+    EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
+    print("Using console email backend for development")
+else:
+    # Use SMTP backend for production
+    EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
+    EMAIL_HOST = 'smtp.gmail.com'
+    EMAIL_PORT = 587
+    EMAIL_USE_TLS = True
+    EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
+    EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'support@mengedmate.com')
 
 
 # Django-allauth settings
@@ -293,8 +295,10 @@ ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Frontend URL for password reset links
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://mengedmate.vercel.app/')
+# Frontend URL for password reset links (hosted on Vercel)
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://mengedmate.vercel.app')
+if DEBUG:
+    FRONTEND_URL = 'http://localhost:3000'
 
 # Admin email for notifications
 ADMIN_EMAIL = 'admin@example.com'
