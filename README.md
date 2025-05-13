@@ -149,8 +149,8 @@ This application consists of a Django backend and a React frontend that need to 
 ### Prerequisites
 
 1. A web hosting service for the Django backend (e.g., Heroku, DigitalOcean, AWS)
-2. A static site hosting service for the React frontend (e.g., Netlify, Vercel, AWS S3)
-3. A PostgreSQL database service
+2. A PostgreSQL database service
+3. A Vercel account for hosting the frontend
 
 ### Backend Deployment
 
@@ -160,42 +160,57 @@ This application consists of a Django backend and a React frontend that need to 
    - `DEBUG`: Set to 'False' for production
    - `ALLOWED_HOSTS`: Add your domain names
    - `DATABASE_URL`: PostgreSQL connection string
-   - `CORS_ALLOWED_ORIGINS`: Your frontend URL
+   - `CORS_ALLOWED_ORIGINS`: Your frontend URL (e.g., https://mengedmate.vercel.app)
    - `FRONTEND_URL`: URL of the frontend application
    - `EMAIL_HOST_USER`: Gmail address for sending emails
    - `EMAIL_HOST_PASSWORD`: Gmail app password
 3. Run the build script: `./build.sh`
 4. Start the Django application with Gunicorn: `gunicorn mengedmate.wsgi:application`
 
-### Frontend Deployment
+### Frontend Deployment on Vercel
 
-1. Set the backend API URL in `.env.production`:
+The frontend is configured for deployment on Vercel. See the [frontend README](frontend/README.md) for detailed instructions.
+
+Quick steps:
+
+1. Push your code to a Git repository
+2. Log in to your Vercel account
+3. Create a new project and import your repository
+4. Configure the project:
+   - Set the Framework Preset to "Create React App"
+   - Set the Root Directory to "frontend"
+   - Add environment variable: `REACT_APP_API_URL` (your backend URL)
+5. Deploy
+
+### Connecting Frontend and Backend
+
+After deploying both services:
+
+1. Update your backend's CORS settings in `mengedmate/settings.py`:
+
+   ```python
+   CORS_ALLOW_ALL_ORIGINS = False
+   CORS_ALLOWED_ORIGINS = [
+       'https://your-vercel-domain.vercel.app',
+       # Add any other domains you're using
+   ]
    ```
-   REACT_APP_API_URL=https://your-backend-domain.com
-   ```
-2. Build the React application:
-   ```
-   cd frontend
-   npm install
-   npm run build
-   ```
-3. Deploy the contents of the `frontend/build` directory to your static site hosting service
 
-### Separate vs. Combined Deployment
+2. Make sure your frontend is using the correct backend URL:
 
-You can deploy the frontend and backend separately (recommended) or together:
+   - In Vercel dashboard: Settings > Environment Variables
+   - Set `REACT_APP_API_URL` to your backend URL
 
-#### Separate Deployment (Recommended)
+3. Redeploy both services if needed
 
-- Deploy the Django backend to a web server
-- Deploy the React frontend to a static site host
-- Configure CORS settings to allow communication between the two
+### Using Custom Domains
 
-#### Combined Deployment
+If you want to use custom domains:
 
-- Serve the React frontend as static files from Django
-- Configure Django to serve the React app for non-API routes
-- This approach requires additional configuration not included in this repository
+1. Configure your custom domain in Vercel for the frontend
+2. Configure your custom domain for your backend hosting service
+3. Update the CORS settings in your backend to include your custom domain
+4. Update the `REACT_APP_API_URL` in Vercel to point to your backend custom domain
 
 ## Environment Variables
 
@@ -221,16 +236,19 @@ You can deploy the frontend and backend separately (recommended) or together:
 # 🚀 Render Deployment Instructions
 
 ## 1. Setup
+
 - Ensure you have a `render.yaml` file in your project root (already provided).
 - Create a PostgreSQL database on Render and copy its connection string.
 
 ## 2. Backend (Django)
+
 - Deploy as a Web Service on Render.
 - Set build command: `./build.sh`
 - Set start command: `gunicorn mengedmate.wsgi:application`
 - Set environment variables as in `render.yaml` (SECRET_KEY, DEBUG, ALLOWED_HOSTS, DATABASE_URL, CORS_ALLOWED_ORIGINS, FRONTEND_URL, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD).
 
 ## 3. Frontend (React)
+
 - Deploy as a Static Site on Render.
 - Set build command: `cd frontend && npm install && npm run build`
 - Set publish directory: `frontend/build`
@@ -241,11 +259,14 @@ You can deploy the frontend and backend separately (recommended) or together:
 - Set the same value in the Render dashboard as an environment variable for the static site if needed.
 
 ## 4. CORS
+
 - In Django settings, ensure `CORS_ALLOWED_ORIGINS` includes your frontend Render URL.
 
 ## 5. Static/Media Files
+
 - Django will serve static files using WhiteNoise. Media files will be served from `/media/`.
 
 ## Important Notes for Render Deployment
+
 - If you want to use SQLite on Render, **do NOT set DATABASE_URL** in the environment variables.
 - For CORS: Use `CORS_ALLOW_ALL_ORIGINS = True` for development. For production, set `CORS_ALLOWED_ORIGINS` to your frontend Render URL.

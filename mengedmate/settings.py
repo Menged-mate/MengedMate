@@ -216,7 +216,19 @@ REST_FRAMEWORK = {
 }
 
 # CORS settings
-CORS_ALLOW_ALL_ORIGINS = True  # For development. For production, use CORS_ALLOWED_ORIGINS = ['https://your-frontend.onrender.com']
+CORS_ALLOW_ALL_ORIGINS = True  # For development. Set to False in production.
+
+# Uncomment and update this for production
+# CORS_ALLOWED_ORIGINS = [
+#     'http://localhost:3000',
+#     'http://localhost:8000',
+#     'https://mengedmate.vercel.app',  # Update with your actual Vercel domain
+#     'https://mengedmate-yourname.vercel.app',  # Update with your actual Vercel domain
+#     # Add your custom domain if you have one
+#     'https://mengedmate.com',
+# ]
+
+# Alternative: Use environment variable for CORS origins
 # CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
 
 # Allow all methods
@@ -257,7 +269,7 @@ CSRF_COOKIE_HTTPONLY = False
 
 # Add CSRF trusted origins - include all possible origins
 CSRF_TRUSTED_ORIGINS = [
-    'https://*.onrender.com',
+    'https://*.vercel.app',  # Covers all Vercel subdomains
     'https://*.mengedmate.com',
     'http://localhost:3000',
     'http://localhost:8000',
