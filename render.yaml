@@ -2,14 +2,17 @@ services:
   # Combined service for both frontend and backend
   - type: web
     name: mengedmate
-    env: python
     plan: free
-    # Option 1: Use build script
-    buildCommand: "bash ./build_combined.sh"
-    startCommand: "gunicorn mengedmate.wsgi:application"
-    # Option 2: Uncomment to use Docker instead
-    # dockerfilePath: ./Dockerfile
-    # dockerCommand: gunicorn mengedmate.wsgi:application --bind 0.0.0.0:$PORT
+
+    # Option 1: Docker deployment (recommended for reliability)
+    env: docker
+    dockerfilePath: ./Dockerfile
+    dockerCommand: gunicorn mengedmate.wsgi:application --bind 0.0.0.0:$PORT
+
+    # Option 2: Script-based deployment (alternative)
+    # env: python
+    # buildCommand: "bash ./build_combined.sh"
+    # startCommand: "gunicorn mengedmate.wsgi:application"
     envVars:
       - key: SECRET_KEY
         generateValue: true

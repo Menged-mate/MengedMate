@@ -180,14 +180,15 @@ The combined deployment approach:
 
 There are two deployment options available:
 
-#### Option 1: Build Script (Default)
-
-Uses the `build_combined.sh` script to build both frontend and backend.
-
-#### Option 2: Docker Deployment
+#### Option 1: Docker Deployment (Default)
 
 Uses the provided Dockerfile to build and run the application in a container.
-To use this option, edit the `render.yaml` file and uncomment the Docker configuration lines.
+This is the recommended approach as it provides a more consistent and reliable build environment.
+
+#### Option 2: Build Script
+
+Uses the `build_combined.sh` script to build both frontend and backend.
+To use this option, edit the `render.yaml` file to comment out the Docker configuration and uncomment the script-based configuration.
 
 ### Manual Deployment
 
