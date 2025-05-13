@@ -144,7 +144,7 @@ To add new features to the frontend:
 
 ## Deployment on Render
 
-This application is configured for deployment on Render using the `render.yaml` file, which sets up separate services for the frontend and backend.
+This application is configured for deployment on Render using the `render.yaml` file, which sets up a combined service for both frontend and backend at https://mengedmate.onrender.com/.
 
 ### Prerequisites
 
@@ -158,8 +158,7 @@ This application is configured for deployment on Render using the `render.yaml` 
 3. Click on "New" and select "Blueprint"
 4. Connect your GitHub repository
 5. Render will automatically detect the `render.yaml` file and set up the services:
-   - `mengedmate-api`: The Django backend
-   - `mengedmate-web`: The React frontend
+   - `mengedmate`: The combined Django backend and React frontend
    - `mengedmate-db`: The PostgreSQL database
 6. Configure the environment variables:
    - `SECRET_KEY`: A secure random string
@@ -167,53 +166,49 @@ This application is configured for deployment on Render using the `render.yaml` 
    - `EMAIL_HOST_PASSWORD`: Your Gmail app password
 7. Deploy the services
 
+### How the Combined Deployment Works
+
+The combined deployment approach:
+
+1. Builds the React frontend during the deployment process
+2. Copies the built frontend files to Django's static directory
+3. Configures Django to serve the React app from its static files
+4. Uses relative API URLs in the frontend to communicate with the backend
+5. Avoids CORS issues since everything is served from the same domain
+
 ### Manual Deployment
 
 If you prefer to set up the services manually:
 
-#### Backend (Django API)
+#### Combined Service
 
 1. Create a new Web Service on Render
 2. Connect your GitHub repository
-3. Set the build command to `./build.sh`
+3. Set the build command to `./build_combined.sh`
 4. Set the start command to `gunicorn mengedmate.wsgi:application`
 5. Add the required environment variables:
    - `SECRET_KEY`: A secure random string
    - `DEBUG`: Set to 'False' for production
-   - `ALLOWED_HOSTS`: Add your Render domains (e.g., `.onrender.com`)
+   - `ALLOWED_HOSTS`: Add your Render domains (e.g., `mengedmate.onrender.com,.onrender.com`)
    - `DATABASE_URL`: Your PostgreSQL connection string
-   - `CORS_ALLOWED_ORIGINS`: Your frontend URL (e.g., `https://mengedmate-web.onrender.com`)
-   - `FRONTEND_URL`: Your frontend URL (e.g., `https://mengedmate-web.onrender.com`)
+   - `FRONTEND_URL`: Your application URL (e.g., `https://mengedmate.onrender.com`)
    - `EMAIL_HOST_USER`: Your Gmail address
    - `EMAIL_HOST_PASSWORD`: Your Gmail app password
 6. Deploy the service
 
-#### Frontend (React Web App)
-
-1. Create a new Static Site on Render
-2. Connect your GitHub repository
-3. Set the build command to `cd frontend && npm install && npm run build`
-4. Set the publish directory to `frontend/build`
-5. Add the environment variables:
-   - `REACT_APP_API_URL`: Your backend URL (e.g., `https://mengedmate-api.onrender.com`)
-6. Add a redirect rule:
-   - Source: `/*`
-   - Destination: `/index.html`
-7. Deploy the service
-
 #### Database (PostgreSQL)
 
 1. Create a new PostgreSQL database on Render
-2. Note the connection details to use in your backend service
+2. Note the connection details to use in your service
 
 ### Troubleshooting
 
-If you encounter a 400 Bad Request error:
+If you encounter issues with the deployment:
 
-1. Check the CORS settings in the backend
-2. Verify that the frontend is using the correct API URL
+1. Check the build logs for any errors during the frontend build or backend setup
+2. Verify that the static files are being served correctly
 3. Check the browser console for specific error messages
-4. Ensure that the backend is properly configured to accept requests from the frontend domain
+4. Ensure that the Django settings are correctly configured to serve the React app
 
 ## Environment Variables
 

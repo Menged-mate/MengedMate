@@ -172,8 +172,15 @@ static_dir = os.path.join(BASE_DIR, 'static')
 if not os.path.exists(static_dir):
     os.makedirs(static_dir)
 
-# Add the static directory to STATICFILES_DIRS
-STATICFILES_DIRS = [static_dir]
+# Add frontend build directory to STATICFILES_DIRS
+frontend_build = os.path.join(BASE_DIR, 'frontend', 'build')
+STATICFILES_DIRS = [
+    static_dir,
+    # Include frontend build directory if it exists
+    frontend_build if os.path.exists(frontend_build) else None,
+]
+# Filter out None values
+STATICFILES_DIRS = [dir for dir in STATICFILES_DIRS if dir]
 
 # Default primary key field type
 # https://docs.djangoproject.com/en/dev/ref/settings/#default-auto-field
@@ -280,19 +287,20 @@ EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD', 'xnat ysee sjed esma
 DEFAULT_FROM_EMAIL = 'support@mengedmate.com'
 
 
-# Django-allauth settings - using new format
-ACCOUNT_LOGIN_METHODS = {'email'}
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+# Django-allauth settings
+# Use both old and new format to ensure compatibility
+ACCOUNT_AUTHENTICATION_METHOD = 'email'
+ACCOUNT_EMAIL_REQUIRED = True
+ACCOUNT_USERNAME_REQUIRED = False
 ACCOUNT_UNIQUE_EMAIL = True
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
 ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 
-# Remove deprecated settings
-# ACCOUNT_AUTHENTICATION_METHOD = 'email'  # Deprecated
-# ACCOUNT_EMAIL_REQUIRED = True  # Deprecated
-# ACCOUNT_USERNAME_REQUIRED = False  # Deprecated
+# New format settings - commented out for now as they're causing issues
+# ACCOUNT_LOGIN_METHODS = {'email'}
+# ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 
 # Media files
 MEDIA_URL = '/media/'

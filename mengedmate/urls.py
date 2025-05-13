@@ -16,11 +16,12 @@ Including another URLconf
 """
 
 from django.contrib import admin
-from django.urls import path, include
+from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
 from django.http import JsonResponse, HttpResponse
 from django.shortcuts import render
+from django.views.generic import TemplateView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from django.views.decorators.csrf import csrf_exempt
@@ -48,15 +49,29 @@ def health_check(request):
 def landing_page(request):
     return render(request, 'index.html')
 
+# Serve React frontend for all non-matching routes
+def serve_react_app(request):
+    return render(request, 'index.html')
+
 urlpatterns = [
-    path("", landing_page, name="landing"),
-    path("admin/", admin.site.urls),
+    # API endpoints
     path("api/auth/", include("authentication.urls")),
     path("api/", include("charging_stations.urls")),
     path("api/test/", test_view, name="test"),
     path("api/register-test/", register_view, name="register-test"),
-    path("health/", health_check, name="health"),
     path("api/health/", health_check, name="api-health"),
+
+    # Admin site
+    path("admin/", admin.site.urls),
+
+    # Health check
+    path("health/", health_check, name="health"),
+
+    # Landing page
+    path("", landing_page, name="landing"),
+
+    # Serve React app for all other routes
+    re_path(r'^(?!api/|admin/|health/|static/|media/).*$', serve_react_app, name='react-app'),
 ]
 
 # Serve media files in development
