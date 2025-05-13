@@ -245,3 +245,7 @@ You can deploy the frontend and backend separately (recommended) or together:
 
 ## 5. Static/Media Files
 - Django will serve static files using WhiteNoise. Media files will be served from `/media/`.
+
+## Important Notes for Render Deployment
+- If you want to use SQLite on Render, **do NOT set DATABASE_URL** in the environment variables.
+- For CORS: Use `CORS_ALLOW_ALL_ORIGINS = True` for development. For production, set `CORS_ALLOWED_ORIGINS` to your frontend Render URL.

@@ -32,7 +32,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', "django-insecure-y!$8furov9c90*rxcky-y
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'False').lower() == 'true'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com').split(',')
 
 
 # Application definition
@@ -159,7 +159,7 @@ USE_TZ = True
 # Static files (CSS, JavaScript, Images)
 # https://docs.djangoproject.com/en/dev/howto/static-files/
 
-STATIC_URL = "static/"
+STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
 # WhiteNoise configuration
@@ -215,15 +215,9 @@ REST_FRAMEWORK = {
     ),
 }
 
-# CORS settings - maximum permissiveness for troubleshooting
-CORS_ALLOW_ALL_ORIGINS = True
-CORS_ALLOW_CREDENTIALS = True
-
-# Explicitly list allowed origins as well (used if CORS_ALLOW_ALL_ORIGINS is False)
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'http://localhost:8000',
-]
+# CORS settings
+CORS_ALLOW_ALL_ORIGINS = True  # For development. For production, use CORS_ALLOWED_ORIGINS = ['https://your-frontend.onrender.com']
+# CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
 
 # Allow all methods
 CORS_ALLOW_METHODS = [
