@@ -212,12 +212,9 @@ CORS_ALLOWED_ORIGINS = [
     'http://localhost:3000',
     'http://localhost:8000',
     'https://mengedmate.vercel.app',
-    'https://mengedmate.vercel.app/',
     'https://mengedmate-pf4ncgtkj-mengedmate.vercel.app',
     'https://mengedmate.com'
 ]
-
-
 
 # Allow all methods
 CORS_ALLOW_METHODS = [
@@ -279,7 +276,6 @@ DEFAULT_FROM_EMAIL = 'support@mengedmate.com'
 
 
 # Django-allauth settings
-# Use both old and new format to ensure compatibility
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
@@ -289,7 +285,7 @@ ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 
-# New format settings - commented out for now as they're causing issues
+# The following new format settings are commented out because they're causing issues
 # ACCOUNT_LOGIN_METHODS = {'email'}
 # ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 
