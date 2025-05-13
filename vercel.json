@@ -1,6 +1,7 @@
 {
   "version": 2,
-  "buildCommand": "cd frontend && npm install && npm run build",
+  "framework": "create-react-app",
+  "buildCommand": "npm install --legacy-peer-deps && npm run build",
   "outputDirectory": "frontend/build",
   "routes": [
     {
@@ -27,5 +28,8 @@
       "src": "/(.*)",
       "dest": "/index.html"
     }
-  ]
+  ],
+  "env": {
+    "REACT_APP_API_URL": "https://your-backend-url.com"
+  }
 }

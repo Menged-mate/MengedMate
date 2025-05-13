@@ -16,17 +16,11 @@ import dj_database_url
 from datetime import timedelta
 from dotenv import load_dotenv
 
-# Load environment variables from .env file
 load_dotenv()
 
-# Build paths inside the project like this: BASE_DIR / 'subdir'.
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
-# Quick-start development settings - unsuitable for production
-# See https://docs.djangoproject.com/en/dev/howto/deployment/checklist/
-
-# SECURITY WARNING: keep the secret key used in production secret!
 SECRET_KEY = os.environ.get('SECRET_KEY', "django-insecure-y!$8furov9c90*rxcky-y-+1@mh(wj_w(o9@#2bt-_aq97&kr!")
 
 # SECURITY WARNING: don't run with debug turned on in production!
@@ -59,27 +53,23 @@ INSTALLED_APPS = [
     "charging_stations",
 ]
 
-# Site ID for django-allauth
 SITE_ID = 1
 
 MIDDLEWARE = [
-    # CORS middleware must be at the top
-    "corsheaders.middleware.CorsMiddleware",  # CORS middleware
+    "corsheaders.middleware.CorsMiddleware",
 
-    # Standard Django middleware
     "django.middleware.security.SecurityMiddleware",
-    "whitenoise.middleware.WhiteNoiseMiddleware",  # Whitenoise for static files
+    "whitenoise.middleware.WhiteNoiseMiddleware",
     "django.contrib.sessions.middleware.SessionMiddleware",
     "django.middleware.common.CommonMiddleware",
 
-    # Temporarily comment out CSRF middleware for troubleshooting
-    # "django.middleware.csrf.CsrfViewMiddleware",
+
 
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
-    "allauth.account.middleware.AccountMiddleware",  # django-allauth middleware
-    "authentication.middleware.AuthenticationBypassMiddleware",  # Custom middleware to bypass authentication
+    "allauth.account.middleware.AccountMiddleware",
+    "authentication.middleware.AuthenticationBypassMiddleware",
 ]
 
 ROOT_URLCONF = "mengedmate.urls"
@@ -87,7 +77,7 @@ ROOT_URLCONF = "mengedmate.urls"
 TEMPLATES = [
     {
         "BACKEND": "django.template.backends.django.DjangoTemplates",
-        "DIRS": [os.path.join(BASE_DIR, 'templates')],  # Added templates directory
+        "DIRS": [os.path.join(BASE_DIR, 'templates')],
         "APP_DIRS": True,
         "OPTIONS": {
             "context_processors": [
@@ -216,20 +206,18 @@ REST_FRAMEWORK = {
 }
 
 # CORS settings
-CORS_ALLOW_ALL_ORIGINS = True  # For development. Set to False in production.
+CORS_ALLOW_ALL_ORIGINS = False
 
-# Uncomment and update this for production
-# CORS_ALLOWED_ORIGINS = [
-#     'http://localhost:3000',
-#     'http://localhost:8000',
-#     'https://mengedmate.vercel.app',  # Update with your actual Vercel domain
-#     'https://mengedmate-yourname.vercel.app',  # Update with your actual Vercel domain
-#     # Add your custom domain if you have one
-#     'https://mengedmate.com',
-# ]
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'http://localhost:8000',
+    'https://mengedmate.vercel.app',
+    'https://mengedmate.vercel.app/',
+    'https://mengedmate-pf4ncgtkj-mengedmate.vercel.app',
+    'https://mengedmate.com'
+]
 
-# Alternative: Use environment variable for CORS origins
-# CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', '').split(',')
+
 
 # Allow all methods
 CORS_ALLOW_METHODS = [
@@ -267,19 +255,17 @@ SECURE_CONTENT_TYPE_NOSNIFF = False
 CSRF_USE_SESSIONS = False
 CSRF_COOKIE_HTTPONLY = False
 
-# Add CSRF trusted origins - include all possible origins
 CSRF_TRUSTED_ORIGINS = [
-    'https://*.vercel.app',  # Covers all Vercel subdomains
+    'https://*.vercel.app',
+    'https://mengedmate-pf4ncgtkj-mengedmate.vercel.app',
     'https://*.mengedmate.com',
     'http://localhost:3000',
-    'http://localhost:8000',
+    'http://localhost:8000'
 ]
 
-# Allow CSRF tokens to be passed in headers
 CSRF_HEADER_NAME = 'X-CSRFTOKEN'
 CSRF_COOKIE_NAME = 'csrftoken'
 
-# Disable CSRF protection for API endpoints during troubleshooting
 CSRF_COOKIE_SAMESITE = None
 
 # Email settings for Gmail
@@ -312,7 +298,7 @@ MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
 # Frontend URL for password reset links
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://mengedmate.vercel.app/')
 
 # Admin email for notifications
 ADMIN_EMAIL = 'admin@example.com'
