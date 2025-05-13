@@ -19,28 +19,44 @@ from django.contrib import admin
 from django.urls import path, include
 from django.conf import settings
 from django.conf.urls.static import static
-from django.http import JsonResponse
+from django.http import JsonResponse, HttpResponse
+from django.shortcuts import render
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
+from django.views.decorators.csrf import csrf_exempt
 
 # Simple test view with explicit permission
 @api_view(['GET', 'POST'])
 @permission_classes([AllowAny])
+@csrf_exempt
 def test_view(request):
     return JsonResponse({"message": "API is working!"})
 
 # Simple register view with explicit permission
 @api_view(['POST'])
 @permission_classes([AllowAny])
+@csrf_exempt
 def register_view(request):
     return JsonResponse({"message": "Register endpoint is working!"})
 
+# Simple health check that doesn't use DRF
+@csrf_exempt
+def health_check(request):
+    return HttpResponse("OK", content_type="text/plain")
+
+# Landing page view
+def landing_page(request):
+    return render(request, 'index.html')
+
 urlpatterns = [
+    path("", landing_page, name="landing"),
     path("admin/", admin.site.urls),
     path("api/auth/", include("authentication.urls")),
     path("api/", include("charging_stations.urls")),
     path("api/test/", test_view, name="test"),
     path("api/register-test/", register_view, name="register-test"),
+    path("health/", health_check, name="health"),
+    path("api/health/", health_check, name="api-health"),
 ]
 
 # Serve media files in development

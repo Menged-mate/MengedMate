@@ -63,12 +63,18 @@ INSTALLED_APPS = [
 SITE_ID = 1
 
 MIDDLEWARE = [
+    # CORS middleware must be at the top
+    "corsheaders.middleware.CorsMiddleware",  # CORS middleware
+
+    # Standard Django middleware
     "django.middleware.security.SecurityMiddleware",
     "whitenoise.middleware.WhiteNoiseMiddleware",  # Whitenoise for static files
     "django.contrib.sessions.middleware.SessionMiddleware",
-    "corsheaders.middleware.CorsMiddleware",  # CORS middleware
     "django.middleware.common.CommonMiddleware",
-    "django.middleware.csrf.CsrfViewMiddleware",
+
+    # Temporarily comment out CSRF middleware for troubleshooting
+    # "django.middleware.csrf.CsrfViewMiddleware",
+
     "django.contrib.auth.middleware.AuthenticationMiddleware",
     "django.contrib.messages.middleware.MessageMiddleware",
     "django.middleware.clickjacking.XFrameOptionsMiddleware",
@@ -177,28 +183,42 @@ DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 # Custom user model
 AUTH_USER_MODEL = "authentication.CustomUser"
 
-# Django Rest Framework settings
+# Django Rest Framework settings - more permissive for troubleshooting
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
         'authentication.authentication.BypassableTokenAuthentication',  # Custom authentication
         'rest_framework.authentication.SessionAuthentication',
+        'rest_framework.authentication.BasicAuthentication',  # Add basic auth for testing
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.IsAuthenticated',  # Back to IsAuthenticated
+        'rest_framework.permissions.AllowAny',  # Allow any access for troubleshooting
     ],
+    # Disable throttling for testing
+    'DEFAULT_THROTTLE_CLASSES': [],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': None,
+        'user': None,
+    },
+    # More detailed exception handling
+    'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
+    # Disable browsable API in production
+    'DEFAULT_RENDERER_CLASSES': (
+        'rest_framework.renderers.JSONRenderer',
+        'rest_framework.renderers.BrowsableAPIRenderer',
+    ),
 }
 
-# CORS settings
-if DEBUG:
-    CORS_ALLOW_ALL_ORIGINS = True
-else:
-    # Allow all origins in production for now to troubleshoot
-    CORS_ALLOW_ALL_ORIGINS = True
-    # Keep this for when we want to restrict origins
-    # CORS_ALLOWED_ORIGINS = os.environ.get('CORS_ALLOWED_ORIGINS', 'http://localhost:3000').split(',')
-
-# Allow credentials
+# CORS settings - maximum permissiveness for troubleshooting
+CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
+CORS_ORIGIN_ALLOW_ALL = True
+
+# Explicitly list allowed origins as well
+CORS_ALLOWED_ORIGINS = [
+    'http://localhost:3000',
+    'https://mengedmate-frontend.onrender.com',
+    'https://mengedmate.onrender.com',
+]
 
 # Allow all methods
 CORS_ALLOW_METHODS = [
@@ -212,39 +232,37 @@ CORS_ALLOW_METHODS = [
 
 # Allow all headers
 CORS_ALLOW_HEADERS = [
-    'accept',
-    'accept-encoding',
-    'authorization',
-    'content-type',
-    'dnt',
-    'origin',
-    'user-agent',
-    'x-csrftoken',
-    'x-requested-with',
+    '*',  # Allow all headers
 ]
 
-# Security settings for production
-if not DEBUG:
-    # Temporarily disable SSL redirect for troubleshooting
-    SECURE_SSL_REDIRECT = False
-    SESSION_COOKIE_SECURE = False
-    CSRF_COOKIE_SECURE = False
+# Additional CORS settings
+CORS_REPLACE_HTTPS_REFERER = True
+CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
 
-    # Keep these security settings
-    SECURE_BROWSER_XSS_FILTER = True
-    SECURE_CONTENT_TYPE_NOSNIFF = True
+# Security settings for production - all disabled for troubleshooting
+# We'll re-enable these once the basic functionality is working
+SECURE_SSL_REDIRECT = False
+SESSION_COOKIE_SECURE = False
+CSRF_COOKIE_SECURE = False
+SECURE_BROWSER_XSS_FILTER = False
+SECURE_CONTENT_TYPE_NOSNIFF = False
+CSRF_USE_SESSIONS = False
+CSRF_COOKIE_HTTPONLY = False
 
-    # Temporarily disable HSTS for troubleshooting
-    # SECURE_HSTS_SECONDS = 31536000  # 1 year
-    # SECURE_HSTS_INCLUDE_SUBDOMAINS = True
-    # SECURE_HSTS_PRELOAD = True
+# Add CSRF trusted origins - include all possible origins
+CSRF_TRUSTED_ORIGINS = [
+    'https://*.onrender.com',
+    'https://*.mengedmate.com',
+    'http://localhost:3000',
+    'http://localhost:8000',
+]
 
-    # Add CSRF trusted origins
-    CSRF_TRUSTED_ORIGINS = [
-        'https://*.onrender.com',
-        'https://*.mengedmate.com',
-        'http://localhost:3000',
-    ]
+# Allow CSRF tokens to be passed in headers
+CSRF_HEADER_NAME = 'X-CSRFTOKEN'
+CSRF_COOKIE_NAME = 'csrftoken'
+
+# Disable CSRF protection for API endpoints during troubleshooting
+CSRF_COOKIE_SAMESITE = None
 
 # Email settings for Gmail
 EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
