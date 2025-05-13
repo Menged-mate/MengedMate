@@ -3,8 +3,13 @@ services:
   - type: web
     name: mengedmate
     env: python
-    buildCommand: "./build_combined.sh"
+    plan: free
+    # Option 1: Use build script
+    buildCommand: "bash ./build_combined.sh"
     startCommand: "gunicorn mengedmate.wsgi:application"
+    # Option 2: Uncomment to use Docker instead
+    # dockerfilePath: ./Dockerfile
+    # dockerCommand: gunicorn mengedmate.wsgi:application --bind 0.0.0.0:$PORT
     envVars:
       - key: SECRET_KEY
         generateValue: true

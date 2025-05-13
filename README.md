@@ -176,6 +176,19 @@ The combined deployment approach:
 4. Uses relative API URLs in the frontend to communicate with the backend
 5. Avoids CORS issues since everything is served from the same domain
 
+### Deployment Options
+
+There are two deployment options available:
+
+#### Option 1: Build Script (Default)
+
+Uses the `build_combined.sh` script to build both frontend and backend.
+
+#### Option 2: Docker Deployment
+
+Uses the provided Dockerfile to build and run the application in a container.
+To use this option, edit the `render.yaml` file and uncomment the Docker configuration lines.
+
 ### Manual Deployment
 
 If you prefer to set up the services manually:

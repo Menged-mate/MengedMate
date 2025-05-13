@@ -4,12 +4,37 @@ set -o errexit
 
 echo "Starting combined build process..."
 
+# Print current directory for debugging
+echo "Current directory: $(pwd)"
+echo "Listing directory contents:"
+ls -la
+
 # Step 1: Build the frontend
 echo "Building frontend..."
-cd frontend
-npm install
-npm run build
-cd ..
+if [ -d "frontend" ]; then
+  cd frontend
+  echo "Changed to frontend directory: $(pwd)"
+  echo "Checking for package.json:"
+  ls -la
+
+  if [ -f "package.json" ]; then
+    echo "Found package.json, installing dependencies..."
+    npm install
+    echo "Building frontend..."
+    npm run build
+    echo "Frontend build completed."
+  else
+    echo "ERROR: package.json not found in frontend directory!"
+    echo "Contents of frontend directory:"
+    ls -la
+    exit 1
+  fi
+
+  cd ..
+else
+  echo "ERROR: frontend directory not found!"
+  exit 1
+fi
 
 # Step 2: Create necessary directories for Django
 echo "Creating necessary directories for Django..."
@@ -19,7 +44,16 @@ mkdir -p staticfiles
 
 # Step 3: Copy frontend build to Django static directory
 echo "Copying frontend build to Django static directory..."
-cp -r frontend/build/* staticfiles/
+if [ -d "frontend/build" ] && [ "$(ls -A frontend/build 2>/dev/null)" ]; then
+  echo "Frontend build directory exists and is not empty, copying files..."
+  cp -r frontend/build/* staticfiles/
+  echo "Copy completed."
+else
+  echo "WARNING: Frontend build directory is missing or empty!"
+  echo "Will continue with backend setup only."
+  # Create a simple index.html in staticfiles as a fallback
+  echo "<html><body><h1>Mengedmate</h1><p>Frontend build not available.</p></body></html>" > staticfiles/index.html
+fi
 
 # Step 4: Install backend dependencies
 echo "Installing backend dependencies..."
