@@ -19,12 +19,13 @@ from django.contrib import admin
 from django.urls import path, include, re_path
 from django.conf import settings
 from django.conf.urls.static import static
-from django.http import JsonResponse, HttpResponse
+from django.http import JsonResponse, HttpResponse, FileResponse
 from django.shortcuts import render
 from django.views.generic import TemplateView
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from django.views.decorators.csrf import csrf_exempt
+import os
 
 # Simple test view with explicit permission
 @api_view(['GET', 'POST'])
@@ -47,10 +48,18 @@ def health_check(request):
 
 # Landing page view
 def landing_page(request):
+    # Serve React build index.html in production
+    react_index = os.path.join(settings.BASE_DIR, 'frontend', 'build', 'index.html')
+    if os.path.exists(react_index):
+        return FileResponse(open(react_index, 'rb'))
     return render(request, 'index.html')
 
 # Serve React frontend for all non-matching routes
 def serve_react_app(request):
+    # Serve React build index.html in production
+    react_index = os.path.join(settings.BASE_DIR, 'frontend', 'build', 'index.html')
+    if os.path.exists(react_index):
+        return FileResponse(open(react_index, 'rb'))
     return render(request, 'index.html')
 
 urlpatterns = [
