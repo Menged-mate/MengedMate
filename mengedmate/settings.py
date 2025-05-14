@@ -201,15 +201,15 @@ REST_FRAMEWORK = {
 }
 
 # CORS settings
-CORS_ALLOW_ALL_ORIGINS = False
+CORS_ALLOW_ALL_ORIGINS = True
 
-CORS_ALLOWED_ORIGINS = [
-    'http://localhost:3000',
-    'http://localhost:8000',
-    'https://mengedmate.vercel.app',
-    'https://mengedmate-pf4ncgtkj-mengedmate.vercel.app',
-    'https://mengedmate.com'
-]
+# CORS_ALLOWED_ORIGINS = [
+#     'http://localhost:3000',
+#     'http://localhost:8000',
+#     'https://mengedmate.vercel.app',
+#     'https://mengedmate-pf4ncgtkj-mengedmate.vercel.app',
+#     'https://mengedmate.com'
+# ]
 
 # Allow all methods
 CORS_ALLOW_METHODS = [
