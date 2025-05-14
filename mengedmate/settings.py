@@ -202,10 +202,12 @@ REST_FRAMEWORK = {
 
 # CORS settings
 CORS_ALLOW_ALL_ORIGINS = True
+CORS_ALLOW_CREDENTIALS = True
 
 # CORS_ALLOWED_ORIGINS = [
 #     'http://localhost:3000',
 #     'http://localhost:8000',
+#     'http://localhost:65389',  # Flutter web dev server
 #     'https://mengedmate.vercel.app',
 #     'https://mengedmate-pf4ncgtkj-mengedmate.vercel.app',
 #     'https://mengedmate.com'
@@ -232,10 +234,16 @@ CORS_ALLOW_HEADERS = [
     'user-agent',
     'x-csrftoken',
     'x-requested-with',
+    'access-control-allow-origin',
+    'access-control-allow-headers',
+    'access-control-allow-methods',
+    'access-control-max-age',
+    'access-control-allow-credentials',
 ]
 
 # Additional CORS settings
 CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
+CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
 
 # Security settings for production - all disabled for troubleshooting
 # We'll re-enable these once the basic functionality is working
