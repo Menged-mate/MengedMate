@@ -5,6 +5,9 @@ from django.core.exceptions import ValidationError
 from django.utils.translation import gettext_lazy as _
 from rest_framework.authtoken.models import Token
 from django.utils.crypto import get_random_string
+from dj_rest_auth.registration.serializers import RegisterSerializer as DjRestAuthRegisterSerializer
+from dj_rest_auth.serializers import LoginSerializer as DjRestAuthLoginSerializer
+from dj_rest_auth.serializers import UserDetailsSerializer
 import random
 import string
 import uuid
@@ -206,3 +209,78 @@ class ResetPasswordSerializer(serializers.Serializer):
             return user
         except User.DoesNotExist:
             raise serializers.ValidationError({"email": "User with this email does not exist."})
+
+
+# Custom serializers for dj-rest-auth
+class CustomUserDetailsSerializer(UserDetailsSerializer):
+    """
+    Custom user details serializer for dj-rest-auth that doesn't require a username field.
+    """
+    class Meta:
+        model = User
+        fields = ('id', 'email', 'first_name', 'last_name', 'is_verified')
+        read_only_fields = ('id', 'email', 'is_verified')
+
+
+class CustomRegisterSerializer(DjRestAuthRegisterSerializer):
+    """
+    Custom registration serializer for dj-rest-auth that uses email instead of username.
+    """
+    username = None
+    email = serializers.EmailField(required=True)
+    first_name = serializers.CharField(required=True)
+    last_name = serializers.CharField(required=True)
+    password1 = serializers.CharField(write_only=True, style={'input_type': 'password'})
+    password2 = serializers.CharField(write_only=True, style={'input_type': 'password'})
+
+    def validate(self, attrs):
+        if attrs['password1'] != attrs['password2']:
+            raise serializers.ValidationError({"password2": "Password fields didn't match."})
+        return attrs
+
+    def get_cleaned_data(self):
+        return {
+            'email': self.validated_data.get('email', ''),
+            'first_name': self.validated_data.get('first_name', ''),
+            'last_name': self.validated_data.get('last_name', ''),
+            'password1': self.validated_data.get('password1', ''),
+        }
+
+    def save(self, request):
+        user = User.objects.create_user(
+            email=self.validated_data['email'],
+            first_name=self.validated_data['first_name'],
+            last_name=self.validated_data['last_name'],
+            verification_code=''.join(random.choices(string.digits, k=6))
+        )
+        user.set_password(self.validated_data['password1'])
+        user.save()
+        return user
+
+
+class CustomLoginSerializer(DjRestAuthLoginSerializer):
+    """
+    Custom login serializer for dj-rest-auth that uses email instead of username.
+    """
+    username = None
+    email = serializers.EmailField(required=True)
+    password = serializers.CharField(style={'input_type': 'password'})
+
+    def validate(self, attrs):
+        email = attrs.get('email')
+        password = attrs.get('password')
+
+        if email and password:
+            user = authenticate(request=self.context.get('request'), email=email, password=password)
+            if not user:
+                msg = _('Unable to log in with provided credentials.')
+                raise serializers.ValidationError(msg, code='authorization')
+            if not user.is_verified:
+                msg = _('Email is not verified.')
+                raise serializers.ValidationError(msg, code='authorization')
+        else:
+            msg = _('Must include "email" and "password".')
+            raise serializers.ValidationError(msg, code='authorization')
+
+        attrs['user'] = user
+        return attrs

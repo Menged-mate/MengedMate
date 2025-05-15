@@ -367,6 +367,22 @@ REST_USE_JWT = True
 JWT_AUTH_COOKIE = 'mengedmate-auth'
 JWT_AUTH_REFRESH_COOKIE = 'mengedmate-refresh'
 
+# dj-rest-auth settings for email-based authentication
+REST_AUTH = {
+    'USER_DETAILS_SERIALIZER': 'authentication.serializers.CustomUserDetailsSerializer',
+    'REGISTER_SERIALIZER': 'authentication.serializers.CustomRegisterSerializer',
+    'LOGIN_SERIALIZER': 'authentication.serializers.CustomLoginSerializer',
+}
+
+# Tell dj-rest-auth to use email instead of username
+ACCOUNT_ADAPTER = 'authentication.adapters.CustomAccountAdapter'
+REST_AUTH_REGISTER_SERIALIZERS = {
+    'REGISTER_SERIALIZER': 'authentication.serializers.CustomRegisterSerializer',
+}
+
+# Specify the username field for dj-rest-auth
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+
 # Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
