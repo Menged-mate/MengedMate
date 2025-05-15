@@ -1,0 +1,6 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="app_name">MengedMate</string>
+    <!-- Google Web Client ID -->
+    <string name="server_client_id">765614208466-ig0fke2a0gnb2hlklnnhb9fr368m4u1q.apps.googleusercontent.com</string>
+</resources>

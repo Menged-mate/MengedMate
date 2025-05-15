@@ -32,6 +32,7 @@ urlpatterns = [
     path('profile/', UserProfileView.as_view(), name='profile'),
     path('change-password/', ChangePasswordView.as_view(), name='change-password'),
     path('forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
+    path('password-reset/', ForgotPasswordView.as_view(), name='password-reset'),  # Alias for forgot-password
     path('reset-password/', ResetPasswordView.as_view(), name='reset-password'),
 
     # Social authentication endpoints
