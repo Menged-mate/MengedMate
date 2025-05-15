@@ -5,6 +5,10 @@ services:
     buildCommand: ./build.sh
     startCommand: gunicorn mengedmate.wsgi:application
     plan: free
+    postBuild:
+      - command: python manage.py migrate
+      - command: python manage.py create_superuser
+      - command: python manage.py collectstatic --noinput
     envVars:
       - key: SECRET_KEY
         value: "<your-django-secret-key>"
@@ -30,4 +34,4 @@ services:
     envVars:
       - key: REACT_APP_API_URL
         value: "https://<your-backend-domain>.onrender.com"
-    autoDeploy: true 
+    autoDeploy: true

@@ -27,4 +27,8 @@ echo "Applying migrations..."
 # Use --run-syncdb to create tables for apps without migrations
 python manage.py migrate --run-syncdb
 
+# Create superuser
+echo "Creating superuser if needed..."
+python manage.py create_superuser
+
 echo "Django setup completed successfully!"
