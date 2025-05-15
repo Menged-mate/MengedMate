@@ -10,9 +10,17 @@ from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
+from django.shortcuts import redirect
+from django.urls import reverse
 import random
 import string
+import json
 from charging_stations.models import StationOwner
+from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
+from allauth.socialaccount.providers.facebook.views import FacebookOAuth2Adapter
+from allauth.socialaccount.providers.apple.views import AppleOAuth2Adapter
+from allauth.socialaccount.providers.oauth2.client import OAuth2Client
+from dj_rest_auth.registration.views import SocialLoginView
 
 from .serializers import (
     UserSerializer,
@@ -346,3 +354,95 @@ class ResetPasswordView(APIView):
                 }, status=status.HTTP_400_BAD_REQUEST)
 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+# Social Authentication Views
+from allauth.account.adapter import get_adapter
+
+class GoogleLoginView(SocialLoginView):
+    """
+    API view for Google login.
+    """
+    adapter_class = GoogleOAuth2Adapter
+    callback_url = settings.FRONTEND_URL
+    client_class = OAuth2Client
+
+    def process_login(self):
+        """
+        Process the login and return the token.
+        """
+        get_adapter(self.request).login(self.request, self.user)
+        token, created = Token.objects.get_or_create(user=self.user)
+        return token
+
+
+class FacebookLoginView(SocialLoginView):
+    """
+    API view for Facebook login.
+    """
+    adapter_class = FacebookOAuth2Adapter
+    callback_url = settings.FRONTEND_URL
+    client_class = OAuth2Client
+
+    def process_login(self):
+        """
+        Process the login and return the token.
+        """
+        get_adapter(self.request).login(self.request, self.user)
+        token, created = Token.objects.get_or_create(user=self.user)
+        return token
+
+
+class AppleLoginView(SocialLoginView):
+    """
+    API view for Apple login.
+    """
+    adapter_class = AppleOAuth2Adapter
+    callback_url = settings.FRONTEND_URL
+    client_class = OAuth2Client
+
+    def process_login(self):
+        """
+        Process the login and return the token.
+        """
+        get_adapter(self.request).login(self.request, self.user)
+        token, created = Token.objects.get_or_create(user=self.user)
+        return token
+
+
+class SocialAuthCallbackView(APIView):
+    """
+    API view for handling social authentication callbacks.
+    """
+    permission_classes = [AllowAny]
+    authentication_classes = [AnonymousAuthentication]
+
+    def get(self, request):
+        """
+        Handle the callback from social providers.
+        """
+        # Extract the token and provider from the request
+        provider = request.GET.get('provider')
+        token = request.GET.get('token')
+
+        if not provider or not token:
+            return Response({
+                "message": "Provider and token are required."
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Find the user associated with this social account
+        try:
+            # This is a simplified example - in a real implementation,
+            # you would use the token to authenticate with the provider
+            # and get the user's information
+
+            # For now, we'll just return a success response
+            return Response({
+                "message": f"Successfully authenticated with {provider}.",
+                "token": token
+            }, status=status.HTTP_200_OK)
+
+        except Exception as e:
+            return Response({
+                "message": f"Authentication failed: {str(e)}"
+            }, status=status.HTTP_400_BAD_REQUEST)

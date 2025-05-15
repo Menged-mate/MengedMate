@@ -9,7 +9,11 @@ from .views import (
     UserProfileView,
     ChangePasswordView,
     ForgotPasswordView,
-    ResetPasswordView
+    ResetPasswordView,
+    GoogleLoginView,
+    FacebookLoginView,
+    AppleLoginView,
+    SocialAuthCallbackView
 )
 
 app_name = 'authentication'
@@ -29,4 +33,10 @@ urlpatterns = [
     path('change-password/', ChangePasswordView.as_view(), name='change-password'),
     path('forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
     path('reset-password/', ResetPasswordView.as_view(), name='reset-password'),
+
+    # Social authentication endpoints
+    path('social/google/', GoogleLoginView.as_view(), name='google-login'),
+    path('social/facebook/', FacebookLoginView.as_view(), name='facebook-login'),
+    path('social/apple/', AppleLoginView.as_view(), name='apple-login'),
+    path('social/callback/', SocialAuthCallbackView.as_view(), name='social-callback'),
 ]

@@ -1,0 +1,35 @@
+name: mengedmate
+description: MengedMate EV Charging Station Locator
+publish_to: "none"
+version: 1.0.0+1
+
+environment:
+  sdk: ">=2.19.0 <4.0.0"
+
+dependencies:
+  flutter:
+    sdk: flutter
+  cupertino_icons: ^1.0.2
+  flutter_svg: ^2.0.5
+  google_fonts: ^4.0.4
+  http: ^1.1.0
+  shared_preferences: ^2.2.0
+  google_maps_flutter: ^2.5.0
+  geolocator: ^10.1.0
+  flutter_typeahead: ^4.8.0
+  flutter_keyboard_visibility: ^5.4.1
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^2.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/images/
+    - assets/images/charging_station.svg
+    - assets/images/route_planning.svg
+    - assets/images/charge_go.svg
+    - assets/icons/
+    - assets/icons/logo.svg

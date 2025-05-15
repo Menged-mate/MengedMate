@@ -48,6 +48,13 @@ INSTALLED_APPS = [
     "allauth.account",
     "allauth.socialaccount",
 
+    # Social providers
+    "allauth.socialaccount.providers.google",
+    "allauth.socialaccount.providers.facebook",
+    "allauth.socialaccount.providers.apple",
+    "dj_rest_auth",
+    "dj_rest_auth.registration",
+
     # Local apps
     "authentication",
     "charging_stations",
@@ -298,6 +305,67 @@ ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 # The following new format settings are commented out because they're causing issues
 # ACCOUNT_LOGIN_METHODS = {'email'}
 # ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
+
+# Social Authentication Settings
+SOCIALACCOUNT_PROVIDERS = {
+    'google': {
+        'APP': {
+            'client_id': os.environ.get('GOOGLE_CLIENT_ID', ''),
+            'secret': os.environ.get('GOOGLE_CLIENT_SECRET', ''),
+            'key': ''
+        },
+        'SCOPE': [
+            'profile',
+            'email',
+        ],
+        'AUTH_PARAMS': {
+            'access_type': 'online',
+        }
+    },
+    'facebook': {
+        'APP': {
+            'client_id': os.environ.get('FACEBOOK_CLIENT_ID', ''),
+            'secret': os.environ.get('FACEBOOK_CLIENT_SECRET', ''),
+            'key': ''
+        },
+        'SCOPE': [
+            'email',
+            'public_profile',
+        ],
+        'FIELDS': [
+            'id',
+            'email',
+            'name',
+            'first_name',
+            'last_name',
+            'picture',
+        ],
+    },
+    'apple': {
+        'APP': {
+            'client_id': os.environ.get('APPLE_CLIENT_ID', ''),
+            'secret': os.environ.get('APPLE_CLIENT_SECRET', ''),
+            'key': os.environ.get('APPLE_KEY_ID', ''),
+            'certificate_key': os.environ.get('APPLE_CERTIFICATE_KEY', '')
+        },
+        'SCOPE': [
+            'email',
+            'name',
+        ],
+    }
+}
+
+# Social account settings
+SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
+SOCIALACCOUNT_EMAIL_REQUIRED = True
+SOCIALACCOUNT_QUERY_EMAIL = True
+SOCIALACCOUNT_AUTO_SIGNUP = True
+SOCIALACCOUNT_ADAPTER = 'authentication.adapters.CustomSocialAccountAdapter'
+
+# REST Auth settings
+REST_USE_JWT = True
+JWT_AUTH_COOKIE = 'mengedmate-auth'
+JWT_AUTH_REFRESH_COOKIE = 'mengedmate-refresh'
 
 # Media files
 MEDIA_URL = '/media/'

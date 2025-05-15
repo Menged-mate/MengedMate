@@ -36,12 +36,10 @@ class UserProfileSerializer(serializers.ModelSerializer):
         read_only_fields = ('id', 'email', 'is_verified', 'ev_connector_type_display')
 
     def get_ev_connector_type_display(self, obj):
-        """Return the display name for the EV connector type."""
         return obj.get_ev_connector_type_display() if obj.ev_connector_type else None
 
 
 class RegisterSerializer(serializers.ModelSerializer):
-    """Serializer for user registration."""
     password = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
     password2 = serializers.CharField(write_only=True, required=True, style={'input_type': 'password'})
 
