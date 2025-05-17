@@ -66,7 +66,6 @@ class RegisterSerializer(serializers.ModelSerializer):
         return attrs
 
     def create(self, validated_data):
-        # Generate a 6-digit verification code
         verification_code = ''.join(random.choices(string.digits, k=6))
 
         user = User.objects.create_user(
@@ -163,8 +162,6 @@ class ForgotPasswordSerializer(serializers.Serializer):
         try:
             user = User.objects.get(email=value)
         except User.DoesNotExist:
-            # We don't want to reveal if a user exists or not for security reasons
-            # So we'll just pass validation and handle it in the view
             pass
         return value
 
@@ -183,11 +180,10 @@ class ResetPasswordSerializer(serializers.Serializer):
         except User.DoesNotExist:
             raise serializers.ValidationError({"email": "User with this email does not exist."})
 
-        # Check if the reset token is valid
+        
         if not hasattr(user, 'password_reset_token') or user.password_reset_token != attrs.get('token'):
             raise serializers.ValidationError({"token": "Invalid or expired token."})
 
-        # Validate the new password
         try:
             validate_password(attrs.get('new_password'), user)
         except ValidationError as e:
@@ -203,7 +199,6 @@ class ResetPasswordSerializer(serializers.Serializer):
         try:
             user = User.objects.get(email=email)
             user.set_password(new_password)
-            # Clear the reset token after use
             user.password_reset_token = None
             user.save()
             return user
@@ -211,7 +206,6 @@ class ResetPasswordSerializer(serializers.Serializer):
             raise serializers.ValidationError({"email": "User with this email does not exist."})
 
 
-# Custom serializers for dj-rest-auth
 class CustomUserDetailsSerializer(UserDetailsSerializer):
     """
     Custom user details serializer for dj-rest-auth that doesn't require a username field.

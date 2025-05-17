@@ -26,7 +26,6 @@ class CustomUserManager(BaseUserManager):
 
 
 class CustomUser(AbstractUser):
-    # EV connector type choices
     class EVConnectorType(models.TextChoices):
         TYPE_1 = 'type1', _('Type 1 (J1772)')
         TYPE_2 = 'type2', _('Type 2 (Mennekes)')
@@ -43,7 +42,6 @@ class CustomUser(AbstractUser):
     verification_code = models.CharField(max_length=6, blank=True, null=True)
     password_reset_token = models.CharField(max_length=100, blank=True, null=True)
 
-    # Profile fields
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True)
@@ -51,7 +49,6 @@ class CustomUser(AbstractUser):
     zip_code = models.CharField(max_length=20, blank=True, null=True)
     profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
 
-    # EV specific fields
     ev_battery_capacity_kwh = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True,
                                                  help_text=_('Battery capacity in kWh'))
     ev_connector_type = models.CharField(max_length=20, choices=EVConnectorType.choices,

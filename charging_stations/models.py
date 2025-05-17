@@ -23,9 +23,14 @@ class StationOwner(models.Model):
     )
 
     # Documents for verification
+    business_document = models.FileField(upload_to='station_owner_docs/business_docs/', blank=True, null=True)
     business_license = models.FileField(upload_to='station_owner_docs/licenses/', blank=True, null=True)
     id_proof = models.FileField(upload_to='station_owner_docs/id_proofs/', blank=True, null=True)
     utility_bill = models.FileField(upload_to='station_owner_docs/utility_bills/', blank=True, null=True)
+
+    # Contact information
+    contact_phone = models.CharField(max_length=20, blank=True, null=True)
+    contact_email = models.EmailField(blank=True, null=True)
 
     # Additional information
     website = models.URLField(blank=True, null=True)
@@ -61,8 +66,13 @@ class ChargingStation(models.Model):
 
     # Station details
     description = models.TextField(blank=True, null=True)
-    amenities = models.TextField(blank=True, null=True)  # Comma-separated list of amenities
     opening_hours = models.TextField(blank=True, null=True)  # JSON format for opening hours
+
+    # Amenities
+    has_restroom = models.BooleanField(default=False)
+    has_wifi = models.BooleanField(default=False)
+    has_restaurant = models.BooleanField(default=False)
+    has_shopping = models.BooleanField(default=False)
 
     # Status
     is_active = models.BooleanField(default=True)
@@ -107,9 +117,11 @@ class ChargingConnector(models.Model):
 
     station = models.ForeignKey(ChargingStation, on_delete=models.CASCADE, related_name='connectors')
     connector_type = models.CharField(max_length=20, choices=ConnectorType.choices)
-    power_output = models.DecimalField(max_digits=6, decimal_places=2, help_text='Power in kW')
+    power_kw = models.DecimalField(max_digits=6, decimal_places=2, help_text='Power in kW')
     quantity = models.PositiveIntegerField(default=1)
     price_per_kwh = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
+    is_available = models.BooleanField(default=True)
+    description = models.TextField(blank=True, null=True)
 
     def __str__(self):
-        return f"{self.get_connector_type_display()} - {self.power_output}kW"
+        return f"{self.get_connector_type_display()} - {self.power_kw}kW"

@@ -23,6 +23,9 @@ facebook-sdk>=3.1.0
 # Apple
 PyJWT>=2.8.0
 
+# Admin panel
+django-jazzmin>=2.6.0
+
 # Other dependencies
 Pillow>=9.5.0
 python-dotenv>=1.0.0
