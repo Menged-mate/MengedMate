@@ -66,21 +66,19 @@ class ChargingStation(models.Model):
     zip_code = models.CharField(max_length=20)
     country = models.CharField(max_length=100, default='United States')
 
-    # Location coordinates
     latitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
 
-    # Station details
+    
     description = models.TextField(blank=True, null=True)
     opening_hours = models.TextField(blank=True, null=True)  # JSON format for opening hours
 
-    # Amenities
+    
     has_restroom = models.BooleanField(default=False)
     has_wifi = models.BooleanField(default=False)
     has_restaurant = models.BooleanField(default=False)
     has_shopping = models.BooleanField(default=False)
 
-    # Status
     is_active = models.BooleanField(default=True)
     is_operational = models.BooleanField(default=True)
     is_public = models.BooleanField(default=True)
@@ -90,20 +88,17 @@ class ChargingStation(models.Model):
         default=StationStatus.OPERATIONAL
     )
 
-    # Rating
     rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.0)
     rating_count = models.PositiveIntegerField(default=0)
 
-    # Pricing and availability
+
     price_range = models.CharField(max_length=20, blank=True, null=True)  # e.g., "$-$$"
     available_connectors = models.PositiveIntegerField(default=0)
     total_connectors = models.PositiveIntegerField(default=0)
 
-    # Images
     main_image = models.ImageField(upload_to='station_images/', blank=True, null=True)
     marker_icon = models.CharField(max_length=50, blank=True, null=True, default='default')
 
-    # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 

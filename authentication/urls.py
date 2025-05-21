@@ -1,5 +1,6 @@
-from django.urls import path
+from django.urls import path, include
 from django.http import JsonResponse
+from rest_framework.routers import DefaultRouter
 from .views import (
     RegisterView,
     VerifyEmailView,
@@ -14,7 +15,8 @@ from .views import (
     FacebookLoginView,
     AppleLoginView,
     SocialAuthCallbackView,
-    CheckEmailVerificationView
+    CheckEmailVerificationView,
+    VehicleViewSet
 )
 from .notification_views import (
     NotificationListView,
@@ -27,6 +29,9 @@ app_name = 'authentication'
 
 def test_view(request):
     return JsonResponse({"message": "API is working!"})
+
+router = DefaultRouter()
+router.register(r'vehicles', VehicleViewSet, basename='vehicle')
 
 urlpatterns = [
     path('test/', test_view, name='test'),
@@ -54,4 +59,6 @@ urlpatterns = [
     path('notifications/<int:notification_id>/mark-read/', NotificationMarkReadView.as_view(), name='notification-mark-read'),
     path('notifications/<int:notification_id>/delete/', NotificationDeleteView.as_view(), name='notification-delete'),
     path('notifications/test/', NotificationTestView.as_view(), name='notification-test'),
+
+    path('', include(router.urls)),
 ]

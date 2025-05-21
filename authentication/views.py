@@ -1,4 +1,4 @@
-from rest_framework import status, generics
+from rest_framework import status, generics, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import AllowAny, IsAuthenticated
@@ -31,7 +31,9 @@ from .serializers import (
     ResendVerificationSerializer,
     ChangePasswordSerializer,
     ForgotPasswordSerializer,
-    ResetPasswordSerializer
+    ResetPasswordSerializer,
+    VehicleSerializer,
+    VehicleListSerializer
 )
 
 User = get_user_model()
@@ -467,3 +469,20 @@ class CheckEmailVerificationView(APIView):
             return Response({
                 "message": "User with this email does not exist."
             }, status=status.HTTP_404_NOT_FOUND)
+
+
+class VehicleViewSet(viewsets.ModelViewSet):
+    permission_classes = [IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    serializer_class = VehicleSerializer
+
+    def get_queryset(self):
+        return Vehicle.objects.filter(user=self.request.user)
+
+    def perform_create(self, serializer):
+        serializer.save(user=self.request.user)
+
+    def get_serializer_class(self):
+        if self.action == 'list':
+            return VehicleListSerializer
+        return VehicleSerializer

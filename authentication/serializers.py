@@ -8,6 +8,7 @@ from django.utils.crypto import get_random_string
 from dj_rest_auth.registration.serializers import RegisterSerializer as DjRestAuthRegisterSerializer
 from dj_rest_auth.serializers import LoginSerializer as DjRestAuthLoginSerializer
 from dj_rest_auth.serializers import UserDetailsSerializer
+from .models import Vehicle
 import random
 import string
 import uuid
@@ -274,3 +275,34 @@ class CustomLoginSerializer(DjRestAuthLoginSerializer):
 
         attrs['user'] = user
         return attrs
+
+
+class VehicleSerializer(serializers.ModelSerializer):
+    connector_type_display = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Vehicle
+        fields = (
+            'id', 'name', 'make', 'model', 'year',
+            'battery_capacity_kwh', 'connector_type',
+            'connector_type_display', 'is_primary',
+            'created_at', 'updated_at'
+        )
+        read_only_fields = ('id', 'created_at', 'updated_at')
+
+    def get_connector_type_display(self, obj):
+        return obj.get_connector_type_display()
+
+    def validate(self, attrs):
+        # If this is a new vehicle and is_primary is True, or if is_primary is being set to True
+        if (not self.instance and attrs.get('is_primary', False)) or \
+           (self.instance and attrs.get('is_primary', False) and not self.instance.is_primary):
+            # Set all other vehicles of this user to not primary
+            Vehicle.objects.filter(user=self.context['request'].user, is_primary=True).update(is_primary=False)
+        return attrs
+
+
+class VehicleListSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = Vehicle
+        fields = ('id', 'name', 'make', 'model', 'year', 'is_primary')

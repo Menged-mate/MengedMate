@@ -98,3 +98,37 @@ class CustomUser(AbstractUser):
         """Set notification preferences from a dictionary"""
         self.notification_preferences = json.dumps(preferences)
         self.save(update_fields=['notification_preferences'])
+
+
+class Vehicle(models.Model):
+    class EVConnectorType(models.TextChoices):
+        TYPE_1 = 'type1', _('Type 1 (J1772)')
+        TYPE_2 = 'type2', _('Type 2 (Mennekes)')
+        CCS1 = 'ccs1', _('CCS Combo 1')
+        CCS2 = 'ccs2', _('CCS Combo 2')
+        CHADEMO = 'chademo', _('CHAdeMO')
+        TESLA = 'tesla', _('Tesla')
+        OTHER = 'other', _('Other')
+        NONE = 'none', _('None')
+
+    user = models.ForeignKey(CustomUser, on_delete=models.CASCADE, related_name='vehicles')
+    name = models.CharField(max_length=100, help_text=_('Vehicle name or nickname'))
+    make = models.CharField(max_length=100)
+    model = models.CharField(max_length=100)
+    year = models.PositiveIntegerField()
+    battery_capacity_kwh = models.DecimalField(max_digits=6, decimal_places=2)
+    connector_type = models.CharField(max_length=20, choices=EVConnectorType.choices)
+    is_primary = models.BooleanField(default=False)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-is_primary', '-created_at']
+
+    def __str__(self):
+        return f"{self.year} {self.make} {self.model} ({self.name})"
+
+    def save(self, *args, **kwargs):
+        if self.is_primary:
+            Vehicle.objects.filter(user=self.user, is_primary=True).exclude(pk=self.pk).update(is_primary=False)
+        super().save(*args, **kwargs)
