@@ -16,8 +16,6 @@ User = get_user_model()
 
 
 class UserSerializer(serializers.ModelSerializer):
-    """Serializer for the custom user model."""
-
     class Meta:
         model = User
         fields = ('id', 'email', 'first_name', 'last_name', 'is_verified')
@@ -25,8 +23,9 @@ class UserSerializer(serializers.ModelSerializer):
 
 
 class UserProfileSerializer(serializers.ModelSerializer):
-    """Serializer for the user profile."""
     ev_connector_type_display = serializers.SerializerMethodField()
+    notification_preferences = serializers.SerializerMethodField()
+    unread_notifications_count = serializers.IntegerField(source='unread_notifications', read_only=True)
 
     class Meta:
         model = User
@@ -34,12 +33,25 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'id', 'email', 'first_name', 'last_name',
             'phone_number', 'address', 'city', 'state', 'zip_code',
             'profile_picture', 'is_verified', 'ev_battery_capacity_kwh',
-            'ev_connector_type', 'ev_connector_type_display'
+            'ev_connector_type', 'ev_connector_type_display',
+            'notification_preferences', 'unread_notifications_count'
         )
-        read_only_fields = ('id', 'email', 'is_verified', 'ev_connector_type_display')
+        read_only_fields = ('id', 'email', 'is_verified', 'ev_connector_type_display',
+                           'unread_notifications_count')
 
     def get_ev_connector_type_display(self, obj):
         return obj.get_ev_connector_type_display() if obj.ev_connector_type else None
+
+    def get_notification_preferences(self, obj):
+        return obj.get_notification_preferences()
+
+    def update(self, instance, validated_data):
+        # Handle notification preferences separately
+        notification_preferences = self.initial_data.get('notification_preferences')
+        if notification_preferences:
+            instance.set_notification_preferences(notification_preferences)
+
+        return super().update(instance, validated_data)
 
 
 class RegisterSerializer(serializers.ModelSerializer):
@@ -57,7 +69,6 @@ class RegisterSerializer(serializers.ModelSerializer):
     def validate(self, attrs):
         if attrs['password'] != attrs['password2']:
             raise serializers.ValidationError({"password": "Password fields didn't match."})
-
         try:
             validate_password(attrs['password'])
         except ValidationError as e:
@@ -82,7 +93,6 @@ class RegisterSerializer(serializers.ModelSerializer):
 
 
 class VerifyEmailSerializer(serializers.Serializer):
-    """Serializer for email verification."""
     email = serializers.EmailField(required=True)
     verification_code = serializers.CharField(required=True)
 
@@ -105,13 +115,11 @@ class VerifyEmailSerializer(serializers.Serializer):
 
 
 class LoginSerializer(serializers.Serializer):
-    """Serializer for user login."""
     email = serializers.EmailField(required=True)
     password = serializers.CharField(required=True, style={'input_type': 'password'})
 
 
 class ResendVerificationSerializer(serializers.Serializer):
-    """Serializer for resending verification code."""
     email = serializers.EmailField(required=True)
 
     def validate(self, attrs):
@@ -129,7 +137,6 @@ class ResendVerificationSerializer(serializers.Serializer):
 
 
 class ChangePasswordSerializer(serializers.Serializer):
-    """Serializer for changing password."""
     current_password = serializers.CharField(required=True, style={'input_type': 'password'})
     new_password = serializers.CharField(required=True, style={'input_type': 'password'})
 
@@ -154,7 +161,6 @@ class ChangePasswordSerializer(serializers.Serializer):
 
 
 class ForgotPasswordSerializer(serializers.Serializer):
-    """Serializer for requesting a password reset email."""
     email = serializers.EmailField(required=True)
 
     def validate_email(self, value):
@@ -167,7 +173,6 @@ class ForgotPasswordSerializer(serializers.Serializer):
 
 
 class ResetPasswordSerializer(serializers.Serializer):
-    """Serializer for resetting password with token."""
     token = serializers.CharField(required=True)
     email = serializers.EmailField(required=True)
     new_password = serializers.CharField(required=True, style={'input_type': 'password'})
@@ -180,7 +185,7 @@ class ResetPasswordSerializer(serializers.Serializer):
         except User.DoesNotExist:
             raise serializers.ValidationError({"email": "User with this email does not exist."})
 
-        
+
         if not hasattr(user, 'password_reset_token') or user.password_reset_token != attrs.get('token'):
             raise serializers.ValidationError({"token": "Invalid or expired token."})
 
@@ -207,9 +212,6 @@ class ResetPasswordSerializer(serializers.Serializer):
 
 
 class CustomUserDetailsSerializer(UserDetailsSerializer):
-    """
-    Custom user details serializer for dj-rest-auth that doesn't require a username field.
-    """
     class Meta:
         model = User
         fields = ('id', 'email', 'first_name', 'last_name', 'is_verified')
@@ -217,9 +219,6 @@ class CustomUserDetailsSerializer(UserDetailsSerializer):
 
 
 class CustomRegisterSerializer(DjRestAuthRegisterSerializer):
-    """
-    Custom registration serializer for dj-rest-auth that uses email instead of username.
-    """
     username = None
     email = serializers.EmailField(required=True)
     first_name = serializers.CharField(required=True)
@@ -253,9 +252,6 @@ class CustomRegisterSerializer(DjRestAuthRegisterSerializer):
 
 
 class CustomLoginSerializer(DjRestAuthLoginSerializer):
-    """
-    Custom login serializer for dj-rest-auth that uses email instead of username.
-    """
     username = None
     email = serializers.EmailField(required=True)
     password = serializers.CharField(style={'input_type': 'password'})
@@ -269,9 +265,9 @@ class CustomLoginSerializer(DjRestAuthLoginSerializer):
             if not user:
                 msg = _('Unable to log in with provided credentials.')
                 raise serializers.ValidationError(msg, code='authorization')
-            if not user.is_verified:
-                msg = _('Email is not verified.')
-                raise serializers.ValidationError(msg, code='authorization')
+
+            # We'll handle unverified emails in the view, not as an error here
+            # This allows the app to redirect to verification page
         else:
             msg = _('Must include "email" and "password".')
             raise serializers.ValidationError(msg, code='authorization')

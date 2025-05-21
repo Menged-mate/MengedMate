@@ -23,19 +23,15 @@ BASE_DIR = Path(__file__).resolve().parent.parent
 
 SECRET_KEY = os.environ.get('SECRET_KEY', "django-insecure-y!$8furov9c90*rxcky-y-+1@mh(wj_w(o9@#2bt-_aq97&kr!")
 
-# SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
 ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com').split(',')
 
 
-# Application definition
 
 INSTALLED_APPS = [
-    # Admin theme
     "jazzmin",
 
-    # Django default apps
     "django.contrib.admin",
     "django.contrib.auth",
     "django.contrib.contenttypes",
@@ -59,94 +55,64 @@ INSTALLED_APPS = [
     "dj_rest_auth",
     "dj_rest_auth.registration",
 
-    # Local apps
     "authentication",
     "charging_stations",
 ]
 
-# Jazzmin Admin Theme Settings
 JAZZMIN_SETTINGS = {
-    # title of the window (Will default to current_admin_site.site_title if absent or None)
     "site_title": "MengedMate Admin",
 
-    # Title on the login screen (19 chars max) (defaults to current_admin_site.site_header if absent or None)
     "site_header": "MengedMate",
 
-    # Title on the brand (19 chars max) (defaults to current_admin_site.site_header if absent or None)
     "site_brand": "MengedMate",
 
-    # Logo to use for your site, must be present in static files, used for brand on top left
     "site_logo": None,
 
-    # Logo to use for your site, must be present in static files, used for login form logo (defaults to site_logo)
     "login_logo": None,
 
-    # CSS classes that are applied to the logo above
     "site_logo_classes": "img-circle",
 
-    # Relative path to a favicon for your site, will default to site_logo if absent (ideally 32x32 px)
     "site_icon": None,
 
-    # Welcome text on the login screen
     "welcome_sign": "Welcome to MengedMate Admin",
 
-    # Copyright on the footer
     "copyright": "MengedMate Ltd",
 
-    # List of model admins to search from the search bar, search bar omitted if excluded
-    # If you want to use a single search field you don't need to use a list, you can use a simple string
+    
     "search_model": ["authentication.CustomUser", "charging_stations.ChargingStation"],
 
-    # Field name on user model that contains avatar ImageField/URLField/Charfield or a callable that receives the user
     "user_avatar": None,
 
-    ############
-    # Top Menu #
-    ############
-    # Links to put along the top menu
     "topmenu_links": [
-        # Url that gets reversed (Permissions can be added)
         {"name": "Home", "url": "admin:index", "permissions": ["auth.view_user"]},
 
-        # External url that opens in a new window (Permissions can be added)
         {"name": "Support", "url": "https://github.com/yourusername/mengedmate/issues", "new_window": True},
 
-        # Model admin to link to (Permissions checked against model)
         {"model": "authentication.CustomUser"},
 
-        # App with dropdown menu to all its models pages
         {"app": "charging_stations"},
     ],
 
-    #############
-    # User Menu #
-    #############
-    # Additional links to include in the user menu on the top right ("app" url type is not allowed)
+   
     "usermenu_links": [
-        {"name": "Support", "url": "https://github.com/yourusername/mengedmate/issues", "new_window": True},
+        {"name": "Support", "url": "https://github.com/Megedmate/mengedmate/issues", "new_window": True},
         {"model": "auth.user"}
     ],
 
-    #############
-    # Side Menu #
-    #############
-    # Whether to display the side menu
+   
     "show_sidebar": True,
 
-    # Whether to aut expand the menu
     "navigation_expanded": True,
 
-    # Hide these apps when generating side menu e.g (auth)
+    
     "hide_apps": [],
 
-    # Hide these models when generating side menu (e.g auth.user)
+
     "hide_models": [],
 
-    # List of apps (and/or models) to base side menu ordering off of (does not need to contain all apps/models)
     "order_with_respect_to": ["authentication", "charging_stations"],
 
-    # Custom icons for side menu apps/models
-    # Icons should be a font awesome icon name (without the fa- prefix)
+   
     "icons": {
         "auth": "fas fa-users-cog",
         "auth.user": "fas fa-user",
@@ -155,45 +121,28 @@ JAZZMIN_SETTINGS = {
         "charging_stations.ChargingStation": "fas fa-charging-station",
     },
 
-    # Icons that are used when one is not manually specified
     "default_icon_parents": "fas fa-chevron-circle-right",
     "default_icon_children": "fas fa-circle",
 
-    #################
-    # Related Modal #
-    #################
-    # Use modals instead of popups
+    
     "related_modal_active": True,
 
-    #############
-    # UI Tweaks #
-    #############
-    # Relative paths to custom CSS/JS scripts (must be present in static files)
+   
     "custom_css": None,
     "custom_js": None,
 
-    # Whether to show the UI customizer on the sidebar
+ 
     "show_ui_builder": False,
 
-    ###############
-    # Change view #
-    ###############
-    # Render out the change view as a single form, or in tabs, current options are
-    # - single
-    # - horizontal_tabs (default)
-    # - vertical_tabs
-    # - collapsible
-    # - carousel
+   
     "changeform_format": "horizontal_tabs",
 
-    # override change forms on a per modeladmin basis
     "changeform_format_overrides": {
         "auth.user": "collapsible",
         "auth.group": "vertical_tabs",
     },
 }
 
-# Jazzmin UI Customizer settings
 JAZZMIN_UI_TWEAKS = {
     "navbar_small_text": False,
     "footer_small_text": False,
@@ -262,11 +211,7 @@ TEMPLATES = [
 WSGI_APPLICATION = "mengedmate.wsgi.application"
 
 
-# Database
-# https://docs.djangoproject.com/en/dev/ref/settings/#databases
 
-# Database configuration
-# Use DATABASE_URL if available, otherwise fall back to SQLite
 database_url = os.environ.get('DATABASE_URL')
 if database_url:
     DATABASES = {
@@ -276,7 +221,6 @@ if database_url:
         )
     }
 else:
-    # Fall back to SQLite
     DATABASES = {
         "default": {
             "ENGINE": "django.db.backends.sqlite3",
@@ -285,8 +229,7 @@ else:
     }
 
 
-# Password validation
-# https://docs.djangoproject.com/en/dev/ref/settings/#auth-password-validators
+
 
 AUTH_PASSWORD_VALIDATORS = [
     {
@@ -304,8 +247,6 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
-# Internationalization
-# https://docs.djangoproject.com/en/dev/topics/i18n/
 
 LANGUAGE_CODE = "en-us"
 
@@ -316,61 +257,50 @@ USE_I18N = True
 USE_TZ = True
 
 
-# Static files (CSS, JavaScript, Images)
-# https://docs.djangoproject.com/en/dev/howto/static-files/
+
 
 STATIC_URL = '/static/'
 STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
 
-# WhiteNoise configuration
-# Use a simpler storage backend to avoid issues
+
 STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
-# Extra places for collectstatic to find static files
-# Create the static directory if it doesn't exist
+
 static_dir = os.path.join(BASE_DIR, 'static')
 if not os.path.exists(static_dir):
     os.makedirs(static_dir)
 
-# Static files directories
 STATICFILES_DIRS = [
     static_dir,
 ]
 
-# Default primary key field type
-# https://docs.djangoproject.com/en/dev/ref/settings/#default-auto-field
+
 
 DEFAULT_AUTO_FIELD = "django.db.models.BigAutoField"
 
-# Custom user model
 AUTH_USER_MODEL = "authentication.CustomUser"
 
-# Django Rest Framework settings - more permissive for troubleshooting
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'authentication.authentication.BypassableTokenAuthentication',  # Custom authentication
+        'authentication.authentication.BypassableTokenAuthentication', 
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication',  # Add basic auth for testing
+        'rest_framework.authentication.BasicAuthentication', 
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  # Allow any access for troubleshooting
+        'rest_framework.permissions.AllowAny',  
     ],
-    # Disable throttling for testing
     'DEFAULT_THROTTLE_CLASSES': [],
     'DEFAULT_THROTTLE_RATES': {
         'anon': None,
         'user': None,
     },
-    # More detailed exception handling
     'EXCEPTION_HANDLER': 'rest_framework.views.exception_handler',
-    # Disable browsable API in production
     'DEFAULT_RENDERER_CLASSES': (
         'rest_framework.renderers.JSONRenderer',
         'rest_framework.renderers.BrowsableAPIRenderer',
     ),
 }
 
-# CORS settings
 CORS_ALLOW_ALL_ORIGINS = True
 CORS_ALLOW_CREDENTIALS = True
 
@@ -383,7 +313,6 @@ CORS_ALLOW_CREDENTIALS = True
 #     'https://mengedmate.com'
 # ]
 
-# Allow all methods
 CORS_ALLOW_METHODS = [
     'DELETE',
     'GET',
@@ -393,7 +322,6 @@ CORS_ALLOW_METHODS = [
     'PUT',
 ]
 
-# Allow all headers - use a list of strings, not '*'
 CORS_ALLOW_HEADERS = [
     'accept',
     'accept-encoding',
@@ -411,12 +339,11 @@ CORS_ALLOW_HEADERS = [
     'access-control-allow-credentials',
 ]
 
-# Additional CORS settings
-CORS_PREFLIGHT_MAX_AGE = 86400  # 24 hours
+
+CORS_PREFLIGHT_MAX_AGE = 86400  
 CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
 
-# Security settings for production - all disabled for troubleshooting
-# We'll re-enable these once the basic functionality is working
+
 SECURE_SSL_REDIRECT = False
 SESSION_COOKIE_SECURE = False
 CSRF_COOKIE_SECURE = False
@@ -438,13 +365,10 @@ CSRF_COOKIE_NAME = 'csrftoken'
 
 CSRF_COOKIE_SAMESITE = None
 
-# Email settings for Gmail
 if DEBUG:
-    # Use console backend for development
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     print("Using console email backend for development")
 else:
-    # Use SMTP backend for production
     EMAIL_BACKEND = 'django.core.mail.backends.smtp.EmailBackend'
     EMAIL_HOST = 'smtp.gmail.com'
     EMAIL_PORT = 587
@@ -455,7 +379,6 @@ else:
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'support@mengedmate.com')
 
 
-# Django-allauth settings
 ACCOUNT_AUTHENTICATION_METHOD = 'email'
 ACCOUNT_EMAIL_REQUIRED = True
 ACCOUNT_USERNAME_REQUIRED = False
@@ -465,11 +388,7 @@ ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
 ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
 
-# The following new format settings are commented out because they're causing issues
-# ACCOUNT_LOGIN_METHODS = {'email'}
-# ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
 
-# Social Authentication Settings
 SOCIALACCOUNT_PROVIDERS = {
     'google': {
         'APP': {
@@ -518,42 +437,42 @@ SOCIALACCOUNT_PROVIDERS = {
     }
 }
 
-# Social account settings
+
 SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
 SOCIALACCOUNT_EMAIL_REQUIRED = True
 SOCIALACCOUNT_QUERY_EMAIL = True
 SOCIALACCOUNT_AUTO_SIGNUP = True
 SOCIALACCOUNT_ADAPTER = 'authentication.adapters.CustomSocialAccountAdapter'
 
-# REST Auth settings
+
 REST_USE_JWT = True
 JWT_AUTH_COOKIE = 'mengedmate-auth'
 JWT_AUTH_REFRESH_COOKIE = 'mengedmate-refresh'
 
-# dj-rest-auth settings for email-based authentication
+
 REST_AUTH = {
     'USER_DETAILS_SERIALIZER': 'authentication.serializers.CustomUserDetailsSerializer',
     'REGISTER_SERIALIZER': 'authentication.serializers.CustomRegisterSerializer',
     'LOGIN_SERIALIZER': 'authentication.serializers.CustomLoginSerializer',
 }
 
-# Tell dj-rest-auth to use email instead of username
 ACCOUNT_ADAPTER = 'authentication.adapters.CustomAccountAdapter'
 REST_AUTH_REGISTER_SERIALIZERS = {
     'REGISTER_SERIALIZER': 'authentication.serializers.CustomRegisterSerializer',
 }
 
-# Specify the username field for dj-rest-auth
+
 ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 
-# Media files
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-# Frontend URL for password reset links (hosted on Vercel)
 FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://mengedmate.vercel.app')
 if DEBUG:
     FRONTEND_URL = 'http://localhost:3000'
 
-# Admin email for notifications
 ADMIN_EMAIL = 'admin@example.com'
+
+GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '')
+
+API_BASE_URL = os.environ.get('API_BASE_URL', '')

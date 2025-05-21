@@ -1,0 +1,724 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MengedMate - EV Charging Station Locator</title>
+    <link href="https://fonts.googleapis.com/css2?family=Roboto:wght@300;400;500;700&display=swap" rel="stylesheet">
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            font-family: 'Roboto', sans-serif;
+        }
+        
+        body, html {
+            height: 100%;
+            width: 100%;
+            overflow: hidden;
+        }
+        
+        .app-container {
+            display: flex;
+            flex-direction: column;
+            height: 100vh;
+            width: 100%;
+            position: relative;
+        }
+        
+        .header {
+            background-color: white;
+            padding: 10px 20px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.1);
+            z-index: 10;
+        }
+        
+        .logo {
+            font-size: 20px;
+            font-weight: 700;
+            color: #00a651;
+        }
+        
+        .search-bar {
+            flex: 1;
+            max-width: 600px;
+            margin: 0 20px;
+            position: relative;
+        }
+        
+        .search-input {
+            width: 100%;
+            padding: 10px 15px;
+            border-radius: 20px;
+            border: 1px solid #ddd;
+            outline: none;
+            font-size: 16px;
+        }
+        
+        .user-profile {
+            width: 32px;
+            height: 32px;
+            border-radius: 50%;
+            background-color: #f0f0f0;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+        }
+        
+        .user-profile img {
+            width: 100%;
+            height: 100%;
+            object-fit: cover;
+        }
+        
+        .map-container {
+            flex: 1;
+            position: relative;
+            width: 100%;
+            background-color: #f5f5f5;
+        }
+        
+        #map {
+            width: 100%;
+            height: 100%;
+        }
+        
+        .nearby-btn {
+            position: absolute;
+            bottom: 80px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #00a651;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 20px;
+            font-weight: 500;
+            box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .bottom-nav {
+            display: flex;
+            justify-content: space-around;
+            background-color: white;
+            padding: 10px 0;
+            box-shadow: 0 -2px 4px rgba(0,0,0,0.1);
+        }
+        
+        .nav-item {
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            color: #666;
+            text-decoration: none;
+            font-size: 12px;
+        }
+        
+        .nav-item.active {
+            color: #00a651;
+        }
+        
+        .nav-icon {
+            font-size: 24px;
+            margin-bottom: 4px;
+        }
+        
+        .station-marker {
+            width: 30px;
+            height: 40px;
+            cursor: pointer;
+        }
+        
+        .station-info {
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            right: 0;
+            background-color: white;
+            border-radius: 20px 20px 0 0;
+            padding: 20px;
+            box-shadow: 0 -2px 10px rgba(0,0,0,0.1);
+            transform: translateY(100%);
+            transition: transform 0.3s ease;
+            max-height: 70%;
+            overflow-y: auto;
+        }
+        
+        .station-info.active {
+            transform: translateY(0);
+        }
+        
+        .close-btn {
+            position: absolute;
+            top: 15px;
+            right: 15px;
+            background: none;
+            border: none;
+            font-size: 20px;
+            cursor: pointer;
+        }
+        
+        .station-header {
+            margin-bottom: 15px;
+        }
+        
+        .station-name {
+            font-size: 18px;
+            font-weight: 700;
+            margin-bottom: 5px;
+        }
+        
+        .station-address {
+            color: #666;
+            font-size: 14px;
+        }
+        
+        .station-details {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+        
+        .detail-item {
+            display: flex;
+            align-items: center;
+            gap: 8px;
+        }
+        
+        .detail-icon {
+            color: #00a651;
+            font-size: 18px;
+        }
+        
+        .connectors {
+            margin-top: 15px;
+        }
+        
+        .connector-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px solid #eee;
+        }
+        
+        .connector-type {
+            font-weight: 500;
+        }
+        
+        .connector-power {
+            color: #666;
+        }
+        
+        .connector-availability {
+            color: #00a651;
+        }
+        
+        .connector-availability.unavailable {
+            color: #ff3b30;
+        }
+        
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 20px;
+        }
+        
+        .action-btn {
+            flex: 1;
+            padding: 12px;
+            border-radius: 8px;
+            border: none;
+            font-weight: 500;
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: 8px;
+        }
+        
+        .directions-btn {
+            background-color: #00a651;
+            color: white;
+        }
+        
+        .favorite-btn {
+            background-color: #f0f0f0;
+            color: #333;
+        }
+        
+        /* Loading indicator */
+        .loading {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background-color: rgba(255,255,255,0.7);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+        
+        .spinner {
+            width: 40px;
+            height: 40px;
+            border: 4px solid #f3f3f3;
+            border-top: 4px solid #00a651;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+        
+        @keyframes spin {
+            0% { transform: rotate(0deg); }
+            100% { transform: rotate(360deg); }
+        }
+    </style>
+</head>
+<body>
+    <div class="app-container">
+        <div class="header">
+            <div class="logo">MengedMate</div>
+            <div class="search-bar">
+                <input type="text" class="search-input" placeholder="Search location or station name">
+            </div>
+            <div class="user-profile">
+                <img src="https://ui-avatars.com/api/?name=User&background=0D8ABC&color=fff" alt="User">
+            </div>
+        </div>
+        
+        <div class="map-container">
+            <div id="map"></div>
+            <button class="nearby-btn">
+                <span class="material-icons">near_me</span>
+                Nearby Stations
+            </button>
+            
+            <div class="station-info" id="stationInfo">
+                <button class="close-btn">&times;</button>
+                <div class="station-header">
+                    <h2 class="station-name">Sample Charging Station</h2>
+                    <p class="station-address">123 Example St, Washington, DC 20001</p>
+                </div>
+                
+                <div class="station-details">
+                    <div class="detail-item">
+                        <span class="detail-icon material-icons">bolt</span>
+                        <span>50 kW</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-icon material-icons">attach_money</span>
+                        <span>$0.35/kWh</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-icon material-icons">access_time</span>
+                        <span>Open 24/7</span>
+                    </div>
+                    <div class="detail-item">
+                        <span class="detail-icon material-icons">ev_station</span>
+                        <span>2/4 Available</span>
+                    </div>
+                </div>
+                
+                <div class="connectors">
+                    <h3>Connectors</h3>
+                    <div class="connector-item">
+                        <div class="connector-type">CCS Combo</div>
+                        <div class="connector-power">150 kW</div>
+                        <div class="connector-availability">Available</div>
+                    </div>
+                    <div class="connector-item">
+                        <div class="connector-type">CHAdeMO</div>
+                        <div class="connector-power">50 kW</div>
+                        <div class="connector-availability unavailable">Unavailable</div>
+                    </div>
+                </div>
+                
+                <div class="action-buttons">
+                    <button class="action-btn directions-btn">
+                        <span class="material-icons">directions</span>
+                        Directions
+                    </button>
+                    <button class="action-btn favorite-btn">
+                        <span class="material-icons">favorite_border</span>
+                        Favorite
+                    </button>
+                </div>
+            </div>
+        </div>
+        
+        <div class="bottom-nav">
+            <a href="#" class="nav-item active">
+                <span class="nav-icon material-icons">home</span>
+                <span>Home</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon material-icons">ev_station</span>
+                <span>Stations</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon material-icons">favorite</span>
+                <span>Favorites</span>
+            </a>
+            <a href="#" class="nav-item">
+                <span class="nav-icon material-icons">settings</span>
+                <span>Settings</span>
+            </a>
+        </div>
+    </div>
+    
+    <div class="loading" id="loading">
+        <div class="spinner"></div>
+    </div>
+    
+    <!-- Google Maps API -->
+    <script src="https://maps.googleapis.com/maps/api/js?key={{ google_maps_api_key }}&libraries=places&callback=initMap" async defer></script>
+    
+    <!-- Material Icons -->
+    <script src="https://fonts.googleapis.com/icon?family=Material+Icons"></script>
+    
+    <script>
+        // Global variables
+        let map;
+        let markers = [];
+        let currentInfoWindow = null;
+        let userLocation = null;
+        
+        // Initialize the map
+        function initMap() {
+            // Hide loading indicator
+            document.getElementById('loading').style.display = 'none';
+            
+            // Default center (Washington DC)
+            const defaultCenter = { lat: 38.9072, lng: -77.0369 };
+            
+            // Create the map
+            map = new google.maps.Map(document.getElementById('map'), {
+                center: defaultCenter,
+                zoom: 13,
+                mapTypeControl: false,
+                streetViewControl: false,
+                fullscreenControl: false,
+                zoomControl: true,
+                zoomControlOptions: {
+                    position: google.maps.ControlPosition.RIGHT_BOTTOM
+                }
+            });
+            
+            // Try to get user's location
+            if (navigator.geolocation) {
+                navigator.geolocation.getCurrentPosition(
+                    (position) => {
+                        userLocation = {
+                            lat: position.coords.latitude,
+                            lng: position.coords.longitude
+                        };
+                        
+                        // Center map on user's location
+                        map.setCenter(userLocation);
+                        
+                        // Add user marker
+                        new google.maps.Marker({
+                            position: userLocation,
+                            map: map,
+                            icon: {
+                                path: google.maps.SymbolPath.CIRCLE,
+                                scale: 10,
+                                fillColor: '#4285F4',
+                                fillOpacity: 1,
+                                strokeColor: '#FFFFFF',
+                                strokeWeight: 2
+                            },
+                            title: 'Your Location'
+                        });
+                        
+                        // Load nearby stations
+                        loadNearbyStations(userLocation.lat, userLocation.lng);
+                    },
+                    () => {
+                        // If geolocation fails, load stations at default center
+                        loadStations();
+                    }
+                );
+            } else {
+                // Browser doesn't support geolocation
+                loadStations();
+            }
+            
+            // Set up event listeners
+            setupEventListeners();
+        }
+        
+        // Load stations from API
+        function loadStations() {
+            fetch('/api/charging_stations/public/stations/')
+                .then(response => response.json())
+                .then(data => {
+                    addStationsToMap(data);
+                })
+                .catch(error => {
+                    console.error('Error loading stations:', error);
+                });
+        }
+        
+        // Load nearby stations
+        function loadNearbyStations(lat, lng, radius = 5) {
+            fetch(`/api/charging_stations/public/nearby-stations/?lat=${lat}&lng=${lng}&radius=${radius}`)
+                .then(response => response.json())
+                .then(data => {
+                    addStationsToMap(data);
+                })
+                .catch(error => {
+                    console.error('Error loading nearby stations:', error);
+                });
+        }
+        
+        // Add stations to the map
+        function addStationsToMap(stations) {
+            // Clear existing markers
+            clearMarkers();
+            
+            // Add new markers
+            stations.forEach(station => {
+                const marker = new google.maps.Marker({
+                    position: { lat: parseFloat(station.latitude), lng: parseFloat(station.longitude) },
+                    map: map,
+                    title: station.name,
+                    icon: {
+                        url: `/static/img/markers/${station.marker_icon || 'default'}.png`,
+                        scaledSize: new google.maps.Size(30, 40)
+                    }
+                });
+                
+                // Store station data with marker
+                marker.station = station;
+                
+                // Add click event
+                marker.addListener('click', () => {
+                    showStationInfo(station);
+                });
+                
+                markers.push(marker);
+            });
+        }
+        
+        // Clear all markers from the map
+        function clearMarkers() {
+            markers.forEach(marker => {
+                marker.setMap(null);
+            });
+            markers = [];
+        }
+        
+        // Show station info panel
+        function showStationInfo(station) {
+            const infoPanel = document.getElementById('stationInfo');
+            
+            // Update station info
+            infoPanel.querySelector('.station-name').textContent = station.name;
+            infoPanel.querySelector('.station-address').textContent = `${station.address}, ${station.city}, ${station.state}`;
+            
+            // Show the panel
+            infoPanel.classList.add('active');
+            
+            // Load detailed station info
+            fetch(`/api/charging_stations/public/stations/${station.id}/`)
+                .then(response => response.json())
+                .then(data => {
+                    updateStationDetails(data);
+                })
+                .catch(error => {
+                    console.error('Error loading station details:', error);
+                });
+        }
+        
+        // Update station details in the info panel
+        function updateStationDetails(station) {
+            const infoPanel = document.getElementById('stationInfo');
+            
+            // Update connector list
+            const connectorsContainer = infoPanel.querySelector('.connectors');
+            connectorsContainer.innerHTML = '<h3>Connectors</h3>';
+            
+            station.connectors.forEach(connector => {
+                const connectorItem = document.createElement('div');
+                connectorItem.className = 'connector-item';
+                
+                const isAvailable = connector.is_available;
+                const availabilityClass = isAvailable ? 'connector-availability' : 'connector-availability unavailable';
+                const availabilityText = isAvailable ? 'Available' : 'Unavailable';
+                
+                connectorItem.innerHTML = `
+                    <div class="connector-type">${connector.connector_type_display}</div>
+                    <div class="connector-power">${connector.power_kw} kW</div>
+                    <div class="${availabilityClass}">${availabilityText}</div>
+                `;
+                
+                connectorsContainer.appendChild(connectorItem);
+            });
+            
+            // Update favorite button
+            const favoriteBtn = infoPanel.querySelector('.favorite-btn');
+            if (station.is_favorite) {
+                favoriteBtn.innerHTML = '<span class="material-icons">favorite</span> Favorited';
+            } else {
+                favoriteBtn.innerHTML = '<span class="material-icons">favorite_border</span> Favorite';
+            }
+            
+            // Update details
+            const detailsContainer = infoPanel.querySelector('.station-details');
+            detailsContainer.innerHTML = `
+                <div class="detail-item">
+                    <span class="detail-icon material-icons">bolt</span>
+                    <span>${station.available_connectors}/${station.total_connectors} Available</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-icon material-icons">attach_money</span>
+                    <span>${station.price_range || '$-$$'}</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-icon material-icons">star</span>
+                    <span>${station.rating} (${station.rating_count})</span>
+                </div>
+                <div class="detail-item">
+                    <span class="detail-icon material-icons">business</span>
+                    <span>${station.owner_name}</span>
+                </div>
+            `;
+            
+            // Add amenities if available
+            if (station.has_restroom || station.has_wifi || station.has_restaurant || station.has_shopping) {
+                const amenitiesContainer = document.createElement('div');
+                amenitiesContainer.className = 'amenities';
+                amenitiesContainer.innerHTML = '<h3>Amenities</h3>';
+                
+                const amenitiesList = document.createElement('div');
+                amenitiesList.className = 'station-details';
+                
+                if (station.has_restroom) {
+                    amenitiesList.innerHTML += `
+                        <div class="detail-item">
+                            <span class="detail-icon material-icons">wc</span>
+                            <span>Restroom</span>
+                        </div>
+                    `;
+                }
+                
+                if (station.has_wifi) {
+                    amenitiesList.innerHTML += `
+                        <div class="detail-item">
+                            <span class="detail-icon material-icons">wifi</span>
+                            <span>Wi-Fi</span>
+                        </div>
+                    `;
+                }
+                
+                if (station.has_restaurant) {
+                    amenitiesList.innerHTML += `
+                        <div class="detail-item">
+                            <span class="detail-icon material-icons">restaurant</span>
+                            <span>Restaurant</span>
+                        </div>
+                    `;
+                }
+                
+                if (station.has_shopping) {
+                    amenitiesList.innerHTML += `
+                        <div class="detail-item">
+                            <span class="detail-icon material-icons">shopping_cart</span>
+                            <span>Shopping</span>
+                        </div>
+                    `;
+                }
+                
+                amenitiesContainer.appendChild(amenitiesList);
+                infoPanel.insertBefore(amenitiesContainer, infoPanel.querySelector('.action-buttons'));
+            }
+        }
+        
+        // Set up event listeners
+        function setupEventListeners() {
+            // Close station info panel
+            document.querySelector('.close-btn').addEventListener('click', () => {
+                document.getElementById('stationInfo').classList.remove('active');
+            });
+            
+            // Nearby stations button
+            document.querySelector('.nearby-btn').addEventListener('click', () => {
+                if (userLocation) {
+                    loadNearbyStations(userLocation.lat, userLocation.lng);
+                } else if (navigator.geolocation) {
+                    navigator.geolocation.getCurrentPosition(
+                        (position) => {
+                            userLocation = {
+                                lat: position.coords.latitude,
+                                lng: position.coords.longitude
+                            };
+                            
+                            // Center map on user's location
+                            map.setCenter(userLocation);
+                            
+                            // Load nearby stations
+                            loadNearbyStations(userLocation.lat, userLocation.lng);
+                        },
+                        (error) => {
+                            console.error('Error getting location:', error);
+                            alert('Could not get your location. Please enable location services.');
+                        }
+                    );
+                } else {
+                    alert('Geolocation is not supported by this browser.');
+                }
+            });
+            
+            // Search input
+            const searchInput = document.querySelector('.search-input');
+            const searchBox = new google.maps.places.SearchBox(searchInput);
+            
+            searchBox.addListener('places_changed', () => {
+                const places = searchBox.getPlaces();
+                
+                if (places.length === 0) {
+                    return;
+                }
+                
+                const bounds = new google.maps.LatLngBounds();
+                
+                places.forEach(place => {
+                    if (!place.geometry || !place.geometry.location) {
+                        console.log('Returned place contains no geometry');
+                        return;
+                    }
+                    
+                    // Update user location
+                    userLocation = {
+                        lat: place.geometry.location.lat(),
+                        lng: place.geometry.location.lng()
+                    };
+                    
+                    // Load nearby stations
+                    loadNearbyStations(userLocation.lat, userLocation.lng);
+                    
+                    if (place.geometry.viewport) {
+                        bounds.union(place.geometry.viewport);
+                    } else {
+                        bounds.extend(place.geometry.location);
+                    }
+                });
+                
+                map.fitBounds(bounds);
+            });
+        }
+    </script>
+</body>
+</html>

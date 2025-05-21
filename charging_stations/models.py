@@ -51,6 +51,12 @@ class ChargingStation(models.Model):
     """
     Model for charging stations managed by station owners.
     """
+    class StationStatus(models.TextChoices):
+        OPERATIONAL = 'operational', _('Operational')
+        UNDER_MAINTENANCE = 'under_maintenance', _('Under Maintenance')
+        CLOSED = 'closed', _('Closed')
+        COMING_SOON = 'coming_soon', _('Coming Soon')
+
     id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     owner = models.ForeignKey(StationOwner, on_delete=models.CASCADE, related_name='stations')
     name = models.CharField(max_length=255)
@@ -76,9 +82,26 @@ class ChargingStation(models.Model):
 
     # Status
     is_active = models.BooleanField(default=True)
+    is_operational = models.BooleanField(default=True)
+    is_public = models.BooleanField(default=True)
+    status = models.CharField(
+        max_length=20,
+        choices=StationStatus.choices,
+        default=StationStatus.OPERATIONAL
+    )
+
+    # Rating
+    rating = models.DecimalField(max_digits=3, decimal_places=2, default=0.0)
+    rating_count = models.PositiveIntegerField(default=0)
+
+    # Pricing and availability
+    price_range = models.CharField(max_length=20, blank=True, null=True)  # e.g., "$-$$"
+    available_connectors = models.PositiveIntegerField(default=0)
+    total_connectors = models.PositiveIntegerField(default=0)
 
     # Images
     main_image = models.ImageField(upload_to='station_images/', blank=True, null=True)
+    marker_icon = models.CharField(max_length=50, blank=True, null=True, default='default')
 
     # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
@@ -125,3 +148,18 @@ class ChargingConnector(models.Model):
 
     def __str__(self):
         return f"{self.get_connector_type_display()} - {self.power_kw}kW"
+
+class FavoriteStation(models.Model):
+    """
+    Model for user's favorite charging stations.
+    """
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='favorite_stations')
+    station = models.ForeignKey(ChargingStation, on_delete=models.CASCADE, related_name='favorited_by')
+    created_at = models.DateTimeField(auto_now_add=True)
+
+    class Meta:
+        unique_together = ('user', 'station')
+        ordering = ['-created_at']
+
+    def __str__(self):
+        return f"{self.user.email} - {self.station.name}"

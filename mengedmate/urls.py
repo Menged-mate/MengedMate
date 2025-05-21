@@ -23,6 +23,7 @@ from django.http import JsonResponse, HttpResponse
 from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from django.views.decorators.csrf import csrf_exempt
+from charging_stations.home_views import HomeView, AppConfigView
 
 # Simple test view with explicit permission
 @api_view(['GET', 'POST'])
@@ -126,6 +127,10 @@ urlpatterns = [
 
     # Health check
     path("health/", health_check, name="health"),
+
+    # Home page with map
+    path("map/", HomeView.as_view(), name="home"),
+    path("api/config/", AppConfigView.as_view(), name="app-config"),
 
     # API info page (root URL)
     path("", api_info, name="api-info"),

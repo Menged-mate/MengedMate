@@ -1,7 +1,5 @@
 class AuthenticationBypassMiddleware:
-    """
-    Middleware to bypass authentication for specific endpoints.
-    """
+    
     def __init__(self, get_response):
         self.get_response = get_response
         self.public_paths = [

@@ -54,3 +54,6 @@ Thumbs.db
 
 .vercel
 
+/frontend/
+/web_frontend/
+/mobile_frontend/

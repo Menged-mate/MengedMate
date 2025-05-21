@@ -13,7 +13,14 @@ from .views import (
     GoogleLoginView,
     FacebookLoginView,
     AppleLoginView,
-    SocialAuthCallbackView
+    SocialAuthCallbackView,
+    CheckEmailVerificationView
+)
+from .notification_views import (
+    NotificationListView,
+    NotificationMarkReadView,
+    NotificationDeleteView,
+    NotificationTestView
 )
 
 app_name = 'authentication'
@@ -28,6 +35,7 @@ urlpatterns = [
     path('login/', LoginView.as_view(), name='login'),
     path('logout/', LogoutView.as_view(), name='logout'),
     path('resend-verification/', ResendVerificationView.as_view(), name='resend-verification'),
+    path('check-verification/', CheckEmailVerificationView.as_view(), name='check-verification'),
     path('profile/', UserProfileView.as_view(), name='profile'),
     path('change-password/', ChangePasswordView.as_view(), name='change-password'),
     path('forgot-password/', ForgotPasswordView.as_view(), name='forgot-password'),
@@ -39,4 +47,11 @@ urlpatterns = [
     path('social/facebook/', FacebookLoginView.as_view(), name='facebook-login'),
     path('social/apple/', AppleLoginView.as_view(), name='apple-login'),
     path('social/callback/', SocialAuthCallbackView.as_view(), name='social-callback'),
+
+    # Notifications
+    path('notifications/', NotificationListView.as_view(), name='notification-list'),
+    path('notifications/mark-read/', NotificationMarkReadView.as_view(), name='notification-mark-all-read'),
+    path('notifications/<int:notification_id>/mark-read/', NotificationMarkReadView.as_view(), name='notification-mark-read'),
+    path('notifications/<int:notification_id>/delete/', NotificationDeleteView.as_view(), name='notification-delete'),
+    path('notifications/test/', NotificationTestView.as_view(), name='notification-test'),
 ]
