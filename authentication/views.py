@@ -1,10 +1,12 @@
 from rest_framework import status, generics, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
+from rest_framework.decorators import action
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from .authentication import AnonymousAuthentication
+from .models import Vehicle
 from django.contrib.auth import get_user_model, authenticate
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -33,7 +35,9 @@ from .serializers import (
     ForgotPasswordSerializer,
     ResetPasswordSerializer,
     VehicleSerializer,
-    VehicleListSerializer
+    VehicleListSerializer,
+    VehicleSwitchSerializer,
+    VehicleStatsSerializer
 )
 
 User = get_user_model()
@@ -107,7 +111,7 @@ class VerifyEmailView(APIView):
 
 class LoginView(APIView):
     permission_classes = [AllowAny]
-    authentication_classes = [AnonymousAuthentication]  # Use custom authentication
+    authentication_classes = [AnonymousAuthentication] 
 
     def send_verification_email(self, user):
         subject = 'Verify your email for MengedMate'
@@ -143,12 +147,10 @@ class LoginView(APIView):
 
             if user is not None:
                 if not user.is_verified:
-                    # Generate a new verification code if needed
                     if not user.verification_code:
                         verification_code = ''.join(random.choices(string.digits, k=6))
                         user.verification_code = verification_code
                         user.save()
-                        # Send the verification email
                         self.send_verification_email(user)
 
                     return Response({
@@ -156,7 +158,7 @@ class LoginView(APIView):
                         "requires_verification": True,
                         "email": user.email,
                         "status": "unverified"
-                    }, status=status.HTTP_200_OK)  # Using 200 instead of 401 for better app handling
+                    }, status=status.HTTP_200_OK)
 
                 token, created = Token.objects.get_or_create(user=user)
 
@@ -410,10 +412,6 @@ class SocialAuthCallbackView(APIView):
 
 
 class CheckEmailVerificationView(APIView):
-    """
-    API view for checking if an email is verified.
-    This is useful for the Flutter app to determine if it should show the verification page.
-    """
     permission_classes = [AllowAny]
     authentication_classes = [AnonymousAuthentication]
 
@@ -434,13 +432,11 @@ class CheckEmailVerificationView(APIView):
                     "message": "Email is verified."
                 }, status=status.HTTP_200_OK)
             else:
-                # Generate a new verification code if needed
                 if not user.verification_code:
                     verification_code = ''.join(random.choices(string.digits, k=6))
                     user.verification_code = verification_code
                     user.save()
 
-                    # Send verification email
                     subject = 'Verify your email for MengedMate'
                     context = {
                         'user': user,
@@ -477,7 +473,13 @@ class VehicleViewSet(viewsets.ModelViewSet):
     serializer_class = VehicleSerializer
 
     def get_queryset(self):
-        return Vehicle.objects.filter(user=self.request.user)
+        queryset = Vehicle.objects.filter(user=self.request.user)
+
+        is_active = self.request.query_params.get('is_active')
+        if is_active is not None:
+            queryset = queryset.filter(is_active=is_active.lower() == 'true')
+
+        return queryset
 
     def perform_create(self, serializer):
         serializer.save(user=self.request.user)
@@ -485,4 +487,114 @@ class VehicleViewSet(viewsets.ModelViewSet):
     def get_serializer_class(self):
         if self.action == 'list':
             return VehicleListSerializer
+        elif self.action == 'stats':
+            return VehicleStatsSerializer
         return VehicleSerializer
+
+    @action(detail=True, methods=['post'])
+    def set_active(self, request, pk=None):
+        vehicle = self.get_object()
+        success = request.user.set_active_vehicle(vehicle)
+
+        if success:
+            return Response({
+                'message': f'{vehicle.get_display_name()} is now your active vehicle',
+                'active_vehicle_id': vehicle.id
+            })
+        else:
+            return Response({
+                'error': 'Failed to set active vehicle'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=True, methods=['post'])
+    def set_primary(self, request, pk=None):
+        vehicle = self.get_object()
+
+        Vehicle.objects.filter(user=request.user, is_primary=True).update(is_primary=False)
+
+        vehicle.is_primary = True
+        vehicle.save(update_fields=['is_primary'])
+
+        return Response({
+            'message': f'{vehicle.get_display_name()} is now your primary vehicle',
+            'primary_vehicle_id': vehicle.id
+        })
+
+    @action(detail=True, methods=['get'])
+    def charging_estimate(self, request, pk=None):
+        vehicle = self.get_object()
+
+        current_percentage = int(request.query_params.get('current_percentage', 20))
+        target_percentage = int(request.query_params.get('target_percentage', 80))
+
+        charging_time = vehicle.get_estimated_charging_time(target_percentage, current_percentage)
+        range_at_target = vehicle.get_range_at_percentage(target_percentage)
+
+        return Response({
+            'vehicle_id': vehicle.id,
+            'vehicle_name': vehicle.get_display_name(),
+            'current_percentage': current_percentage,
+            'target_percentage': target_percentage,
+            'estimated_charging_time_minutes': charging_time,
+            'estimated_range_at_target_km': range_at_target,
+            'battery_capacity_kwh': float(vehicle.battery_capacity_kwh),
+            'usable_battery_kwh': float(vehicle.usable_battery_kwh) if vehicle.usable_battery_kwh else None,
+            'max_charging_speed_kw': float(vehicle.max_charging_speed_kw) if vehicle.max_charging_speed_kw else None
+        })
+
+    @action(detail=True, methods=['get'])
+    def stats(self, request, pk=None):
+        vehicle = self.get_object()
+        serializer = VehicleStatsSerializer(vehicle)
+        return Response(serializer.data)
+
+    @action(detail=False, methods=['get'])
+    def active(self, request):
+        active_vehicle = request.user.get_active_vehicle()
+
+        if active_vehicle:
+            serializer = VehicleSerializer(active_vehicle, context={'request': request})
+            return Response(serializer.data)
+        else:
+            return Response({
+                'message': 'No active vehicle set',
+                'active_vehicle': None
+            })
+
+    @action(detail=False, methods=['post'])
+    def switch_active(self, request):
+        serializer = VehicleSwitchSerializer(data=request.data, context={'request': request})
+
+        if serializer.is_valid():
+            vehicle_id = serializer.validated_data['vehicle_id']
+            vehicle = Vehicle.objects.get(id=vehicle_id, user=request.user)
+
+            success = request.user.set_active_vehicle(vehicle)
+
+            if success:
+                vehicle.update_usage_stats()
+
+                return Response({
+                    'message': f'Switched to {vehicle.get_display_name()}',
+                    'active_vehicle': VehicleSerializer(vehicle, context={'request': request}).data
+                })
+            else:
+                return Response({
+                    'error': 'Failed to switch active vehicle'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+    @action(detail=False, methods=['get'])
+    def summary(self, request):
+        vehicles = self.get_queryset()
+        active_vehicle = request.user.get_active_vehicle()
+
+        return Response({
+            'total_vehicles': vehicles.count(),
+            'active_vehicles': vehicles.filter(is_active=True).count(),
+            'primary_vehicle': vehicles.filter(is_primary=True).first().id if vehicles.filter(is_primary=True).exists() else None,
+            'active_vehicle': active_vehicle.id if active_vehicle else None,
+            'connector_types': request.user.get_compatible_connector_types(),
+            'vehicles': VehicleListSerializer(vehicles, many=True, context={'request': request}).data
+        })

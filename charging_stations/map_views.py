@@ -19,14 +19,11 @@ import math
 User = get_user_model()
 
 class PublicStationListView(generics.ListAPIView):
-    """
-    API view for listing public charging stations for the map.
-    """
     serializer_class = MapStationSerializer
     permission_classes = [permissions.AllowAny]
     authentication_classes = [AnonymousAuthentication, TokenAuthentication, SessionAuthentication]
     
-    @method_decorator(cache_page(60 * 5))  # Cache for 5 minutes
+    @method_decorator(cache_page(60 * 5))
     def list(self, request, *args, **kwargs):
         return super().list(request, *args, **kwargs)
     
@@ -38,7 +35,6 @@ class PublicStationListView(generics.ListAPIView):
             longitude__isnull=False
         )
         
-        # Filter by bounds if provided
         north = self.request.query_params.get('north')
         south = self.request.query_params.get('south')
         east = self.request.query_params.get('east')
@@ -55,12 +51,10 @@ class PublicStationListView(generics.ListAPIView):
             except ValueError:
                 pass
         
-        # Filter by connector type
         connector_type = self.request.query_params.get('connector_type')
         if connector_type:
             queryset = queryset.filter(connectors__connector_type=connector_type).distinct()
         
-        # Filter by minimum power
         min_power = self.request.query_params.get('min_power')
         if min_power:
             try:
@@ -68,7 +62,6 @@ class PublicStationListView(generics.ListAPIView):
             except ValueError:
                 pass
         
-        # Filter by availability
         available_only = self.request.query_params.get('available_only') == 'true'
         if available_only:
             queryset = queryset.filter(available_connectors__gt=0)
@@ -76,18 +69,15 @@ class PublicStationListView(generics.ListAPIView):
         return queryset
 
 class NearbyStationsView(generics.ListAPIView):
-    """
-    API view for listing nearby charging stations.
-    """
+  
     serializer_class = MapStationSerializer
     permission_classes = [permissions.AllowAny]
     authentication_classes = [AnonymousAuthentication, TokenAuthentication, SessionAuthentication]
     
     def get_queryset(self):
-        # Get latitude and longitude from query parameters
         lat = self.request.query_params.get('lat')
         lng = self.request.query_params.get('lng')
-        radius = self.request.query_params.get('radius', 5)  # Default radius: 5km
+        radius = self.request.query_params.get('radius', 5) 
         
         if not lat or not lng:
             return ChargingStation.objects.none()
@@ -99,13 +89,9 @@ class NearbyStationsView(generics.ListAPIView):
         except ValueError:
             return ChargingStation.objects.none()
         
-        # Calculate bounding box for initial filtering (optimization)
-        # 1 degree of latitude is approximately 111 km
-        # 1 degree of longitude varies with latitude, approximately 111 * cos(lat) km
         lat_range = radius / 111.0
         lng_range = radius / (111.0 * math.cos(math.radians(lat)))
         
-        # Get stations within the bounding box
         queryset = ChargingStation.objects.filter(
             is_active=True,
             is_public=True,
@@ -113,10 +99,8 @@ class NearbyStationsView(generics.ListAPIView):
             longitude__range=(lng - lng_range, lng + lng_range)
         )
         
-        # Filter stations by exact distance (Haversine formula)
         result = []
         for station in queryset:
-            # Calculate distance using Haversine formula
             station_lat = float(station.latitude)
             station_lng = float(station.longitude)
             
@@ -126,19 +110,15 @@ class NearbyStationsView(generics.ListAPIView):
                  math.cos(math.radians(lat)) * math.cos(math.radians(station_lat)) * 
                  math.sin(dlng/2)**2)
             c = 2 * math.atan2(math.sqrt(a), math.sqrt(1-a))
-            distance = 6371 * c  # Earth radius in km
+            distance = 6371 * c  
             
             if distance <= radius:
                 station.distance = distance
                 result.append(station)
         
-        # Sort by distance
         return sorted(result, key=lambda x: x.distance)
 
 class StationSearchView(generics.ListAPIView):
-    """
-    API view for searching charging stations.
-    """
     serializer_class = MapStationSerializer
     permission_classes = [permissions.AllowAny]
     authentication_classes = [AnonymousAuthentication, TokenAuthentication, SessionAuthentication]
@@ -157,9 +137,7 @@ class StationSearchView(generics.ListAPIView):
         ).filter(is_active=True, is_public=True)
 
 class PublicStationDetailView(generics.RetrieveAPIView):
-    """
-    API view for retrieving a public charging station.
-    """
+   
     serializer_class = StationDetailSerializer
     permission_classes = [permissions.AllowAny]
     authentication_classes = [AnonymousAuthentication, TokenAuthentication, SessionAuthentication]
@@ -167,9 +145,7 @@ class PublicStationDetailView(generics.RetrieveAPIView):
     queryset = ChargingStation.objects.filter(is_active=True, is_public=True)
 
 class FavoriteStationListView(generics.ListAPIView):
-    """
-    API view for listing user's favorite charging stations.
-    """
+    
     serializer_class = FavoriteStationSerializer
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [TokenAuthentication, SessionAuthentication]
@@ -178,9 +154,7 @@ class FavoriteStationListView(generics.ListAPIView):
         return FavoriteStation.objects.filter(user=self.request.user)
 
 class FavoriteStationToggleView(APIView):
-    """
-    API view for toggling a station as favorite.
-    """
+   
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     
@@ -196,7 +170,6 @@ class FavoriteStationToggleView(APIView):
         )
         
         if not created:
-            # If it already existed, remove it
             favorite.delete()
             return Response({"detail": "Station removed from favorites."}, status=status.HTTP_200_OK)
         

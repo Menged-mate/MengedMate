@@ -78,7 +78,7 @@ JAZZMIN_SETTINGS = {
 
     "copyright": "MengedMate Ltd",
 
-    
+
     "search_model": ["authentication.CustomUser", "charging_stations.ChargingStation"],
 
     "user_avatar": None,
@@ -93,18 +93,18 @@ JAZZMIN_SETTINGS = {
         {"app": "charging_stations"},
     ],
 
-   
+
     "usermenu_links": [
         {"name": "Support", "url": "https://github.com/Megedmate/mengedmate/issues", "new_window": True},
         {"model": "auth.user"}
     ],
 
-   
+
     "show_sidebar": True,
 
     "navigation_expanded": True,
 
-    
+
     "hide_apps": [],
 
 
@@ -112,7 +112,7 @@ JAZZMIN_SETTINGS = {
 
     "order_with_respect_to": ["authentication", "charging_stations"],
 
-   
+
     "icons": {
         "auth": "fas fa-users-cog",
         "auth.user": "fas fa-user",
@@ -124,17 +124,17 @@ JAZZMIN_SETTINGS = {
     "default_icon_parents": "fas fa-chevron-circle-right",
     "default_icon_children": "fas fa-circle",
 
-    
+
     "related_modal_active": True,
 
-   
+
     "custom_css": None,
     "custom_js": None,
 
- 
+
     "show_ui_builder": False,
 
-   
+
     "changeform_format": "horizontal_tabs",
 
     "changeform_format_overrides": {
@@ -267,8 +267,12 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 
 static_dir = os.path.join(BASE_DIR, 'static')
-if not os.path.exists(static_dir):
-    os.makedirs(static_dir)
+# Create static directory only if we have permissions
+try:
+    if not os.path.exists(static_dir):
+        os.makedirs(static_dir)
+except PermissionError:
+    pass  # Skip if we don't have permissions
 
 STATICFILES_DIRS = [
     static_dir,
@@ -282,12 +286,12 @@ AUTH_USER_MODEL = "authentication.CustomUser"
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'authentication.authentication.BypassableTokenAuthentication', 
+        'authentication.authentication.BypassableTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication', 
+        'rest_framework.authentication.BasicAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  
+        'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_THROTTLE_CLASSES': [],
     'DEFAULT_THROTTLE_RATES': {
@@ -340,7 +344,7 @@ CORS_ALLOW_HEADERS = [
 ]
 
 
-CORS_PREFLIGHT_MAX_AGE = 86400  
+CORS_PREFLIGHT_MAX_AGE = 86400
 CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
 
 

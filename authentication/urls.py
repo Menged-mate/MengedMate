@@ -47,13 +47,13 @@ urlpatterns = [
     path('password-reset/', ForgotPasswordView.as_view(), name='password-reset'),
     path('reset-password/', ResetPasswordView.as_view(), name='reset-password'),
 
-    # Social authentication endpoints
+   
     path('social/google/', GoogleLoginView.as_view(), name='google-login'),
     path('social/facebook/', FacebookLoginView.as_view(), name='facebook-login'),
     path('social/apple/', AppleLoginView.as_view(), name='apple-login'),
     path('social/callback/', SocialAuthCallbackView.as_view(), name='social-callback'),
 
-    # Notifications
+  
     path('notifications/', NotificationListView.as_view(), name='notification-list'),
     path('notifications/mark-read/', NotificationMarkReadView.as_view(), name='notification-mark-all-read'),
     path('notifications/<int:notification_id>/mark-read/', NotificationMarkReadView.as_view(), name='notification-mark-read'),

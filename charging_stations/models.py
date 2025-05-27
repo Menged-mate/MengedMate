@@ -3,16 +3,13 @@ from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 import uuid
 
-# Verification status choices
 class VerificationStatus(models.TextChoices):
     PENDING = 'pending', _('Pending')
     VERIFIED = 'verified', _('Verified')
     REJECTED = 'rejected', _('Rejected')
 
 class StationOwner(models.Model):
-    """
-    Model for station owners who can register and manage charging stations.
-    """
+   
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='station_owner')
     company_name = models.CharField(max_length=255)
     business_registration_number = models.CharField(max_length=100, blank=True, null=True)
@@ -22,35 +19,28 @@ class StationOwner(models.Model):
         default=VerificationStatus.PENDING
     )
 
-    # Documents for verification
     business_document = models.FileField(upload_to='station_owner_docs/business_docs/', blank=True, null=True)
     business_license = models.FileField(upload_to='station_owner_docs/licenses/', blank=True, null=True)
     id_proof = models.FileField(upload_to='station_owner_docs/id_proofs/', blank=True, null=True)
     utility_bill = models.FileField(upload_to='station_owner_docs/utility_bills/', blank=True, null=True)
 
-    # Contact information
     contact_phone = models.CharField(max_length=20, blank=True, null=True)
     contact_email = models.EmailField(blank=True, null=True)
 
-    # Additional information
     website = models.URLField(blank=True, null=True)
     description = models.TextField(blank=True, null=True)
 
-    # Timestamps
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
     verified_at = models.DateTimeField(blank=True, null=True)
 
-    # Profile completion status
     is_profile_completed = models.BooleanField(default=False)
 
     def __str__(self):
         return f"{self.company_name} ({self.user.email})"
 
 class ChargingStation(models.Model):
-    """
-    Model for charging stations managed by station owners.
-    """
+   
     class StationStatus(models.TextChoices):
         OPERATIONAL = 'operational', _('Operational')
         UNDER_MAINTENANCE = 'under_maintenance', _('Under Maintenance')
@@ -71,7 +61,7 @@ class ChargingStation(models.Model):
 
     
     description = models.TextField(blank=True, null=True)
-    opening_hours = models.TextField(blank=True, null=True)  # JSON format for opening hours
+    opening_hours = models.TextField(blank=True, null=True)
 
     
     has_restroom = models.BooleanField(default=False)
@@ -92,7 +82,7 @@ class ChargingStation(models.Model):
     rating_count = models.PositiveIntegerField(default=0)
 
 
-    price_range = models.CharField(max_length=20, blank=True, null=True)  # e.g., "$-$$"
+    price_range = models.CharField(max_length=20, blank=True, null=True)
     available_connectors = models.PositiveIntegerField(default=0)
     total_connectors = models.PositiveIntegerField(default=0)
 
@@ -106,9 +96,7 @@ class ChargingStation(models.Model):
         return self.name
 
 class StationImage(models.Model):
-    """
-    Model for additional images of charging stations.
-    """
+   
     station = models.ForeignKey(ChargingStation, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='station_images/')
     caption = models.CharField(max_length=255, blank=True, null=True)
@@ -121,9 +109,7 @@ class StationImage(models.Model):
         return f"Image for {self.station.name}"
 
 class ChargingConnector(models.Model):
-    """
-    Model for charging connectors available at a station.
-    """
+    
     class ConnectorType(models.TextChoices):
         TYPE_1 = 'type1', _('Type 1 (J1772)')
         TYPE_2 = 'type2', _('Type 2 (Mennekes)')
@@ -145,9 +131,7 @@ class ChargingConnector(models.Model):
         return f"{self.get_connector_type_display()} - {self.power_kw}kW"
 
 class FavoriteStation(models.Model):
-    """
-    Model for user's favorite charging stations.
-    """
+   
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='favorite_stations')
     station = models.ForeignKey(ChargingStation, on_delete=models.CASCADE, related_name='favorited_by')
     created_at = models.DateTimeField(auto_now_add=True)

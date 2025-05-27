@@ -8,9 +8,6 @@ from authentication.authentication import AnonymousAuthentication, TokenAuthenti
 from rest_framework.authentication import SessionAuthentication
 
 class HomeView(TemplateView):
-    """
-    View for the home page with the map.
-    """
     template_name = 'home.html'
     
     def get_context_data(self, **kwargs):
@@ -20,16 +17,10 @@ class HomeView(TemplateView):
         return context
 
 class AppConfigView(APIView):
-    """
-    API view for getting app configuration.
-    """
     permission_classes = [permissions.AllowAny]
     authentication_classes = [AnonymousAuthentication, TokenAuthentication, SessionAuthentication]
     
     def get(self, request):
-        """
-        Return app configuration.
-        """
         config = {
             'app_name': 'MengedMate',
             'version': '1.0.0',
