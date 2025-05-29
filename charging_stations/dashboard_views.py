@@ -3,11 +3,10 @@ from rest_framework.response import Response
 from rest_framework import permissions, status
 from rest_framework.authentication import SessionAuthentication
 from authentication.authentication import TokenAuthentication
-from django.db.models import Count, Sum, Q, Avg
+from django.db.models import Sum
 from django.utils import timezone
-from datetime import datetime, timedelta
-from .models import StationOwner, ChargingStation, Connector
-from authentication.models import CustomUser
+from datetime import timedelta
+from .models import StationOwner, ChargingStation
 from payments.models import Transaction, WalletTransaction
 import random
 
