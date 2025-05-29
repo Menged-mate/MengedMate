@@ -1,361 +1,326 @@
-# 👋 Hi there, I'm Haile Abateneh
+# MengedMate - Electric Vehicle Charging Station Management Platform
 
-<div align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=500&size=40&pause=1000&color=2E8B57&center=true&vCenter=true&width=600&height=100&lines=Full+Stack+Developer;Django+%7C+Flutter+%7C+React;UI%2FUX+Enthusiast" alt="Typing SVG" />
-</div>
+MengedMate is a comprehensive platform for managing electric vehicle charging stations across Ethiopia. The platform connects station owners with EV drivers, providing real-time station monitoring, payment processing, and analytics.
 
-## 🚀 About Me
+## Overview
 
-I'm a passionate Full Stack Developer based in Addis Ababa, Ethiopia, specializing in building robust and scalable web applications. With expertise in both frontend and backend technologies, I create seamless user experiences and efficient server-side solutions.
+MengedMate serves as the bridge between electric vehicle charging infrastructure and users in Ethiopia. Station owners can register their charging stations, monitor usage, track revenue, and manage operations through an intuitive dashboard. EV drivers can find nearby stations, check availability, make reservations, and process payments seamlessly.
 
-## 🛠️ Tech Stack
-
-<div align="center">
-  
-  ![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white)
-  ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
-  ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
-  ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
-  ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
-  ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
-  ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-  ![Bootstrap](https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white)
-  ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-  
-</div>
-
-## 🌟 Featured Projects
-
-### 1. [Upwork Clone](https://upwork-tuf3.onrender.com/)
-A full-featured freelancing platform clone with advanced features:
-- Task posting and bidding system
-- Secure payment integration
-- Real-time messaging
-- User profiles and ratings
-- Task management dashboard
-
-### 2. [Online Examination System](https://oes-nk2r.onrender.com/)
-A comprehensive examination platform featuring:
-- AI-powered proctoring system
-- Real-time results and analytics
-- Multiple exam types support
-- Secure authentication
-- Performance tracking
-
-### 3. [ERP Management System](https://erp-gjx6.onrender.com/)
-Enterprise Resource Planning system with:
-- Inventory management
-- User role management
-- Reporting and analytics
-- Resource allocation
-- Business process automation
-
-### 4. [Personal Portfolio](https://haileab.onrender.com/)
-A modern, responsive portfolio website showcasing:
-- Project showcases
-- Skills and expertise
-- Blog section
-- Contact form
-- Interactive UI elements
-
-## 📊 GitHub Stats
-
-<div align="center">
-  <img src="https://github-readme-stats.vercel.app/api?username=yourusername&show_icons=true&theme=radical" alt="GitHub Stats" />
-  <img src="https://github-readme-streak-stats.herokuapp.com/?user=yourusername&theme=radical" alt="GitHub Streak" />
-</div>
-
-## 🌐 Connect With Me
-
-<div align="center">
-  <a href="mailto:Halazab16@gmail.com">
-    <img src="https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white" />
-  </a>
-  <a href="https://linkedin.com/in/yourprofile">
-    <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" />
-  </a>
-  <a href="https://twitter.com/yourhandle">
-    <img src="https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white" />
-  </a>
-</div>
-
-## 📫 Let's Connect!
-
-I'm always open to discussing new projects, creative ideas, or opportunities to be part of your visions. Feel free to reach out to me!
-
-<div align="center">
-  <img src="https://komarev.com/ghpvc/?username=yourusername&style=flat-square&color=blue" alt="Profile Views"/>
-</div>
-
-# Mengedmate - EV Charging Station Locator
-
-A web application to locate EV charging stations with email verification authentication and station owner management.
-
-## Features
-
-### For Regular Users
-
-- User authentication with email verification
-- Mobile-responsive design
-- Profile management with EV battery capacity and connector type
-- EV charging station locator (coming soon)
+## Key Features
 
 ### For Station Owners
+- **Station Management**: Register and manage multiple charging stations with detailed information
+- **Real-time Monitoring**: Track station status, connector availability, and usage patterns
+- **Revenue Analytics**: Comprehensive financial reporting with transaction history and revenue trends
+- **Payment Processing**: Integrated M-Pesa payment system for seamless transactions
+- **Wallet Management**: Digital wallet for receiving payments and managing payouts
+- **Maintenance Tracking**: Monitor station health and schedule maintenance activities
+- **User Notifications**: Real-time alerts for station events and system updates
 
-- Station owner registration with verification process
-- Station management dashboard
-- Profile and business information management
-- Verification badge for trusted station owners
+### For EV Drivers
+- **Station Discovery**: Find nearby charging stations with real-time availability
+- **Route Planning**: Integrated mapping for optimal charging route planning
+- **Reservation System**: Book charging slots in advance to guarantee availability
+- **Payment Integration**: Secure payment processing through M-Pesa and other methods
+- **Session Tracking**: Monitor charging progress and receive completion notifications
+- **Rating System**: Rate and review charging stations for community feedback
 
-## Tech Stack
+### Platform Features
+- **Multi-language Support**: Available in English and Amharic
+- **Mobile Responsive**: Optimized for desktop, tablet, and mobile devices
+- **Real-time Updates**: Live status updates for stations and charging sessions
+- **Advanced Analytics**: Detailed reporting and insights for business intelligence
+- **Secure Authentication**: Multi-factor authentication and secure user management
+- **API Integration**: RESTful APIs for third-party integrations
+
+## Technology Stack
 
 ### Backend
-
-- Django
-- Django Rest Framework (DRF)
-- Django Allauth for authentication
-- PostgreSQL (production), SQLite (development)
-- Whitenoise for static files
-- Gunicorn for production server
+- **Framework**: Django 4.2 with Django REST Framework
+- **Database**: PostgreSQL for production, SQLite for development
+- **Authentication**: Token-based authentication with email verification
+- **Payment Processing**: Safaricom Ethiopia M-Pesa integration
+- **File Storage**: AWS S3 for production media files
+- **Caching**: Redis for session management and caching
+- **Task Queue**: Celery for background task processing
 
 ### Frontend
+- **Framework**: React 18 with modern hooks and functional components
+- **Routing**: React Router for single-page application navigation
+- **Styling**: Custom CSS with responsive design principles
+- **State Management**: React hooks for local state management
+- **HTTP Client**: Fetch API for backend communication
+- **Charts**: Custom chart components for analytics visualization
 
-- React
-- React Router
-- Axios for API requests
-- Modern responsive UI
+### Infrastructure
+- **Hosting**: Render.com for backend deployment
+- **CDN**: Cloudflare for static asset delivery
+- **Monitoring**: Built-in health checks and error tracking
+- **Security**: HTTPS encryption and CORS configuration
 
-## Setup Instructions
+## Installation and Setup
+
+### Prerequisites
+- Python 3.9 or higher
+- Node.js 16 or higher
+- PostgreSQL 12 or higher
+- Redis server
 
 ### Backend Setup
 
-1. Clone the repository:
+Clone the repository and navigate to the project directory:
 
 ```bash
-git clone <repository-url>
+git clone https://github.com/your-username/mengedmate.git
 cd mengedmate
 ```
 
-2. Create a virtual environment and activate it:
+Create and activate a virtual environment:
 
 ```bash
 python -m venv venv
 source venv/bin/activate  # On Windows: venv\Scripts\activate
 ```
 
-3. Install dependencies:
+Install Python dependencies:
 
 ```bash
 pip install -r requirements.txt
 ```
 
-4. Run migrations:
+Configure environment variables by creating a `.env` file:
 
 ```bash
-python manage.py migrate
+SECRET_KEY=your-secret-key
+DEBUG=True
+DATABASE_URL=postgresql://username:password@localhost:5432/mengedmate
+REDIS_URL=redis://localhost:6379/0
+SAFARICOM_CONSUMER_KEY=your-consumer-key
+SAFARICOM_CONSUMER_SECRET=your-consumer-secret
+SAFARICOM_BUSINESS_SHORT_CODE=your-shortcode
+SAFARICOM_PASSKEY=your-passkey
+EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_PASSWORD=your-app-password
 ```
 
-5. Create a superuser:
-
-```bash
-python manage.py createsuperuser
-```
-
-6. Start the Django development server:
-
-```bash
-python manage.py runserver
-```
-
-The backend server will be running at http://localhost:8000/
-
-### Frontend Setup
-
-1. Navigate to the frontend directory:
-
-```bash
-cd frontend
-```
-
-2. Install dependencies:
-
-```bash
-npm install
-```
-
-3. Start the React development server:
-
-```bash
-npm start
-```
-
-The frontend will be running at http://localhost:3000/
-
-## API Endpoints
-
-### Authentication
-
-- `POST /api/auth/register/` - Register a new user
-- `POST /api/auth/verify-email/` - Verify email with code
-- `POST /api/auth/login/` - Login user
-- `POST /api/auth/logout/` - Logout user
-- `POST /api/auth/resend-verification/` - Resend verification code
-- `GET/PUT /api/auth/profile/` - Get or update user profile
-
-## Development
-
-### Backend Development
-
-To add new features to the backend:
-
-1. Create a new Django app:
-
-```bash
-python manage.py startapp app_name
-```
-
-2. Add the app to `INSTALLED_APPS` in `settings.py`
-3. Create models, serializers, views, and URLs
-4. Run migrations:
+Run database migrations:
 
 ```bash
 python manage.py makemigrations
 python manage.py migrate
 ```
 
-### Frontend Development
+Create a superuser account:
 
-To add new features to the frontend:
+```bash
+python manage.py createsuperuser
+```
 
-1. Create new components in the `frontend/src/components` directory
-2. Add routes in `App.js`
-3. Create services for API calls in `frontend/src/services` directory
+Start the development server:
 
-## Deployment
+```bash
+python manage.py runserver
+```
 
-This application consists of a Django backend and a React frontend that need to be deployed separately.
+### Frontend Setup
 
-### Prerequisites
+Navigate to the frontend directory:
 
-1. A web hosting service for the Django backend (e.g., Heroku, DigitalOcean, AWS)
-2. A PostgreSQL database service
-3. A Vercel account for hosting the frontend
+```bash
+cd web_frontend
+```
 
-### Backend Deployment
+Install Node.js dependencies:
 
-1. Set up a PostgreSQL database
-2. Configure the environment variables:
-   - `SECRET_KEY`: A secure random string
-   - `DEBUG`: Set to 'False' for production
-   - `ALLOWED_HOSTS`: Add your domain names
-   - `DATABASE_URL`: PostgreSQL connection string
-   - `CORS_ALLOWED_ORIGINS`: Your frontend URL (e.g., https://mengedmate.vercel.app)
-   - `FRONTEND_URL`: URL of the frontend application
-   - `EMAIL_HOST_USER`: Gmail address for sending emails
-   - `EMAIL_HOST_PASSWORD`: Gmail app password
-3. Run the build script: `./build.sh`
-4. Start the Django application with Gunicorn: `gunicorn mengedmate.wsgi:application`
+```bash
+npm install
+```
 
-### Frontend Deployment on Vercel
+Start the development server:
 
-The frontend is configured for deployment on Vercel. See the [frontend README](frontend/README.md) for detailed instructions.
+```bash
+npm start
+```
 
-Quick steps:
+The frontend will be available at `http://localhost:3000` and will proxy API requests to the Django backend at `http://localhost:8000`.
 
-1. Push your code to a Git repository
-2. Log in to your Vercel account
-3. Create a new project and import your repository
-4. Configure the project:
-   - Set the Framework Preset to "Create React App"
-   - Set the Root Directory to "frontend"
-   - Add environment variable: `REACT_APP_API_URL` (your backend URL)
-5. Deploy
+## API Documentation
 
-### Connecting Frontend and Backend
+### Authentication Endpoints
 
-After deploying both services:
+**User Registration**
+- `POST /api/auth/register/` - Register a new user account
+- `POST /api/auth/verify-email/` - Verify email address with verification code
+- `POST /api/auth/resend-verification/` - Resend email verification code
 
-1. Update your backend's CORS settings in `mengedmate/settings.py`:
+**User Authentication**
+- `POST /api/auth/login/` - User login with email and password
+- `POST /api/auth/logout/` - User logout and token invalidation
+- `POST /api/auth/forgot-password/` - Request password reset email
+- `POST /api/auth/reset-password/` - Reset password with token
 
-   ```python
-   CORS_ALLOW_ALL_ORIGINS = False
-   CORS_ALLOWED_ORIGINS = [
-       'https://your-vercel-domain.vercel.app',
-       # Add any other domains you're using
-   ]
-   ```
+**Profile Management**
+- `GET /api/auth/profile/` - Get user profile information
+- `PUT /api/auth/profile/` - Update user profile details
+- `PUT /api/auth/change-password/` - Change user password
 
-2. Make sure your frontend is using the correct backend URL:
+### Station Owner Endpoints
 
-   - In Vercel dashboard: Settings > Environment Variables
-   - Set `REACT_APP_API_URL` to your backend URL
+**Registration and Profile**
+- `POST /api/station-owners/register/` - Register as station owner
+- `POST /api/station-owners/verify-email/` - Verify station owner email
+- `GET /api/station-owners/profile/` - Get station owner profile
+- `PATCH /api/station-owners/profile/` - Update station owner profile
+- `POST /api/station-owners/login/` - Station owner login
 
-3. Redeploy both services if needed
+### Charging Station Management
 
-### Using Custom Domains
+**Station Operations**
+- `GET /api/stations/` - List all charging stations for owner
+- `POST /api/stations/` - Create new charging station
+- `GET /api/stations/{id}/` - Get specific station details
+- `PATCH /api/stations/{id}/` - Update station information
+- `DELETE /api/stations/{id}/` - Delete charging station
 
-If you want to use custom domains:
+**Connector Management**
+- `GET /api/stations/{id}/connectors/` - List station connectors
+- `POST /api/stations/{id}/connectors/` - Add connector to station
+- `GET /api/connectors/{id}/` - Get connector details
+- `PATCH /api/connectors/{id}/` - Update connector information
+- `DELETE /api/connectors/{id}/` - Remove connector
 
-1. Configure your custom domain in Vercel for the frontend
-2. Configure your custom domain for your backend hosting service
-3. Update the CORS settings in your backend to include your custom domain
-4. Update the `REACT_APP_API_URL` in Vercel to point to your backend custom domain
+**Public Station Access**
+- `GET /api/public/stations/` - List all public stations
+- `GET /api/stations/nearby/` - Find nearby stations with location
+- `GET /api/stations/search/` - Search stations by criteria
+- `GET /api/public/stations/{id}/` - Get public station details
 
-## Environment Variables
+### Payment System
 
-### Backend
+**Payment Processing**
+- `POST /api/payments/initiate/` - Initiate M-Pesa payment
+- `POST /api/payments/callback/` - Payment callback endpoint
+- `POST /api/payments/status/` - Check transaction status
 
-- `SECRET_KEY`: Django secret key
-- `DEBUG`: Set to 'True' for development, 'False' for production
-- `ALLOWED_HOSTS`: Comma-separated list of allowed hosts
-- `DATABASE_URL`: PostgreSQL connection string (production only)
-- `CORS_ALLOWED_ORIGINS`: Comma-separated list of allowed origins for CORS
-- `FRONTEND_URL`: URL of the frontend application
-- `EMAIL_HOST_USER`: Gmail address for sending emails
-- `EMAIL_HOST_PASSWORD`: Gmail app password
+**Wallet Management**
+- `GET /api/payments/wallet/` - Get wallet balance and details
+- `GET /api/payments/wallet/transactions/` - List wallet transactions
+- `POST /api/payments/wallet/withdraw/` - Withdraw funds from wallet
 
-### Frontend
+**Payment Methods**
+- `GET /api/payments/payment-methods/` - List user payment methods
+- `POST /api/payments/payment-methods/` - Add new payment method
+- `PATCH /api/payments/payment-methods/{id}/` - Update payment method
+- `DELETE /api/payments/payment-methods/{id}/` - Remove payment method
 
-- `REACT_APP_API_URL`: URL of the backend API
+**Transaction History**
+- `GET /api/payments/transactions/` - List all transactions
+- `GET /api/payments/transactions/{id}/` - Get transaction details
+- `GET /api/payments/sessions/` - List payment sessions
+
+### Analytics and Reporting
+
+**Dashboard Analytics**
+- `GET /api/dashboard/` - Get dashboard statistics
+- `GET /api/activities/` - Get recent activity feed
+- `GET /api/analytics/usage/` - Get usage analytics
+- `GET /api/analytics/reports/` - Get comprehensive analytics reports
+
+**Notifications**
+- `GET /api/notifications/` - Get user notifications
+- `POST /api/notifications/{id}/mark-read/` - Mark notification as read
+- `POST /api/notifications/mark-all-read/` - Mark all notifications as read
+- `DELETE /api/notifications/{id}/` - Delete notification
+
+### Vehicle Management
+
+**User Vehicles**
+- `GET /api/auth/vehicles/` - List user vehicles
+- `POST /api/auth/vehicles/` - Add new vehicle
+- `GET /api/auth/vehicles/{id}/` - Get vehicle details
+- `PATCH /api/auth/vehicles/{id}/` - Update vehicle information
+- `DELETE /api/auth/vehicles/{id}/` - Remove vehicle
+
+## Project Structure
+
+### Backend Structure
+```
+mengedmate/
+├── authentication/          # User authentication and profile management
+├── charging_stations/       # Station and connector management
+├── payments/               # Payment processing and wallet management
+├── mengedmate/             # Django project settings and configuration
+├── static/                 # Static files for production
+├── media/                  # User uploaded files
+├── requirements.txt        # Python dependencies
+└── manage.py              # Django management script
+```
+
+### Frontend Structure
+```
+web_frontend/
+├── src/
+│   ├── components/
+│   │   ├── auth/           # Authentication components
+│   │   ├── dashboard/      # Dashboard and analytics
+│   │   ├── landing/        # Landing page components
+│   │   ├── reports/        # Analytics and reporting
+│   │   ├── revenue/        # Revenue management
+│   │   ├── stations/       # Station management
+│   │   └── wallet/         # Wallet and payments
+│   ├── styles/             # CSS stylesheets
+│   ├── App.jsx            # Main application component
+│   └── index.js           # Application entry point
+├── public/                 # Public assets
+└── package.json           # Node.js dependencies
+```
+
+## Features in Detail
+
+### Station Management System
+Station owners can register multiple charging stations with comprehensive details including location, connector types, pricing, and operational hours. The system supports real-time status updates, allowing owners to mark stations as operational, under maintenance, or temporarily closed.
+
+### Real-time Analytics Dashboard
+The analytics dashboard provides comprehensive insights into station performance, revenue trends, energy consumption, and user behavior. Station owners can view data across different time periods and filter by specific stations for detailed analysis.
+
+### Integrated Payment System
+MengedMate integrates with Safaricom Ethiopia's M-Pesa system for seamless payment processing. Users can add funds to their digital wallet, pay for charging sessions, and station owners can receive payments directly to their accounts.
+
+### Mobile-First Design
+The platform is designed with a mobile-first approach, ensuring optimal user experience across all devices. The responsive design adapts to different screen sizes while maintaining functionality and usability.
+
+### Multi-language Support
+The platform supports both English and Amharic languages, making it accessible to a broader user base across Ethiopia. Language switching is seamless and preserves user session data.
+
+## Security and Privacy
+
+### Data Protection
+All user data is encrypted in transit and at rest. The platform implements industry-standard security practices including secure password hashing, token-based authentication, and regular security audits.
+
+### Payment Security
+Payment processing follows PCI DSS compliance standards. All financial transactions are encrypted and processed through secure channels with Safaricom Ethiopia's certified payment gateway.
+
+### User Privacy
+The platform adheres to strict privacy policies, ensuring user data is only used for platform functionality and is never shared with third parties without explicit consent.
+
+## Contributing
+
+We welcome contributions to MengedMate. Please follow these guidelines when contributing:
+
+1. Fork the repository and create a feature branch
+2. Write clear, documented code following the existing style
+3. Add tests for new functionality
+4. Ensure all tests pass before submitting
+5. Submit a pull request with a detailed description of changes
+
+## Support and Documentation
+
+For technical support, feature requests, or bug reports, please contact our development team. Additional documentation and API references are available in the project wiki.
 
 ## License
 
-[MIT License](LICENSE)
+MengedMate is proprietary software developed for the Ethiopian electric vehicle charging infrastructure market. All rights reserved.
 
-# 🚀 Render Deployment Instructions
+## Contact
 
-## 1. Setup
-
-- Ensure you have a `render.yaml` file in your project root (already provided).
-- Create a PostgreSQL database on Render and copy its connection string.
-
-## 2. Backend (Django)
-
-- Deploy as a Web Service on Render.
-- Set build command: `./build.sh`
-- Set start command: `gunicorn mengedmate.wsgi:application`
-- Set environment variables as in `render.yaml` (SECRET_KEY, DEBUG, ALLOWED_HOSTS, DATABASE_URL, CORS_ALLOWED_ORIGINS, FRONTEND_URL, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD).
-
-## 3. Frontend (React)
-
-- Deploy as a Static Site on Render.
-- Set build command: `cd frontend && npm install && npm run build`
-- Set publish directory: `frontend/build`
-- Create a file `frontend/.env.production` with:
-  ```
-  REACT_APP_API_URL=https://<your-backend-domain>.onrender.com
-  ```
-- Set the same value in the Render dashboard as an environment variable for the static site if needed.
-
-## 4. CORS
-
-- In Django settings, ensure `CORS_ALLOWED_ORIGINS` includes your frontend Render URL.
-
-## 5. Static/Media Files
-
-- Django will serve static files using WhiteNoise. Media files will be served from `/media/`.
-
-## Important Notes for Render Deployment
-
-- If you want to use SQLite on Render, **do NOT set DATABASE_URL** in the environment variables.
-- For CORS: Use `CORS_ALLOW_ALL_ORIGINS = True` for development. For production, set `CORS_ALLOWED_ORIGINS` to your frontend Render URL.
+For business inquiries, partnerships, or technical support, please reach out to our team through the official channels provided in the platform.
