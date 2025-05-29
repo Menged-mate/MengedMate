@@ -39,6 +39,9 @@ class DashboardStatsView(APIView):
                     'last_name': request.user.last_name,
                     'email': request.user.email,
                     'company_name': station_owner.company_name,
+                    'is_verified': request.user.is_verified,
+                    'verification_status': station_owner.verification_status,
+                    'is_profile_completed': station_owner.is_profile_completed,
                 },
                 'stats': {
                     'totalStations': total_stations,

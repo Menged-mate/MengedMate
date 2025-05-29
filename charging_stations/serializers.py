@@ -83,11 +83,27 @@ class StationOwnerProfileSerializer(serializers.ModelSerializer):
     def update(self, instance, validated_data):
         instance = super().update(instance, validated_data)
 
-        required_fields = ['business_registration_number', 'business_license', 'id_proof']
-        is_complete = all(getattr(instance, field) for field in required_fields)
+        # Check if all required fields have actual values (not just empty fields)
+        required_text_fields = ['business_registration_number']
+        required_file_fields = ['business_license', 'id_proof']
+
+        # Check text fields are not empty
+        text_fields_complete = all(
+            getattr(instance, field) and str(getattr(instance, field)).strip()
+            for field in required_text_fields
+        )
+
+        # Check file fields have actual files uploaded
+        file_fields_complete = all(
+            getattr(instance, field) and getattr(instance, field).name
+            for field in required_file_fields
+        )
+
+        is_complete = text_fields_complete and file_fields_complete
 
         if is_complete and not instance.is_profile_completed:
             instance.is_profile_completed = True
+            instance.verification_status = 'pending'  # Set to pending when profile is completed
             instance.save()
 
         return instance
