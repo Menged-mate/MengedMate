@@ -18,7 +18,6 @@ class NotificationSerializer(serializers.ModelSerializer):
         )
     
     def get_time_ago(self, obj):
-        """Return a human-readable time difference"""
         from django.utils import timezone
         from django.utils.timesince import timesince
         
@@ -26,7 +25,6 @@ class NotificationSerializer(serializers.ModelSerializer):
         diff = now - obj.created_at
         
         if diff.days == 0:
-            # Less than a day
             if diff.seconds < 60:
                 return 'just now'
             elif diff.seconds < 3600:

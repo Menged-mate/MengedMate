@@ -57,6 +57,7 @@ INSTALLED_APPS = [
 
     "authentication",
     "charging_stations",
+    "payments",
 ]
 
 JAZZMIN_SETTINGS = {
@@ -78,7 +79,7 @@ JAZZMIN_SETTINGS = {
 
     "copyright": "MengedMate Ltd",
 
-    
+
     "search_model": ["authentication.CustomUser", "charging_stations.ChargingStation"],
 
     "user_avatar": None,
@@ -93,18 +94,18 @@ JAZZMIN_SETTINGS = {
         {"app": "charging_stations"},
     ],
 
-   
+
     "usermenu_links": [
         {"name": "Support", "url": "https://github.com/Megedmate/mengedmate/issues", "new_window": True},
         {"model": "auth.user"}
     ],
 
-   
+
     "show_sidebar": True,
 
     "navigation_expanded": True,
 
-    
+
     "hide_apps": [],
 
 
@@ -112,7 +113,7 @@ JAZZMIN_SETTINGS = {
 
     "order_with_respect_to": ["authentication", "charging_stations"],
 
-   
+
     "icons": {
         "auth": "fas fa-users-cog",
         "auth.user": "fas fa-user",
@@ -124,17 +125,17 @@ JAZZMIN_SETTINGS = {
     "default_icon_parents": "fas fa-chevron-circle-right",
     "default_icon_children": "fas fa-circle",
 
-    
+
     "related_modal_active": True,
 
-   
+
     "custom_css": None,
     "custom_js": None,
 
- 
+
     "show_ui_builder": False,
 
-   
+
     "changeform_format": "horizontal_tabs",
 
     "changeform_format_overrides": {
@@ -267,8 +268,12 @@ STATICFILES_STORAGE = 'whitenoise.storage.CompressedStaticFilesStorage'
 
 
 static_dir = os.path.join(BASE_DIR, 'static')
-if not os.path.exists(static_dir):
-    os.makedirs(static_dir)
+# Create static directory only if we have permissions
+try:
+    if not os.path.exists(static_dir):
+        os.makedirs(static_dir)
+except PermissionError:
+    pass  # Skip if we don't have permissions
 
 STATICFILES_DIRS = [
     static_dir,
@@ -282,12 +287,12 @@ AUTH_USER_MODEL = "authentication.CustomUser"
 
 REST_FRAMEWORK = {
     'DEFAULT_AUTHENTICATION_CLASSES': [
-        'authentication.authentication.BypassableTokenAuthentication', 
+        'authentication.authentication.BypassableTokenAuthentication',
         'rest_framework.authentication.SessionAuthentication',
-        'rest_framework.authentication.BasicAuthentication', 
+        'rest_framework.authentication.BasicAuthentication',
     ],
     'DEFAULT_PERMISSION_CLASSES': [
-        'rest_framework.permissions.AllowAny',  
+        'rest_framework.permissions.AllowAny',
     ],
     'DEFAULT_THROTTLE_CLASSES': [],
     'DEFAULT_THROTTLE_RATES': {
@@ -340,7 +345,7 @@ CORS_ALLOW_HEADERS = [
 ]
 
 
-CORS_PREFLIGHT_MAX_AGE = 86400  
+CORS_PREFLIGHT_MAX_AGE = 86400
 CORS_EXPOSE_HEADERS = ['Content-Type', 'X-CSRFToken']
 
 
@@ -476,3 +481,13 @@ ADMIN_EMAIL = 'admin@example.com'
 GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '')
 
 API_BASE_URL = os.environ.get('API_BASE_URL', '')
+
+SAFARICOM_ETHIOPIA_SETTINGS = {
+    'CONSUMER_KEY': os.environ.get('SAFARICOM_CONSUMER_KEY', 'Ov8MgCNyaN93YvNtZE27FuAmpuNP3J88GU6s5vrNPAEV53al'),
+    'CONSUMER_SECRET': os.environ.get('SAFARICOM_CONSUMER_SECRET', 'Rb09A1mIgGmV1HxqTrLMAL4B0jOmqt7zyzi8GCfS7WFPMqFMM8hRKGsTFjuNL4As'),
+    'BUSINESS_SHORT_CODE': os.environ.get('SAFARICOM_BUSINESS_SHORT_CODE', '2060'),
+    'PASSKEY': os.environ.get('SAFARICOM_PASSKEY', '5ab0ecb13d56a1818f182cbe463b84370c3768a5f3e355aa1dd706043d722dee'),
+    'CALLBACK_URL': os.environ.get('SAFARICOM_CALLBACK_URL', f'{API_BASE_URL}/api/payments/callback/'),
+    'SANDBOX_URL': 'https://apisandbox.safaricom.et',
+    'USE_SANDBOX': os.environ.get('SAFARICOM_USE_SANDBOX', 'True').lower() == 'true',
+}

@@ -8,9 +8,6 @@ from django.utils.html import strip_tags
 
 
 class Notification(models.Model):
-    """
-    Model for storing user notifications.
-    """
     class NotificationType(models.TextChoices):
         SYSTEM = 'system', _('System')
         STATION_UPDATE = 'station_update', _('Station Update')
@@ -34,12 +31,10 @@ class Notification(models.Model):
         return f"{self.get_notification_type_display()}: {self.title}"
     
     def mark_as_read(self):
-        """Mark notification as read and update user's unread count"""
         if not self.is_read:
             self.is_read = True
             self.save(update_fields=['is_read'])
             
-            # Update user's unread count
             user = self.user
             if user.unread_notifications > 0:
                 user.unread_notifications -= 1
@@ -47,21 +42,7 @@ class Notification(models.Model):
 
 
 def create_notification(user, notification_type, title, message, link=None, send_email=True):
-    """
-    Create a notification for a user and optionally send an email.
-    
-    Args:
-        user: The user to notify
-        notification_type: Type of notification (from Notification.NotificationType)
-        title: Notification title
-        message: Notification message
-        link: Optional link to include in the notification
-        send_email: Whether to send an email notification
-    
-    Returns:
-        The created notification object
-    """
-    # Create the notification
+ 
     notification = Notification.objects.create(
         user=user,
         notification_type=notification_type,
@@ -70,18 +51,13 @@ def create_notification(user, notification_type, title, message, link=None, send
         link=link
     )
     
-    # Update user's unread count
     user.unread_notifications += 1
     user.save(update_fields=['unread_notifications'])
     
-    # Check if we should send an email
     if send_email:
-        # Get user's notification preferences
         preferences = user.get_notification_preferences()
         
-        # Check if user has enabled email notifications
         if preferences.get('email_notifications', True):
-            # Check if user has enabled this type of notification
             notification_map = {
                 Notification.NotificationType.STATION_UPDATE: 'station_updates',
                 Notification.NotificationType.BOOKING: 'booking_notifications',
@@ -92,16 +68,13 @@ def create_notification(user, notification_type, title, message, link=None, send
             
             preference_key = notification_map.get(notification_type)
             
-            # If it's a system notification or the user has enabled this type
             if not preference_key or preferences.get(preference_key, True):
-                # Send email notification
                 send_notification_email(user, notification)
     
     return notification
 
 
 def send_notification_email(user, notification):
-    """Send an email notification to a user"""
     subject = f"MengedMate: {notification.title}"
     
     context = {
@@ -126,5 +99,4 @@ def send_notification_email(user, notification):
             fail_silently=True
         )
     except Exception as e:
-        # Log the error but don't raise an exception
         print(f"Error sending notification email: {e}")

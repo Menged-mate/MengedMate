@@ -27,6 +27,9 @@ class UserProfileSerializer(serializers.ModelSerializer):
     ev_connector_type_display = serializers.SerializerMethodField()
     notification_preferences = serializers.SerializerMethodField()
     unread_notifications_count = serializers.IntegerField(source='unread_notifications', read_only=True)
+    active_vehicle = serializers.SerializerMethodField()
+    vehicle_count = serializers.SerializerMethodField()
+    compatible_connector_types = serializers.SerializerMethodField()
 
     class Meta:
         model = User
@@ -35,10 +38,12 @@ class UserProfileSerializer(serializers.ModelSerializer):
             'phone_number', 'address', 'city', 'state', 'zip_code',
             'profile_picture', 'is_verified', 'ev_battery_capacity_kwh',
             'ev_connector_type', 'ev_connector_type_display',
-            'notification_preferences', 'unread_notifications_count'
+            'notification_preferences', 'unread_notifications_count',
+            'active_vehicle', 'vehicle_count', 'compatible_connector_types'
         )
         read_only_fields = ('id', 'email', 'is_verified', 'ev_connector_type_display',
-                           'unread_notifications_count')
+                           'unread_notifications_count', 'active_vehicle',
+                           'vehicle_count', 'compatible_connector_types')
 
     def get_ev_connector_type_display(self, obj):
         return obj.get_ev_connector_type_display() if obj.ev_connector_type else None
@@ -46,8 +51,27 @@ class UserProfileSerializer(serializers.ModelSerializer):
     def get_notification_preferences(self, obj):
         return obj.get_notification_preferences()
 
+    def get_active_vehicle(self, obj):
+        active_vehicle = obj.get_active_vehicle()
+        if active_vehicle:
+            return {
+                'id': active_vehicle.id,
+                'name': active_vehicle.name,
+                'display_name': active_vehicle.get_display_name(),
+                'connector_type': active_vehicle.connector_type,
+                'connector_type_display': active_vehicle.get_connector_type_display(),
+                'battery_capacity_kwh': float(active_vehicle.battery_capacity_kwh),
+                'estimated_range_km': active_vehicle.estimated_range_km
+            }
+        return None
+
+    def get_vehicle_count(self, obj):
+        return obj.get_vehicle_count()
+
+    def get_compatible_connector_types(self, obj):
+        return obj.get_compatible_connector_types()
+
     def update(self, instance, validated_data):
-        # Handle notification preferences separately
         notification_preferences = self.initial_data.get('notification_preferences')
         if notification_preferences:
             instance.set_notification_preferences(notification_preferences)
@@ -267,8 +291,6 @@ class CustomLoginSerializer(DjRestAuthLoginSerializer):
                 msg = _('Unable to log in with provided credentials.')
                 raise serializers.ValidationError(msg, code='authorization')
 
-            # We'll handle unverified emails in the view, not as an error here
-            # This allows the app to redirect to verification page
         else:
             msg = _('Must include "email" and "password".')
             raise serializers.ValidationError(msg, code='authorization')
@@ -279,30 +301,133 @@ class CustomLoginSerializer(DjRestAuthLoginSerializer):
 
 class VehicleSerializer(serializers.ModelSerializer):
     connector_type_display = serializers.SerializerMethodField()
+    charging_speed_display = serializers.SerializerMethodField()
+    preferred_charging_speed_display = serializers.SerializerMethodField()
+    display_name = serializers.SerializerMethodField()
+    short_name = serializers.SerializerMethodField()
+    efficiency_rating = serializers.SerializerMethodField()
+    charging_speed_category = serializers.SerializerMethodField()
+    is_active_vehicle = serializers.SerializerMethodField()
 
     class Meta:
         model = Vehicle
         fields = (
-            'id', 'name', 'make', 'model', 'year',
-            'battery_capacity_kwh', 'connector_type',
-            'connector_type_display', 'is_primary',
+            'id', 'name', 'make', 'model', 'year', 'color', 'license_plate',
+            'battery_capacity_kwh', 'usable_battery_kwh', 'connector_type', 'connector_type_display',
+            'max_charging_speed_kw', 'preferred_charging_speed', 'preferred_charging_speed_display',
+            'estimated_range_km', 'efficiency_kwh_per_100km',
+            'is_primary', 'is_active', 'notes', 'vehicle_image',
+            'total_charging_sessions', 'total_energy_charged_kwh', 'last_used_at',
+            'display_name', 'short_name', 'efficiency_rating', 'charging_speed_category',
+            'charging_speed_display', 'is_active_vehicle',
             'created_at', 'updated_at'
         )
-        read_only_fields = ('id', 'created_at', 'updated_at')
+        read_only_fields = (
+            'id', 'total_charging_sessions', 'total_energy_charged_kwh', 'last_used_at',
+            'display_name', 'short_name', 'efficiency_rating', 'charging_speed_category',
+            'charging_speed_display', 'is_active_vehicle', 'usable_battery_kwh',
+            'created_at', 'updated_at'
+        )
 
     def get_connector_type_display(self, obj):
         return obj.get_connector_type_display()
 
+    def get_charging_speed_display(self, obj):
+        return obj.get_charging_speed_display() if hasattr(obj, 'get_charging_speed_display') else None
+
+    def get_preferred_charging_speed_display(self, obj):
+        return obj.get_preferred_charging_speed_display()
+
+    def get_display_name(self, obj):
+        return obj.get_display_name()
+
+    def get_short_name(self, obj):
+        return obj.get_short_name()
+
+    def get_efficiency_rating(self, obj):
+        return obj.get_efficiency_rating()
+
+    def get_charging_speed_category(self, obj):
+        return obj.get_charging_speed_category()
+
+    def get_is_active_vehicle(self, obj):
+        request = self.context.get('request')
+        if request and request.user:
+            return request.user.active_vehicle_id == obj.id
+        return False
+
     def validate(self, attrs):
-        # If this is a new vehicle and is_primary is True, or if is_primary is being set to True
         if (not self.instance and attrs.get('is_primary', False)) or \
            (self.instance and attrs.get('is_primary', False) and not self.instance.is_primary):
-            # Set all other vehicles of this user to not primary
             Vehicle.objects.filter(user=self.context['request'].user, is_primary=True).update(is_primary=False)
         return attrs
 
 
 class VehicleListSerializer(serializers.ModelSerializer):
+    connector_type_display = serializers.SerializerMethodField()
+    display_name = serializers.SerializerMethodField()
+    is_active_vehicle = serializers.SerializerMethodField()
+    efficiency_rating = serializers.SerializerMethodField()
+
     class Meta:
         model = Vehicle
-        fields = ('id', 'name', 'make', 'model', 'year', 'is_primary')
+        fields = (
+            'id', 'name', 'make', 'model', 'year', 'connector_type', 'connector_type_display',
+            'battery_capacity_kwh', 'estimated_range_km', 'is_primary', 'is_active',
+            'display_name', 'is_active_vehicle', 'efficiency_rating', 'last_used_at'
+        )
+
+    def get_connector_type_display(self, obj):
+        return obj.get_connector_type_display()
+
+    def get_display_name(self, obj):
+        return obj.get_display_name()
+
+    def get_is_active_vehicle(self, obj):
+        request = self.context.get('request')
+        if request and request.user:
+            return request.user.active_vehicle_id == obj.id
+        return False
+
+    def get_efficiency_rating(self, obj):
+        return obj.get_efficiency_rating()
+
+
+class VehicleSwitchSerializer(serializers.Serializer):
+    vehicle_id = serializers.IntegerField()
+
+    def validate_vehicle_id(self, value):
+        request = self.context.get('request')
+        if not request or not request.user:
+            raise serializers.ValidationError("Authentication required")
+
+        try:
+            vehicle = Vehicle.objects.get(id=value, user=request.user)
+            return value
+        except Vehicle.DoesNotExist:
+            raise serializers.ValidationError("Vehicle not found or doesn't belong to you")
+
+
+class VehicleStatsSerializer(serializers.ModelSerializer):
+    efficiency_rating = serializers.SerializerMethodField()
+    charging_speed_category = serializers.SerializerMethodField()
+    average_energy_per_session = serializers.SerializerMethodField()
+
+    class Meta:
+        model = Vehicle
+        fields = (
+            'id', 'name', 'total_charging_sessions', 'total_energy_charged_kwh',
+            'efficiency_rating', 'charging_speed_category', 'average_energy_per_session',
+            'last_used_at'
+        )
+
+    def get_efficiency_rating(self, obj):
+        return obj.get_efficiency_rating()
+
+    def get_charging_speed_category(self, obj):
+        return obj.get_charging_speed_category()
+
+    def get_average_energy_per_session(self, obj):
+        if obj.total_charging_sessions > 0:
+            return round(float(obj.total_energy_charged_kwh) / obj.total_charging_sessions, 2)
+        return 0

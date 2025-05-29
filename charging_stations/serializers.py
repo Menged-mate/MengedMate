@@ -9,9 +9,7 @@ import string
 User = get_user_model()
 
 class StationOwnerRegistrationSerializer(serializers.Serializer):
-    """
-    Serializer for station owner registration.
-    """
+
     email = serializers.EmailField(required=True)
     password = serializers.CharField(required=True, write_only=True)
     password2 = serializers.CharField(required=True, write_only=True)
@@ -36,23 +34,19 @@ class StationOwnerRegistrationSerializer(serializers.Serializer):
         return attrs
 
     def create(self, validated_data):
-        # Create user
         user = User(
             email=validated_data['email'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
-            is_verified=False,  # User needs to verify email
+            is_verified=False,
         )
 
-        # Generate verification code
         verification_code = ''.join(random.choices(string.digits, k=6))
         user.verification_code = verification_code
 
-        # Set password
         user.set_password(validated_data['password'])
         user.save()
 
-        # Create station owner profile
         station_owner = StationOwner.objects.create(
             user=user,
             company_name=validated_data['company_name'],
@@ -67,9 +61,7 @@ class StationOwnerRegistrationSerializer(serializers.Serializer):
         }
 
 class StationOwnerProfileSerializer(serializers.ModelSerializer):
-    """
-    Serializer for station owner profile.
-    """
+
     email = serializers.EmailField(source='user.email', read_only=True)
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
@@ -89,42 +81,50 @@ class StationOwnerProfileSerializer(serializers.ModelSerializer):
         ]
 
     def update(self, instance, validated_data):
-        # Update the station owner profile
         instance = super().update(instance, validated_data)
 
-        # Check if all required fields are filled
-        required_fields = ['business_registration_number', 'business_license', 'id_proof']
-        is_complete = all(getattr(instance, field) for field in required_fields)
+        # Check if all required fields have actual values (not just empty fields)
+        required_text_fields = ['business_registration_number']
+        required_file_fields = ['business_license', 'id_proof']
 
-        # Update profile completion status
+        # Check text fields are not empty
+        text_fields_complete = all(
+            getattr(instance, field) and str(getattr(instance, field)).strip()
+            for field in required_text_fields
+        )
+
+        # Check file fields have actual files uploaded
+        file_fields_complete = all(
+            getattr(instance, field) and getattr(instance, field).name
+            for field in required_file_fields
+        )
+
+        is_complete = text_fields_complete and file_fields_complete
+
         if is_complete and not instance.is_profile_completed:
             instance.is_profile_completed = True
+            instance.verification_status = 'pending'  # Set to pending when profile is completed
             instance.save()
 
         return instance
 
 class ChargingConnectorSerializer(serializers.ModelSerializer):
-    """
-    Serializer for charging connectors.
-    """
+
     connector_type_display = serializers.CharField(source='get_connector_type_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
 
     class Meta:
         model = ChargingConnector
-        fields = ['id', 'connector_type', 'connector_type_display', 'power_kw', 'quantity', 'price_per_kwh', 'is_available']
+        fields = ['id', 'connector_type', 'connector_type_display', 'power_kw', 'quantity', 'price_per_kwh', 'is_available', 'status', 'status_display', 'description']
 
 class StationImageSerializer(serializers.ModelSerializer):
-    """
-    Serializer for station images.
-    """
+
     class Meta:
         model = StationImage
         fields = ['id', 'image', 'caption', 'order']
 
 class ChargingStationSerializer(serializers.ModelSerializer):
-    """
-    Serializer for charging stations.
-    """
+
     connectors = ChargingConnectorSerializer(many=True, read_only=True)
     images = StationImageSerializer(many=True, read_only=True)
     owner_name = serializers.CharField(source='owner.company_name', read_only=True)
@@ -148,25 +148,20 @@ class ChargingStationSerializer(serializers.ModelSerializer):
         return obj.owner.verification_status == 'verified'
 
     def create(self, validated_data):
-        # Get the current user's station owner profile
         user = self.context['request'].user
         try:
             station_owner = StationOwner.objects.get(user=user)
         except StationOwner.DoesNotExist:
             raise serializers.ValidationError("You must be a registered station owner to add stations.")
 
-        # Check if the station owner's profile is completed and verified
         if not station_owner.is_profile_completed:
             raise serializers.ValidationError("Please complete your profile before adding stations.")
 
-        # Create the charging station
         validated_data['owner'] = station_owner
         return super().create(validated_data)
 
 class MapStationSerializer(serializers.ModelSerializer):
-    """
-    Simplified serializer for charging stations on the map.
-    """
+
     owner_name = serializers.CharField(source='owner.company_name', read_only=True)
     is_verified_owner = serializers.SerializerMethodField()
     connector_types = serializers.SerializerMethodField()
@@ -187,9 +182,7 @@ class MapStationSerializer(serializers.ModelSerializer):
         return list(obj.connectors.values_list('connector_type', flat=True).distinct())
 
 class StationDetailSerializer(serializers.ModelSerializer):
-    """
-    Detailed serializer for a single charging station.
-    """
+
     connectors = ChargingConnectorSerializer(many=True, read_only=True)
     images = StationImageSerializer(many=True, read_only=True)
     owner_name = serializers.CharField(source='owner.company_name', read_only=True)
@@ -218,9 +211,7 @@ class StationDetailSerializer(serializers.ModelSerializer):
         return False
 
 class FavoriteStationSerializer(serializers.ModelSerializer):
-    """
-    Serializer for favorite stations.
-    """
+
     station = MapStationSerializer(read_only=True)
 
     class Meta:

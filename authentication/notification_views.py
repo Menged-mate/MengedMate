@@ -8,29 +8,22 @@ from .notification_serializers import NotificationSerializer
 
 
 class NotificationListView(generics.ListAPIView):
-    """
-    API view for listing user notifications.
-    """
+   
     serializer_class = NotificationSerializer
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     
     def get_queryset(self):
-        """Return notifications for the current user"""
         return Notification.objects.filter(user=self.request.user)
 
 
 class NotificationMarkReadView(APIView):
-    """
-    API view for marking notifications as read.
-    """
+   
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     
     def post(self, request, notification_id=None):
-        """Mark a notification as read"""
         if notification_id:
-            # Mark a specific notification as read
             try:
                 notification = Notification.objects.get(id=notification_id, user=request.user)
                 notification.mark_as_read()
@@ -41,12 +34,10 @@ class NotificationMarkReadView(APIView):
                     status=status.HTTP_404_NOT_FOUND
                 )
         else:
-            # Mark all notifications as read
             notifications = Notification.objects.filter(user=request.user, is_read=False)
             for notification in notifications:
                 notification.mark_as_read()
             
-            # Reset unread count
             request.user.unread_notifications = 0
             request.user.save(update_fields=['unread_notifications'])
             
@@ -54,18 +45,14 @@ class NotificationMarkReadView(APIView):
 
 
 class NotificationDeleteView(APIView):
-    """
-    API view for deleting notifications.
-    """
+   
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     
     def delete(self, request, notification_id):
-        """Delete a notification"""
         try:
             notification = Notification.objects.get(id=notification_id, user=request.user)
             
-            # If deleting an unread notification, update the unread count
             if not notification.is_read and request.user.unread_notifications > 0:
                 request.user.unread_notifications -= 1
                 request.user.save(update_fields=['unread_notifications'])
@@ -80,10 +67,6 @@ class NotificationDeleteView(APIView):
 
 
 class NotificationTestView(APIView):
-    """
-    API view for creating a test notification.
-    Only for development/testing purposes.
-    """
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     
@@ -91,7 +74,6 @@ class NotificationTestView(APIView):
         """Create a test notification"""
         notification_type = request.data.get('type', 'system')
         
-        # Map string type to enum value
         type_map = {
             'system': Notification.NotificationType.SYSTEM,
             'station_update': Notification.NotificationType.STATION_UPDATE,
@@ -103,7 +85,6 @@ class NotificationTestView(APIView):
         
         notification_type = type_map.get(notification_type, Notification.NotificationType.SYSTEM)
         
-        # Create the notification
         notification = create_notification(
             user=request.user,
             notification_type=notification_type,
@@ -113,6 +94,5 @@ class NotificationTestView(APIView):
             send_email=request.data.get('send_email', False)
         )
         
-        # Return the created notification
         serializer = NotificationSerializer(notification)
         return Response(serializer.data, status=status.HTTP_201_CREATED)
