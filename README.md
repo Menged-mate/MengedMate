@@ -246,14 +246,14 @@ The frontend will be available at `http://localhost:3000` and will proxy API req
 ### Backend Structure
 ```
 mengedmate/
-├── authentication/          # User authentication and profile management
-├── charging_stations/       # Station and connector management
-├── payments/               # Payment processing and wallet management
-├── mengedmate/             # Django project settings and configuration
-├── static/                 # Static files for production
-├── media/                  # User uploaded files
-├── requirements.txt        # Python dependencies
-└── manage.py              # Django management script
+├── authentication/          
+├── charging_stations/       
+├── payments/               
+├── mengedmate/             
+├── static/                
+├── media/                
+├── requirements.txt        
+└── manage.py              
 ```
 
 ### Frontend Structure
@@ -261,18 +261,17 @@ mengedmate/
 web_frontend/
 ├── src/
 │   ├── components/
-│   │   ├── auth/           # Authentication components
-│   │   ├── dashboard/      # Dashboard and analytics
-│   │   ├── landing/        # Landing page components
-│   │   ├── reports/        # Analytics and reporting
-│   │   ├── revenue/        # Revenue management
-│   │   ├── stations/       # Station management
-│   │   └── wallet/         # Wallet and payments
-│   ├── styles/             # CSS stylesheets
-│   ├── App.jsx            # Main application component
-│   └── index.js           # Application entry point
-├── public/                 # Public assets
-└── package.json           # Node.js dependencies
+│   │   ├── auth/           
+│   │   ├── dashboard/      
+│   │   ├── landing/        
+│   │   ├── reports/        
+│   │   ├── revenue/       
+│   │   ├── stations/       
+│   │   └── wallet/         
+│   ├── styles/             
+│   ├── App.jsx            
+│   └── index.js           
+└── package.json           
 ```
 
 ## Features in Detail
