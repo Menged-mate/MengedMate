@@ -57,6 +57,7 @@ INSTALLED_APPS = [
 
     "authentication",
     "charging_stations",
+    "payments",
 ]
 
 JAZZMIN_SETTINGS = {
@@ -480,3 +481,13 @@ ADMIN_EMAIL = 'admin@example.com'
 GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '')
 
 API_BASE_URL = os.environ.get('API_BASE_URL', '')
+
+SAFARICOM_ETHIOPIA_SETTINGS = {
+    'CONSUMER_KEY': os.environ.get('SAFARICOM_CONSUMER_KEY', 'Ov8MgCNyaN93YvNtZE27FuAmpuNP3J88GU6s5vrNPAEV53al'),
+    'CONSUMER_SECRET': os.environ.get('SAFARICOM_CONSUMER_SECRET', 'Rb09A1mIgGmV1HxqTrLMAL4B0jOmqt7zyzi8GCfS7WFPMqFMM8hRKGsTFjuNL4As'),
+    'BUSINESS_SHORT_CODE': os.environ.get('SAFARICOM_BUSINESS_SHORT_CODE', '2060'),
+    'PASSKEY': os.environ.get('SAFARICOM_PASSKEY', '5ab0ecb13d56a1818f182cbe463b84370c3768a5f3e355aa1dd706043d722dee'),
+    'CALLBACK_URL': os.environ.get('SAFARICOM_CALLBACK_URL', f'{API_BASE_URL}/api/payments/callback/'),
+    'SANDBOX_URL': 'https://apisandbox.safaricom.et',
+    'USE_SANDBOX': os.environ.get('SAFARICOM_USE_SANDBOX', 'True').lower() == 'true',
+}

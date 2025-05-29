@@ -24,7 +24,8 @@ from .dashboard_views import (
     AnalyticsUsageView,
     NotificationsView,
     MarkNotificationReadView,
-    MarkAllNotificationsReadView
+    MarkAllNotificationsReadView,
+    AnalyticsReportsView
 )
 
 app_name = 'charging_stations'
@@ -51,6 +52,7 @@ urlpatterns = [
     path('dashboard/', DashboardStatsView.as_view(), name='dashboard-stats'),
     path('activities/', ActivitiesView.as_view(), name='activities'),
     path('analytics/usage/', AnalyticsUsageView.as_view(), name='analytics-usage'),
+    path('analytics/reports/', AnalyticsReportsView.as_view(), name='analytics-reports'),
     path('notifications/', NotificationsView.as_view(), name='notifications'),
     path('notifications/<int:notification_id>/mark-read/', MarkNotificationReadView.as_view(), name='mark-notification-read'),
     path('notifications/mark-all-read/', MarkAllNotificationsReadView.as_view(), name='mark-all-notifications-read'),
