@@ -6,6 +6,7 @@ from .views import (
     ChargingStationListCreateView,
     ChargingStationDetailView,
     ConnectorCreateView,
+    ConnectorDetailView,
     StationImageCreateView
 )
 from .map_views import (
@@ -17,6 +18,14 @@ from .map_views import (
     FavoriteStationToggleView
 )
 from .home_views import HomeView, AppConfigView
+from .dashboard_views import (
+    DashboardStatsView,
+    ActivitiesView,
+    AnalyticsUsageView,
+    NotificationsView,
+    MarkNotificationReadView,
+    MarkAllNotificationsReadView
+)
 
 app_name = 'charging_stations'
 
@@ -28,6 +37,7 @@ urlpatterns = [
     path('stations/', ChargingStationListCreateView.as_view(), name='station-list-create'),
     path('stations/<uuid:id>/', ChargingStationDetailView.as_view(), name='station-detail'),
     path('stations/<uuid:station_id>/connectors/', ConnectorCreateView.as_view(), name='connector-create'),
+    path('stations/<uuid:station_id>/connectors/<uuid:id>/', ConnectorDetailView.as_view(), name='connector-detail'),
     path('stations/<uuid:station_id>/images/', StationImageCreateView.as_view(), name='station-image-create'),
 
     path('public/stations/', PublicStationListView.as_view(), name='public-station-list'),
@@ -36,4 +46,12 @@ urlpatterns = [
     path('public/search-stations/', StationSearchView.as_view(), name='search-stations'),
     path('favorites/', FavoriteStationListView.as_view(), name='favorite-list'),
     path('favorites/<uuid:station_id>/toggle/', FavoriteStationToggleView.as_view(), name='favorite-toggle'),
+
+    # Dashboard endpoints
+    path('dashboard/', DashboardStatsView.as_view(), name='dashboard-stats'),
+    path('activities/', ActivitiesView.as_view(), name='activities'),
+    path('analytics/usage/', AnalyticsUsageView.as_view(), name='analytics-usage'),
+    path('notifications/', NotificationsView.as_view(), name='notifications'),
+    path('notifications/<int:notification_id>/mark-read/', MarkNotificationReadView.as_view(), name='mark-notification-read'),
+    path('notifications/mark-all-read/', MarkAllNotificationsReadView.as_view(), name='mark-all-notifications-read'),
 ]

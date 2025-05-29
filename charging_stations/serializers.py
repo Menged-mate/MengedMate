@@ -9,7 +9,7 @@ import string
 User = get_user_model()
 
 class StationOwnerRegistrationSerializer(serializers.Serializer):
-   
+
     email = serializers.EmailField(required=True)
     password = serializers.CharField(required=True, write_only=True)
     password2 = serializers.CharField(required=True, write_only=True)
@@ -38,7 +38,7 @@ class StationOwnerRegistrationSerializer(serializers.Serializer):
             email=validated_data['email'],
             first_name=validated_data['first_name'],
             last_name=validated_data['last_name'],
-            is_verified=False,  
+            is_verified=False,
         )
 
         verification_code = ''.join(random.choices(string.digits, k=6))
@@ -61,7 +61,7 @@ class StationOwnerRegistrationSerializer(serializers.Serializer):
         }
 
 class StationOwnerProfileSerializer(serializers.ModelSerializer):
-   
+
     email = serializers.EmailField(source='user.email', read_only=True)
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
@@ -93,21 +93,22 @@ class StationOwnerProfileSerializer(serializers.ModelSerializer):
         return instance
 
 class ChargingConnectorSerializer(serializers.ModelSerializer):
-    
+
     connector_type_display = serializers.CharField(source='get_connector_type_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
 
     class Meta:
         model = ChargingConnector
-        fields = ['id', 'connector_type', 'connector_type_display', 'power_kw', 'quantity', 'price_per_kwh', 'is_available']
+        fields = ['id', 'connector_type', 'connector_type_display', 'power_kw', 'quantity', 'price_per_kwh', 'is_available', 'status', 'status_display', 'description']
 
 class StationImageSerializer(serializers.ModelSerializer):
-    
+
     class Meta:
         model = StationImage
         fields = ['id', 'image', 'caption', 'order']
 
 class ChargingStationSerializer(serializers.ModelSerializer):
-   
+
     connectors = ChargingConnectorSerializer(many=True, read_only=True)
     images = StationImageSerializer(many=True, read_only=True)
     owner_name = serializers.CharField(source='owner.company_name', read_only=True)
@@ -144,7 +145,7 @@ class ChargingStationSerializer(serializers.ModelSerializer):
         return super().create(validated_data)
 
 class MapStationSerializer(serializers.ModelSerializer):
-   
+
     owner_name = serializers.CharField(source='owner.company_name', read_only=True)
     is_verified_owner = serializers.SerializerMethodField()
     connector_types = serializers.SerializerMethodField()
@@ -165,7 +166,7 @@ class MapStationSerializer(serializers.ModelSerializer):
         return list(obj.connectors.values_list('connector_type', flat=True).distinct())
 
 class StationDetailSerializer(serializers.ModelSerializer):
-   
+
     connectors = ChargingConnectorSerializer(many=True, read_only=True)
     images = StationImageSerializer(many=True, read_only=True)
     owner_name = serializers.CharField(source='owner.company_name', read_only=True)
@@ -194,7 +195,7 @@ class StationDetailSerializer(serializers.ModelSerializer):
         return False
 
 class FavoriteStationSerializer(serializers.ModelSerializer):
-   
+
     station = MapStationSerializer(read_only=True)
 
     class Meta:

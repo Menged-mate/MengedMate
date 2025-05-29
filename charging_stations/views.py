@@ -22,7 +22,7 @@ from rest_framework.authentication import SessionAuthentication
 User = get_user_model()
 
 class StationOwnerRegistrationView(generics.GenericAPIView):
-   
+
     permission_classes = [permissions.AllowAny]
     authentication_classes = [AnonymousAuthentication]
     serializer_class = StationOwnerRegistrationSerializer
@@ -32,7 +32,7 @@ class StationOwnerRegistrationView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         result = serializer.save()
 
-       
+
         user = result['user']
         verification_code = result['verification_code']
 
@@ -59,7 +59,7 @@ class StationOwnerRegistrationView(generics.GenericAPIView):
         }, status=status.HTTP_201_CREATED)
 
 class StationOwnerVerifyEmailView(APIView):
-   
+
     permission_classes = [permissions.AllowAny]
     authentication_classes = [AnonymousAuthentication]
 
@@ -106,7 +106,7 @@ class StationOwnerVerifyEmailView(APIView):
         }, status=status.HTTP_200_OK)
 
 class StationOwnerProfileView(generics.RetrieveUpdateAPIView):
-   
+
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     serializer_class = StationOwnerProfileSerializer
@@ -141,7 +141,7 @@ class StationOwnerProfileView(generics.RetrieveUpdateAPIView):
         return Response(serializer.data)
 
 class ChargingStationListCreateView(generics.ListCreateAPIView):
-   
+
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     serializer_class = ChargingStationSerializer
@@ -158,7 +158,7 @@ class ChargingStationListCreateView(generics.ListCreateAPIView):
         serializer.save()
 
 class ChargingStationDetailView(generics.RetrieveUpdateDestroyAPIView):
-   
+
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     serializer_class = ChargingStationSerializer
@@ -173,7 +173,7 @@ class ChargingStationDetailView(generics.RetrieveUpdateDestroyAPIView):
             return ChargingStation.objects.none()
 
 class ConnectorCreateView(generics.CreateAPIView):
-    
+
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     serializer_class = ChargingConnectorSerializer
@@ -187,8 +187,24 @@ class ConnectorCreateView(generics.CreateAPIView):
         except (StationOwner.DoesNotExist, ChargingStation.DoesNotExist):
             raise permissions.PermissionDenied("You don't have permission to add connectors to this station.")
 
+class ConnectorDetailView(generics.RetrieveUpdateDestroyAPIView):
+
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    serializer_class = ChargingConnectorSerializer
+    lookup_field = 'id'
+
+    def get_queryset(self):
+        try:
+            station_owner = StationOwner.objects.get(user=self.request.user)
+            station_id = self.kwargs.get('station_id')
+            station = ChargingStation.objects.get(id=station_id, owner=station_owner)
+            return ChargingConnector.objects.filter(station=station)
+        except (StationOwner.DoesNotExist, ChargingStation.DoesNotExist):
+            return ChargingConnector.objects.none()
+
 class StationImageCreateView(generics.CreateAPIView):
-   
+
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     serializer_class = StationImageSerializer

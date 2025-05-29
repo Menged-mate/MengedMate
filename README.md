@@ -1,129 +1,89 @@
-# 👋 Hi there, I'm Haile Abateneh
+# ⚡ MengedMate - EV Charging Station Management Platform
 
 <div align="center">
-  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=500&size=40&pause=1000&color=2E8B57&center=true&vCenter=true&width=600&height=100&lines=Full+Stack+Developer;Django+%7C+Flutter+%7C+React;UI%2FUX+Enthusiast" alt="Typing SVG" />
+  <img src="https://readme-typing-svg.herokuapp.com?font=Fira+Code&weight=500&size=30&pause=1000&color=4263EB&center=true&vCenter=true&width=600&height=80&lines=EV+Charging+Made+Easy;Station+Management+Platform;React+%7C+Django+%7C+PostgreSQL" alt="Typing SVG" />
 </div>
 
-## 🚀 About Me
+## 🚀 About MengedMate
 
-I'm a passionate Full Stack Developer based in Addis Ababa, Ethiopia, specializing in building robust and scalable web applications. With expertise in both frontend and backend technologies, I create seamless user experiences and efficient server-side solutions.
+MengedMate is a comprehensive EV charging station management platform that connects electric vehicle owners with charging station operators. Built with modern web technologies, it provides a seamless experience for both EV drivers looking for charging stations and business owners managing their charging infrastructure.
 
 ## 🛠️ Tech Stack
 
 <div align="center">
-  
-  ![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white)
-  ![Flutter](https://img.shields.io/badge/Flutter-02569B?style=for-the-badge&logo=flutter&logoColor=white)
+
   ![React](https://img.shields.io/badge/React-20232A?style=for-the-badge&logo=react&logoColor=61DAFB)
+  ![Django](https://img.shields.io/badge/Django-092E20?style=for-the-badge&logo=django&logoColor=white)
+  ![PostgreSQL](https://img.shields.io/badge/PostgreSQL-316192?style=for-the-badge&logo=postgresql&logoColor=white)
+  ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
+  ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
   ![HTML5](https://img.shields.io/badge/HTML5-E34F26?style=for-the-badge&logo=html5&logoColor=white)
   ![CSS3](https://img.shields.io/badge/CSS3-1572B6?style=for-the-badge&logo=css3&logoColor=white)
-  ![Python](https://img.shields.io/badge/Python-3776AB?style=for-the-badge&logo=python&logoColor=white)
-  ![JavaScript](https://img.shields.io/badge/JavaScript-F7DF1E?style=for-the-badge&logo=javascript&logoColor=black)
-  ![Bootstrap](https://img.shields.io/badge/Bootstrap-563D7C?style=for-the-badge&logo=bootstrap&logoColor=white)
-  ![Tailwind](https://img.shields.io/badge/Tailwind_CSS-38B2AC?style=for-the-badge&logo=tailwind-css&logoColor=white)
-  
+
 </div>
 
-## 🌟 Featured Projects
+## 🌟 Key Features
 
-### 1. [Upwork Clone](https://upwork-tuf3.onrender.com/)
-A full-featured freelancing platform clone with advanced features:
-- Task posting and bidding system
-- Secure payment integration
-- Real-time messaging
-- User profiles and ratings
-- Task management dashboard
-
-### 2. [Online Examination System](https://oes-nk2r.onrender.com/)
-A comprehensive examination platform featuring:
-- AI-powered proctoring system
-- Real-time results and analytics
-- Multiple exam types support
-- Secure authentication
-- Performance tracking
-
-### 3. [ERP Management System](https://erp-gjx6.onrender.com/)
-Enterprise Resource Planning system with:
-- Inventory management
-- User role management
-- Reporting and analytics
-- Resource allocation
-- Business process automation
-
-### 4. [Personal Portfolio](https://haileab.onrender.com/)
-A modern, responsive portfolio website showcasing:
-- Project showcases
-- Skills and expertise
-- Blog section
-- Contact form
-- Interactive UI elements
-
-## 📊 GitHub Stats
-
-<div align="center">
-  <img src="https://github-readme-stats.vercel.app/api?username=yourusername&show_icons=true&theme=radical" alt="GitHub Stats" />
-  <img src="https://github-readme-streak-stats.herokuapp.com/?user=yourusername&theme=radical" alt="GitHub Streak" />
-</div>
-
-## 🌐 Connect With Me
-
-<div align="center">
-  <a href="mailto:Halazab16@gmail.com">
-    <img src="https://img.shields.io/badge/Gmail-D14836?style=for-the-badge&logo=gmail&logoColor=white" />
-  </a>
-  <a href="https://linkedin.com/in/yourprofile">
-    <img src="https://img.shields.io/badge/LinkedIn-0077B5?style=for-the-badge&logo=linkedin&logoColor=white" />
-  </a>
-  <a href="https://twitter.com/yourhandle">
-    <img src="https://img.shields.io/badge/Twitter-1DA1F2?style=for-the-badge&logo=twitter&logoColor=white" />
-  </a>
-</div>
-
-## 📫 Let's Connect!
-
-I'm always open to discussing new projects, creative ideas, or opportunities to be part of your visions. Feel free to reach out to me!
-
-<div align="center">
-  <img src="https://komarev.com/ghpvc/?username=yourusername&style=flat-square&color=blue" alt="Profile Views"/>
-</div>
-
-# Mengedmate - EV Charging Station Locator
-
-A web application to locate EV charging stations with email verification authentication and station owner management.
-
-## Features
-
-### For Regular Users
-
-- User authentication with email verification
-- Mobile-responsive design
-- Profile management with EV battery capacity and connector type
-- EV charging station locator (coming soon)
+### For EV Drivers
+- 🔍 **Station Locator**: Find nearby charging stations with real-time availability
+- 📱 **Mobile-Responsive**: Seamless experience across all devices
+- 👤 **User Profiles**: Manage vehicle information and charging preferences
+- 🔔 **Notifications**: Get alerts about charging status and station updates
+- ⚡ **Multiple Car Profiles**: Support for multiple vehicles with different specifications
 
 ### For Station Owners
+- 🏢 **Business Dashboard**: Comprehensive management interface
+- 📊 **Analytics**: Track usage, revenue, and performance metrics
+- 🔧 **Station Management**: Add, edit, and monitor charging stations
+- ✅ **Verification System**: Build trust with verified business profiles
+- 💰 **Revenue Tracking**: Monitor earnings and payment processing
 
-- Station owner registration with verification process
-- Station management dashboard
-- Profile and business information management
-- Verification badge for trusted station owners
+## 📁 Project Structure
 
-## Tech Stack
+```
+MengedMate/
+├── backend/                 # Django REST API
+│   ├── mengedmate/         # Main Django project
+│   ├── authentication/     # User authentication app
+│   ├── station_owners/     # Station owner management
+│   ├── stations/           # Charging station data
+│   └── requirements.txt    # Python dependencies
+├── web_frontend/           # React web application (JSX)
+│   ├── src/
+│   │   ├── components/     # React components (JSX)
+│   │   ├── services/       # API service layer (JSX)
+│   │   └── App.jsx         # Main app component
+│   └── package.json        # Node.js dependencies
+├── mobile_frontend/        # Flutter mobile app
+│   ├── lib/               # Dart source code
+│   └── pubspec.yaml       # Flutter dependencies
+└── README.md              # Project documentation
+```
 
-### Backend
+## 🔧 Technical Architecture
 
-- Django
-- Django Rest Framework (DRF)
-- Django Allauth for authentication
-- PostgreSQL (production), SQLite (development)
-- Whitenoise for static files
-- Gunicorn for production server
+### Backend (Django REST API)
+- **Framework**: Django 4.x with Django REST Framework
+- **Authentication**: Token-based authentication with email verification
+- **Database**: PostgreSQL (production), SQLite (development)
+- **File Handling**: WhiteNoise for static files
+- **Server**: Gunicorn for production deployment
+- **API Documentation**: Auto-generated with DRF
 
-### Frontend
+### Frontend (React JSX)
+- **Framework**: React 18+ with JSX components
+- **Routing**: React Router for navigation
+- **HTTP Client**: Axios for API communication
+- **Styling**: Modern CSS with responsive design
+- **Build Tool**: Create React App with JSX support
+- **Backend Integration**: https://mengedmate.onrender.com/api
 
-- React
-- React Router
-- Axios for API requests
-- Modern responsive UI
+### Mobile (Flutter)
+- **Framework**: Flutter with Dart
+- **State Management**: Provider pattern
+- **HTTP Client**: Dio for API requests
+- **Maps Integration**: Google Maps API
+- **Platform**: iOS and Android support
 
 ## Setup Instructions
 
@@ -169,12 +129,12 @@ python manage.py runserver
 
 The backend server will be running at http://localhost:8000/
 
-### Frontend Setup
+### Web Frontend Setup (React JSX)
 
-1. Navigate to the frontend directory:
+1. Navigate to the web frontend directory:
 
 ```bash
-cd frontend
+cd web_frontend
 ```
 
 2. Install dependencies:
@@ -183,24 +143,119 @@ cd frontend
 npm install
 ```
 
-3. Start the React development server:
+3. Create environment file for development:
+
+```bash
+echo "REACT_APP_API_URL=http://localhost:8000" > .env.local
+```
+
+4. Start the React development server:
 
 ```bash
 npm start
 ```
 
-The frontend will be running at http://localhost:3000/
+The web frontend will be running at http://localhost:3000/
 
-## API Endpoints
+### Mobile Frontend Setup (Flutter)
+
+1. Navigate to the mobile frontend directory:
+
+```bash
+cd mobile_frontend
+```
+
+2. Install Flutter dependencies:
+
+```bash
+flutter pub get
+```
+
+3. Run the mobile app:
+
+```bash
+flutter run
+```
+
+## 🔗 API Endpoints
 
 ### Authentication
-
 - `POST /api/auth/register/` - Register a new user
-- `POST /api/auth/verify-email/` - Verify email with code
-- `POST /api/auth/login/` - Login user
-- `POST /api/auth/logout/` - Logout user
-- `POST /api/auth/resend-verification/` - Resend verification code
-- `GET/PUT /api/auth/profile/` - Get or update user profile
+- `POST /api/auth/verify-email/` - Verify email with verification code
+- `POST /api/auth/login/` - User login
+- `POST /api/auth/logout/` - User logout
+- `POST /api/auth/resend-verification/` - Resend email verification code
+- `GET /api/auth/profile/` - Get user profile
+- `PUT /api/auth/profile/` - Update user profile
+- `PUT /api/auth/change-password/` - Change user password
+- `POST /api/auth/forgot-password/` - Request password reset
+- `POST /api/auth/reset-password/` - Reset password with token
+
+### Station Owners
+- `POST /api/station-owners/register/` - Register station owner
+- `POST /api/station-owners/verify-email/` - Verify station owner email
+- `GET /api/station-owners/profile/` - Get station owner profile
+- `PATCH /api/station-owners/profile/` - Update station owner profile
+- `POST /api/station-owners/login/` - Station owner login
+
+### Charging Stations
+- `GET /api/stations/` - List all charging stations
+- `POST /api/stations/` - Create new charging station
+- `GET /api/stations/{id}/` - Get specific station details
+- `PATCH /api/stations/{id}/` - Update station information
+- `DELETE /api/stations/{id}/` - Delete charging station
+- `GET /api/stations/nearby/` - Find nearby stations
+- `GET /api/stations/search/` - Search stations by criteria
+
+### Connectors
+- `GET /api/stations/{id}/connectors/` - List station connectors
+- `POST /api/stations/{id}/connectors/` - Add connector to station
+- `GET /api/connectors/{id}/` - Get connector details
+- `PATCH /api/connectors/{id}/` - Update connector information
+- `DELETE /api/connectors/{id}/` - Remove connector
+
+### Notifications
+- `GET /api/auth/notifications/` - Get user notifications
+- `POST /api/auth/notifications/{id}/mark-read/` - Mark notification as read
+- `POST /api/auth/notifications/mark-read/` - Mark all notifications as read
+- `DELETE /api/auth/notifications/{id}/delete/` - Delete notification
+- `POST /api/auth/notifications/test/` - Create test notification
+
+### User Management
+- `GET /api/users/` - List users (admin only)
+- `GET /api/users/{id}/` - Get user details
+- `PATCH /api/users/{id}/` - Update user information
+- `DELETE /api/users/{id}/` - Delete user account
+
+### Car Profiles
+- `GET /api/auth/car-profiles/` - Get user car profiles
+- `POST /api/auth/car-profiles/` - Create new car profile
+- `GET /api/auth/car-profiles/{id}/` - Get specific car profile
+- `PATCH /api/auth/car-profiles/{id}/` - Update car profile
+- `DELETE /api/auth/car-profiles/{id}/` - Delete car profile
+- `POST /api/auth/car-profiles/{id}/set-active/` - Set active car profile
+
+### Reviews and Ratings
+- `GET /api/stations/{id}/reviews/` - Get station reviews
+- `POST /api/stations/{id}/reviews/` - Add station review
+- `GET /api/reviews/{id}/` - Get review details
+- `PATCH /api/reviews/{id}/` - Update review
+- `DELETE /api/reviews/{id}/` - Delete review
+
+### Booking and Reservations
+- `GET /api/bookings/` - Get user bookings
+- `POST /api/bookings/` - Create new booking
+- `GET /api/bookings/{id}/` - Get booking details
+- `PATCH /api/bookings/{id}/` - Update booking
+- `DELETE /api/bookings/{id}/` - Cancel booking
+- `POST /api/bookings/{id}/check-in/` - Check in to station
+- `POST /api/bookings/{id}/check-out/` - Check out from station
+
+### Analytics and Reports
+- `GET /api/station-owners/analytics/` - Get station analytics
+- `GET /api/station-owners/revenue/` - Get revenue reports
+- `GET /api/station-owners/usage-stats/` - Get usage statistics
+- `GET /api/stations/{id}/analytics/` - Get specific station analytics
 
 ## Development
 
@@ -223,139 +278,47 @@ python manage.py makemigrations
 python manage.py migrate
 ```
 
-### Frontend Development
+### Web Frontend Development (React JSX)
 
-To add new features to the frontend:
+To add new features to the web frontend:
 
-1. Create new components in the `frontend/src/components` directory
-2. Add routes in `App.js`
-3. Create services for API calls in `frontend/src/services` directory
+1. Create new JSX components in the `web_frontend/src/components` directory
+2. Add routes in `App.jsx`
+3. Create services for API calls in `web_frontend/src/services` directory
+4. Use JSX file extensions for all React components
+5. Import components with `.jsx` extension: `import Component from './Component.jsx'`
 
-## Deployment
+### Mobile Frontend Development (Flutter)
 
-This application consists of a Django backend and a React frontend that need to be deployed separately.
+To add new features to the mobile app:
 
-### Prerequisites
-
-1. A web hosting service for the Django backend (e.g., Heroku, DigitalOcean, AWS)
-2. A PostgreSQL database service
-3. A Vercel account for hosting the frontend
-
-### Backend Deployment
-
-1. Set up a PostgreSQL database
-2. Configure the environment variables:
-   - `SECRET_KEY`: A secure random string
-   - `DEBUG`: Set to 'False' for production
-   - `ALLOWED_HOSTS`: Add your domain names
-   - `DATABASE_URL`: PostgreSQL connection string
-   - `CORS_ALLOWED_ORIGINS`: Your frontend URL (e.g., https://mengedmate.vercel.app)
-   - `FRONTEND_URL`: URL of the frontend application
-   - `EMAIL_HOST_USER`: Gmail address for sending emails
-   - `EMAIL_HOST_PASSWORD`: Gmail app password
-3. Run the build script: `./build.sh`
-4. Start the Django application with Gunicorn: `gunicorn mengedmate.wsgi:application`
-
-### Frontend Deployment on Vercel
-
-The frontend is configured for deployment on Vercel. See the [frontend README](frontend/README.md) for detailed instructions.
-
-Quick steps:
-
-1. Push your code to a Git repository
-2. Log in to your Vercel account
-3. Create a new project and import your repository
-4. Configure the project:
-   - Set the Framework Preset to "Create React App"
-   - Set the Root Directory to "frontend"
-   - Add environment variable: `REACT_APP_API_URL` (your backend URL)
-5. Deploy
-
-### Connecting Frontend and Backend
-
-After deploying both services:
-
-1. Update your backend's CORS settings in `mengedmate/settings.py`:
-
-   ```python
-   CORS_ALLOW_ALL_ORIGINS = False
-   CORS_ALLOWED_ORIGINS = [
-       'https://your-vercel-domain.vercel.app',
-       # Add any other domains you're using
-   ]
-   ```
-
-2. Make sure your frontend is using the correct backend URL:
-
-   - In Vercel dashboard: Settings > Environment Variables
-   - Set `REACT_APP_API_URL` to your backend URL
-
-3. Redeploy both services if needed
-
-### Using Custom Domains
-
-If you want to use custom domains:
-
-1. Configure your custom domain in Vercel for the frontend
-2. Configure your custom domain for your backend hosting service
-3. Update the CORS settings in your backend to include your custom domain
-4. Update the `REACT_APP_API_URL` in Vercel to point to your backend custom domain
+1. Create new Dart files in the `mobile_frontend/lib` directory
+2. Add routes in the main router configuration
+3. Create services for API calls in the `lib/services` directory
+4. Follow Flutter's widget-based architecture
 
 ## Environment Variables
 
 ### Backend
-
-- `SECRET_KEY`: Django secret key
-- `DEBUG`: Set to 'True' for development, 'False' for production
-- `ALLOWED_HOSTS`: Comma-separated list of allowed hosts
-- `DATABASE_URL`: PostgreSQL connection string (production only)
-- `CORS_ALLOWED_ORIGINS`: Comma-separated list of allowed origins for CORS
-- `FRONTEND_URL`: URL of the frontend application
-- `EMAIL_HOST_USER`: Gmail address for sending emails
-- `EMAIL_HOST_PASSWORD`: Gmail app password
+- `SECRET_KEY` - Django secret key
+- `DEBUG` - Set to 'True' for development, 'False' for production
+- `ALLOWED_HOSTS` - Comma-separated list of allowed hosts
+- `DATABASE_URL` - PostgreSQL connection string (production only)
+- `CORS_ALLOWED_ORIGINS` - Comma-separated list of allowed origins for CORS
+- `FRONTEND_URL` - URL of the frontend application
+- `EMAIL_HOST_USER` - Gmail address for sending emails
+- `EMAIL_HOST_PASSWORD` - Gmail app password
 
 ### Frontend
+- `REACT_APP_API_URL` - URL of the backend API
 
-- `REACT_APP_API_URL`: URL of the backend API
+## 👨‍💻 Developer
 
-## License
+**Haile Abateneh** - Full Stack Developer
+- 📧 Email: Halazab16@gmail.com
+- 🌐 Portfolio: [haileab.onrender.com](https://haileab.onrender.com/)
+- 💼 Specializing in Django, React, and Flutter development
 
-[MIT License](LICENSE)
+## 📄 License
 
-# 🚀 Render Deployment Instructions
-
-## 1. Setup
-
-- Ensure you have a `render.yaml` file in your project root (already provided).
-- Create a PostgreSQL database on Render and copy its connection string.
-
-## 2. Backend (Django)
-
-- Deploy as a Web Service on Render.
-- Set build command: `./build.sh`
-- Set start command: `gunicorn mengedmate.wsgi:application`
-- Set environment variables as in `render.yaml` (SECRET_KEY, DEBUG, ALLOWED_HOSTS, DATABASE_URL, CORS_ALLOWED_ORIGINS, FRONTEND_URL, EMAIL_HOST_USER, EMAIL_HOST_PASSWORD).
-
-## 3. Frontend (React)
-
-- Deploy as a Static Site on Render.
-- Set build command: `cd frontend && npm install && npm run build`
-- Set publish directory: `frontend/build`
-- Create a file `frontend/.env.production` with:
-  ```
-  REACT_APP_API_URL=https://<your-backend-domain>.onrender.com
-  ```
-- Set the same value in the Render dashboard as an environment variable for the static site if needed.
-
-## 4. CORS
-
-- In Django settings, ensure `CORS_ALLOWED_ORIGINS` includes your frontend Render URL.
-
-## 5. Static/Media Files
-
-- Django will serve static files using WhiteNoise. Media files will be served from `/media/`.
-
-## Important Notes for Render Deployment
-
-- If you want to use SQLite on Render, **do NOT set DATABASE_URL** in the environment variables.
-- For CORS: Use `CORS_ALLOW_ALL_ORIGINS = True` for development. For production, set `CORS_ALLOWED_ORIGINS` to your frontend Render URL.
+This project is licensed under the MIT License - see the [LICENSE](LICENSE) file for details.

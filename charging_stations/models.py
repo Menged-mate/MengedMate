@@ -9,7 +9,7 @@ class VerificationStatus(models.TextChoices):
     REJECTED = 'rejected', _('Rejected')
 
 class StationOwner(models.Model):
-   
+
     user = models.OneToOneField(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='station_owner')
     company_name = models.CharField(max_length=255)
     business_registration_number = models.CharField(max_length=100, blank=True, null=True)
@@ -40,7 +40,7 @@ class StationOwner(models.Model):
         return f"{self.company_name} ({self.user.email})"
 
 class ChargingStation(models.Model):
-   
+
     class StationStatus(models.TextChoices):
         OPERATIONAL = 'operational', _('Operational')
         UNDER_MAINTENANCE = 'under_maintenance', _('Under Maintenance')
@@ -59,11 +59,11 @@ class ChargingStation(models.Model):
     latitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
     longitude = models.DecimalField(max_digits=9, decimal_places=6, blank=True, null=True)
 
-    
+
     description = models.TextField(blank=True, null=True)
     opening_hours = models.TextField(blank=True, null=True)
 
-    
+
     has_restroom = models.BooleanField(default=False)
     has_wifi = models.BooleanField(default=False)
     has_restaurant = models.BooleanField(default=False)
@@ -96,7 +96,7 @@ class ChargingStation(models.Model):
         return self.name
 
 class StationImage(models.Model):
-   
+
     station = models.ForeignKey(ChargingStation, on_delete=models.CASCADE, related_name='images')
     image = models.ImageField(upload_to='station_images/')
     caption = models.CharField(max_length=255, blank=True, null=True)
@@ -109,7 +109,7 @@ class StationImage(models.Model):
         return f"Image for {self.station.name}"
 
 class ChargingConnector(models.Model):
-    
+
     class ConnectorType(models.TextChoices):
         TYPE_1 = 'type1', _('Type 1 (J1772)')
         TYPE_2 = 'type2', _('Type 2 (Mennekes)')
@@ -119,19 +119,26 @@ class ChargingConnector(models.Model):
         TESLA = 'tesla', _('Tesla')
         OTHER = 'other', _('Other')
 
+    class ConnectorStatus(models.TextChoices):
+        AVAILABLE = 'available', _('Available')
+        OCCUPIED = 'occupied', _('Occupied')
+        OUT_OF_ORDER = 'out_of_order', _('Out of Order')
+        MAINTENANCE = 'maintenance', _('Under Maintenance')
+
     station = models.ForeignKey(ChargingStation, on_delete=models.CASCADE, related_name='connectors')
     connector_type = models.CharField(max_length=20, choices=ConnectorType.choices)
     power_kw = models.DecimalField(max_digits=6, decimal_places=2, help_text='Power in kW')
     quantity = models.PositiveIntegerField(default=1)
     price_per_kwh = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
     is_available = models.BooleanField(default=True)
+    status = models.CharField(max_length=20, choices=ConnectorStatus.choices, default=ConnectorStatus.AVAILABLE)
     description = models.TextField(blank=True, null=True)
 
     def __str__(self):
         return f"{self.get_connector_type_display()} - {self.power_kw}kW"
 
 class FavoriteStation(models.Model):
-   
+
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='favorite_stations')
     station = models.ForeignKey(ChargingStation, on_delete=models.CASCADE, related_name='favorited_by')
     created_at = models.DateTimeField(auto_now_add=True)
