@@ -79,7 +79,7 @@ class InitiatePaymentView(APIView):
         if serializer.is_valid():
             payment_service = PaymentService()
 
-            result = payment_service.initiate_mpesa_payment(
+            result = payment_service.initiate_chapa_payment(
                 user=request.user,
                 amount=serializer.validated_data['amount'],
                 phone_number=serializer.validated_data['phone_number'],
@@ -105,28 +105,21 @@ class InitiatePaymentView(APIView):
 @permission_classes([AllowAny])
 def payment_callback(request):
     try:
-        serializer = PaymentCallbackSerializer(data=request.data)
-        if serializer.is_valid():
-            callback_data = serializer.validated_data['Body']['stkCallback']
+        callback_data = request.data
 
-            payment_service = PaymentService()
-            result = payment_service.process_callback(callback_data)
-
-            return Response({
-                'ResultCode': 0,
-                'ResultDesc': 'Success'
-            }, status=status.HTTP_200_OK)
+        payment_service = PaymentService()
+        result = payment_service.process_callback(callback_data)
 
         return Response({
-            'ResultCode': 1,
-            'ResultDesc': 'Invalid callback data'
-        }, status=status.HTTP_400_BAD_REQUEST)
+            'status': 'success',
+            'message': 'Callback processed successfully'
+        }, status=status.HTTP_200_OK)
 
     except Exception as e:
         logger.error(f"Payment callback error: {e}")
         return Response({
-            'ResultCode': 1,
-            'ResultDesc': 'Callback processing failed'
+            'status': 'error',
+            'message': 'Callback processing failed'
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
@@ -139,7 +132,7 @@ class TransactionStatusView(APIView):
             payment_service = PaymentService()
 
             result = payment_service.get_transaction_status(
-                serializer.validated_data['checkout_request_id']
+                serializer.validated_data['tx_ref']
             )
 
             return Response(result, status=status.HTTP_200_OK)

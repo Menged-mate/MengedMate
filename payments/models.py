@@ -6,7 +6,7 @@ import uuid
 
 class PaymentMethod(models.Model):
     class MethodType(models.TextChoices):
-        MPESA = 'mpesa', _('M-Pesa')
+        CHAPA = 'chapa', _('Chapa')
         TELEBIRR = 'telebirr', _('TeleBirr')
         BANK_TRANSFER = 'bank_transfer', _('Bank Transfer')
         CREDIT_CARD = 'credit_card', _('Credit Card')

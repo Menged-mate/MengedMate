@@ -17,19 +17,19 @@ class PaymentMethodSerializer(serializers.ModelSerializer):
     def create(self, validated_data):
         user = self.context['request'].user
         validated_data['user'] = user
-        
+
         if validated_data.get('is_default'):
             PaymentMethod.objects.filter(user=user, is_default=True).update(is_default=False)
-        
+
         return super().create(validated_data)
 
     def update(self, instance, validated_data):
         if validated_data.get('is_default'):
             PaymentMethod.objects.filter(
-                user=instance.user, 
+                user=instance.user,
                 is_default=True
             ).exclude(id=instance.id).update(is_default=False)
-        
+
         return super().update(instance, validated_data)
 
 
@@ -101,16 +101,21 @@ class InitiatePaymentSerializer(serializers.Serializer):
     description = serializers.CharField(max_length=255, required=False, default="MengedMate Payment")
 
     def validate_phone_number(self, value):
-        if not value.startswith('+251') and not value.startswith('251') and not value.startswith('09'):
-            raise serializers.ValidationError("Phone number must be a valid Ethiopian number")
-        
-        if value.startswith('09'):
-            value = '+251' + value[1:]
-        elif value.startswith('251'):
-            value = '+' + value
-        elif not value.startswith('+251'):
-            raise serializers.ValidationError("Invalid phone number format")
-        
+        # Remove any spaces or special characters
+        cleaned_value = ''.join(filter(str.isdigit, value.replace('+', '')))
+
+        # Ethiopian number validation (primary)
+        if value.startswith('09') or value.startswith('+2519') or value.startswith('2519'):
+            if value.startswith('09'):
+                value = '+251' + value[1:]
+            elif value.startswith('251'):
+                value = '+' + value
+            elif not value.startswith('+251'):
+                value = '+251' + value[4:] if value.startswith('2519') else value
+        # Basic international format validation
+        elif not value.startswith('+'):
+            raise serializers.ValidationError("Phone number must be in international format (+country_code)")
+
         return value
 
 
@@ -126,7 +131,7 @@ class PaymentCallbackSerializer(serializers.Serializer):
 
 
 class TransactionStatusSerializer(serializers.Serializer):
-    checkout_request_id = serializers.CharField(max_length=100)
+    tx_ref = serializers.CharField(max_length=100)
 
 
 class WithdrawSerializer(serializers.Serializer):
@@ -137,21 +142,21 @@ class WithdrawSerializer(serializers.Serializer):
     def validate_phone_number(self, value):
         if not value.startswith('+251') and not value.startswith('251') and not value.startswith('09'):
             raise serializers.ValidationError("Phone number must be a valid Ethiopian number")
-        
+
         if value.startswith('09'):
             value = '+251' + value[1:]
         elif value.startswith('251'):
             value = '+' + value
         elif not value.startswith('+251'):
             raise serializers.ValidationError("Invalid phone number format")
-        
+
         return value
 
     def validate_amount(self, value):
         user = self.context['request'].user
         wallet = Wallet.objects.filter(user=user).first()
-        
+
         if not wallet or wallet.balance < value:
             raise serializers.ValidationError("Insufficient wallet balance")
-        
+
         return value

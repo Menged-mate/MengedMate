@@ -20,11 +20,11 @@ class PaymentModelTests(TestCase):
     def test_payment_method_creation(self):
         payment_method = PaymentMethod.objects.create(
             user=self.user,
-            method_type=PaymentMethod.MethodType.MPESA,
+            method_type=PaymentMethod.MethodType.CHAPA,
             phone_number='+251912345678'
         )
         self.assertEqual(payment_method.user, self.user)
-        self.assertEqual(payment_method.method_type, PaymentMethod.MethodType.MPESA)
+        self.assertEqual(payment_method.method_type, PaymentMethod.MethodType.CHAPA)
         self.assertEqual(payment_method.phone_number, '+251912345678')
 
     def test_wallet_creation(self):
@@ -66,12 +66,12 @@ class PaymentAPITests(APITestCase):
 
     def test_create_payment_method(self):
         data = {
-            'method_type': 'mpesa',
+            'method_type': 'chapa',
             'phone_number': '+251912345678'
         }
         response = self.client.post('/api/payments/payment-methods/', data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertEqual(response.data['method_type'], 'mpesa')
+        self.assertEqual(response.data['method_type'], 'chapa')
 
     def test_transactions_list(self):
         response = self.client.get('/api/payments/transactions/')
