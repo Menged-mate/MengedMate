@@ -70,7 +70,6 @@ class ChargingStation(models.Model):
     has_shopping = models.BooleanField(default=False)
 
     is_active = models.BooleanField(default=True)
-    is_operational = models.BooleanField(default=True)
     is_public = models.BooleanField(default=True)
     status = models.CharField(
         max_length=20,
@@ -94,6 +93,16 @@ class ChargingStation(models.Model):
 
     def __str__(self):
         return self.name
+
+    def update_connector_counts(self):
+        """Update total and available connector counts based on actual connectors"""
+        connectors = self.connectors.all()
+        self.total_connectors = sum(connector.quantity for connector in connectors)
+        self.available_connectors = sum(
+            connector.quantity for connector in connectors
+            if connector.is_available and connector.status == 'available'
+        )
+        self.save(update_fields=['total_connectors', 'available_connectors'])
 
 class StationImage(models.Model):
 

@@ -183,7 +183,9 @@ class ConnectorCreateView(generics.CreateAPIView):
         try:
             station_owner = StationOwner.objects.get(user=self.request.user)
             station = ChargingStation.objects.get(id=station_id, owner=station_owner)
-            serializer.save(station=station)
+            connector = serializer.save(station=station)
+            # Update station connector counts
+            station.update_connector_counts()
         except (StationOwner.DoesNotExist, ChargingStation.DoesNotExist):
             raise permissions.PermissionDenied("You don't have permission to add connectors to this station.")
 
@@ -202,6 +204,17 @@ class ConnectorDetailView(generics.RetrieveUpdateDestroyAPIView):
             return ChargingConnector.objects.filter(station=station)
         except (StationOwner.DoesNotExist, ChargingStation.DoesNotExist):
             return ChargingConnector.objects.none()
+
+    def perform_update(self, serializer):
+        connector = serializer.save()
+        # Update station connector counts after update
+        connector.station.update_connector_counts()
+
+    def perform_destroy(self, instance):
+        station = instance.station
+        instance.delete()
+        # Update station connector counts after deletion
+        station.update_connector_counts()
 
 class StationImageCreateView(generics.CreateAPIView):
 

@@ -1,91 +1,394 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Verify Your EV Charging Station Owner Account</title>
+    <title>Station Owner Verification - MengedMate</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
+        * {
             margin: 0;
             padding: 0;
+            box-sizing: border-box;
         }
-        .container {
-            max-width: 600px;
-            margin: 0 auto;
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2d3748;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
             padding: 20px;
         }
+
+        .email-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
         .header {
+            background: linear-gradient(135deg, #805ad5 0%, #b794f6 100%);
+            padding: 40px 30px;
             text-align: center;
-            padding: 20px 0;
+            position: relative;
         }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        }
+
         .logo {
-            font-size: 24px;
-            font-weight: bold;
-            color: #4a6cf7;
+            position: relative;
+            z-index: 1;
         }
-        .content {
-            background-color: #f9f9f9;
-            padding: 30px;
-            border-radius: 5px;
-        }
-        .verification-code {
+
+        .logo h1 {
+            color: #ffffff;
             font-size: 32px;
-            font-weight: bold;
-            text-align: center;
-            letter-spacing: 5px;
-            margin: 20px 0;
-            color: #4a6cf7;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        .button {
+
+        .logo p {
+            color: #e9d8fd;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .content {
+            padding: 50px 40px;
+            text-align: center;
+        }
+
+        .verification-icon {
+            font-size: 64px;
+            margin-bottom: 24px;
+        }
+
+        .verification-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 16px;
+        }
+
+        .verification-text {
+            font-size: 18px;
+            color: #4a5568;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        .status-section {
+            background: #f7fafc;
+            border-radius: 16px;
+            padding: 32px;
+            margin: 32px 0;
+            text-align: left;
+        }
+
+        .status-badge {
+            display: inline-flex;
+            align-items: center;
+            padding: 12px 20px;
+            border-radius: 25px;
+            font-weight: 700;
+            font-size: 16px;
+            margin-bottom: 20px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .status-verified {
+            background: linear-gradient(135deg, #48bb78 0%, #68d391 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(72, 187, 120, 0.3);
+        }
+
+        .status-pending {
+            background: linear-gradient(135deg, #ed8936 0%, #f6ad55 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(237, 137, 54, 0.3);
+        }
+
+        .status-rejected {
+            background: linear-gradient(135deg, #e53e3e 0%, #fc8181 100%);
+            color: #ffffff;
+            box-shadow: 0 4px 12px rgba(229, 62, 62, 0.3);
+        }
+
+        .benefits-section {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+            text-align: left;
+        }
+
+        .benefits-title {
+            font-size: 18px;
+            font-weight: 600;
+            color: #22543d;
+            margin-bottom: 16px;
+        }
+
+        .benefits-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .benefits-list li {
+            color: #22543d;
+            font-size: 16px;
+            margin-bottom: 12px;
+            padding-left: 28px;
+            position: relative;
+        }
+
+        .benefits-list li::before {
+            content: '⚡';
+            position: absolute;
+            left: 0;
+            font-size: 18px;
+        }
+
+        .action-section {
+            margin: 40px 0;
+        }
+
+        .action-button {
             display: inline-block;
-            background-color: #4a6cf7;
-            color: white;
+            background: linear-gradient(135deg, #805ad5 0%, #b794f6 100%);
+            color: #ffffff !important;
             text-decoration: none;
-            padding: 12px 24px;
-            border-radius: 5px;
-            margin: 20px 0;
-            font-weight: bold;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(128, 90, 213, 0.3);
+            transition: all 0.3s ease;
         }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(128, 90, 213, 0.4);
+        }
+
+        .timeline-section {
+            background: #edf2f7;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 32px 0;
+            text-align: left;
+        }
+
+        .timeline-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 16px;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin-bottom: 12px;
+            font-size: 14px;
+            color: #4a5568;
+        }
+
+        .timeline-icon {
+            width: 20px;
+            height: 20px;
+            border-radius: 50%;
+            margin-right: 12px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: white;
+        }
+
+        .timeline-completed {
+            background: #48bb78;
+        }
+
+        .timeline-current {
+            background: #ed8936;
+        }
+
+        .timeline-pending {
+            background: #cbd5e0;
+        }
+
         .footer {
+            background: #f8fafc;
+            padding: 32px 40px;
             text-align: center;
-            margin-top: 20px;
-            font-size: 12px;
-            color: #666;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .footer-content {
+            color: #718096;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .footer-links {
+            margin-top: 16px;
+        }
+
+        .footer-links a {
+            color: #805ad5;
+            text-decoration: none;
+            margin: 0 12px;
+            font-weight: 500;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .action-button {
+                padding: 14px 24px;
+                font-size: 16px;
+            }
+
+            .footer {
+                padding: 24px 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="email-wrapper">
         <div class="header">
-            <div class="logo">EV Finder</div>
+            <div class="logo">
+                <h1>🏢 MengedMate</h1>
+                <p>Station Owner Verification</p>
+            </div>
         </div>
+
         <div class="content">
-            <h2>Verify Your Station Owner Account</h2>
-            <p>Hello {{ user.first_name }},</p>
-            <p>Thank you for registering as a charging station owner on EV Finder. To complete your registration, please use the verification code below:</p>
-            
-            <div class="verification-code">{{ verification_code }}</div>
-            
-            <p>Enter this code on the verification page to confirm your email address and continue setting up your station owner profile.</p>
-            
-            <p>After verifying your email, you'll need to complete your profile by uploading the required documents:</p>
-            <ul>
-                <li>Business license</li>
-                <li>ID proof</li>
-                <li>Utility bill</li>
-            </ul>
-            
-            <p>Once your profile is complete, our team will review your information and verify your account.</p>
-            
-            <p>If you have any questions, please contact our support team.</p>
-            <p>Best regards,<br>The EV Finder Team</p>
+            {% if station_owner.verification_status == 'verified' %}
+                <div class="verification-icon">🎉</div>
+                <h1 class="verification-title">Congratulations! You're Verified!</h1>
+            {% elif station_owner.verification_status == 'pending' %}
+                <div class="verification-icon">⏳</div>
+                <h1 class="verification-title">Verification In Progress</h1>
+            {% else %}
+                <div class="verification-icon">📋</div>
+                <h1 class="verification-title">Action Required</h1>
+            {% endif %}
+
+            <p class="verification-text">
+                Hello <strong>{{ station_owner.user.first_name|default:"there" }}</strong>,<br>
+                We have an important update regarding your station owner verification status.
+            </p>
+
+            <div class="status-section">
+                {% if station_owner.verification_status == 'verified' %}
+                    <div class="status-badge status-verified">✓ Verified</div>
+                    <p style="color: #22543d; font-size: 16px; margin-bottom: 20px;">
+                        <strong>Excellent news!</strong> Your station owner account has been successfully verified and approved.
+                    </p>
+
+                    <div class="benefits-section">
+                        <div class="benefits-title">🚀 What You Can Do Now:</div>
+                        <ul class="benefits-list">
+                            <li>Add and manage unlimited charging stations</li>
+                            <li>Monitor real-time station performance</li>
+                            <li>Access comprehensive revenue analytics</li>
+                            <li>Receive payments from charging sessions</li>
+                            <li>Set custom pricing for your stations</li>
+                            <li>Access priority customer support</li>
+                        </ul>
+                    </div>
+
+                    <div class="action-section">
+                        <a href="#" class="action-button">Access Your Dashboard</a>
+                    </div>
+
+                {% elif station_owner.verification_status == 'pending' %}
+                    <div class="status-badge status-pending">⏳ Under Review</div>
+                    <p style="color: #744210; font-size: 16px; margin-bottom: 20px;">
+                        Your verification documents are currently being reviewed by our team.
+                    </p>
+
+                    <div class="timeline-section">
+                        <div class="timeline-title">📋 Verification Process:</div>
+                        <div class="timeline-item">
+                            <div class="timeline-icon timeline-completed">✓</div>
+                            Documents submitted
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-icon timeline-current">⏳</div>
+                            Under review (1-3 business days)
+                        </div>
+                        <div class="timeline-item">
+                            <div class="timeline-icon timeline-pending">○</div>
+                            Verification complete
+                        </div>
+                    </div>
+
+                {% else %}
+                    <div class="status-badge status-rejected">📋 Additional Information Required</div>
+                    <p style="color: #742a2a; font-size: 16px; margin-bottom: 20px;">
+                        We need additional information or documentation to complete your verification.
+                    </p>
+
+                    <div class="action-section">
+                        <a href="#" class="action-button">Update Documents</a>
+                    </div>
+                {% endif %}
+            </div>
+
+            <p style="color: #4a5568; margin-top: 32px;">
+                Questions? Our verification team is here to help.<br>
+                <strong>Thank you for choosing MengedMate!</strong><br>
+                The MengedMate Verification Team
+            </p>
         </div>
+
         <div class="footer">
-            <p>&copy; 2023 EV Finder. All rights reserved.</p>
-            <p>This email was sent to {{ user.email }}</p>
+            <div class="footer-content">
+                <p><strong>MengedMate</strong> - Powering Your Electric Journey</p>
+                <p>&copy; {% now "Y" %} MengedMate. All rights reserved.</p>
+
+                <div class="footer-links">
+                    <a href="#">Verification Help</a>
+                    <a href="#">Support Center</a>
+                    <a href="#">Contact Us</a>
+                </div>
+
+                <p style="margin-top: 16px; font-size: 12px;">
+                    This email was sent to {{ station_owner.user.email }}<br>
+                    You're receiving this because you applied for station owner verification.
+                </p>
+            </div>
         </div>
     </div>
 </body>

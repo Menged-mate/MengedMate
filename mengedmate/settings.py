@@ -371,6 +371,7 @@ CSRF_COOKIE_NAME = 'csrftoken'
 
 CSRF_COOKIE_SAMESITE = None
 
+# Email Configuration
 if DEBUG:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     print("Using console email backend for development")
@@ -382,7 +383,13 @@ else:
     EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
 
-DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'support@mengedmate.com')
+# Email Settings
+DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'MengedMate <noreply@mengedmate.com>')
+EMAIL_SUBJECT_PREFIX = '[MengedMate] '
+EMAIL_TIMEOUT = 60
+
+# Frontend URL for email links
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
 
 
 ACCOUNT_LOGIN_METHODS = {'email'}

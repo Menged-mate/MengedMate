@@ -1,90 +1,277 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>{{ notification.title }}</title>
+    <title>{{ notification.title }} - MengedMate</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            line-height: 1.6;
-            color: #333;
+        * {
             margin: 0;
             padding: 0;
-            background-color: #f5f7fa;
+            box-sizing: border-box;
         }
-        .container {
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2d3748;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .email-wrapper {
             max-width: 600px;
             margin: 0 auto;
-            padding: 20px;
-            background-color: #ffffff;
-            border-radius: 8px;
-            box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+            background: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
         }
+
         .header {
+            background: linear-gradient(135deg, #38b2ac 0%, #4fd1c7 100%);
+            padding: 40px 30px;
             text-align: center;
-            padding-bottom: 20px;
-            border-bottom: 1px solid #eaeaea;
+            position: relative;
         }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/><circle cx="50" cy="10" r="0.5" fill="white" opacity="0.1"/><circle cx="10" cy="60" r="0.5" fill="white" opacity="0.1"/><circle cx="90" cy="40" r="0.5" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        }
+
         .logo {
-            max-width: 150px;
-            margin-bottom: 20px;
+            position: relative;
+            z-index: 1;
         }
-        .content {
-            padding: 20px 0;
+
+        .logo h1 {
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
         }
-        .notification-title {
-            font-size: 22px;
-            font-weight: bold;
-            color: #4a6cf7;
-            margin-bottom: 15px;
-        }
-        .notification-message {
+
+        .logo p {
+            color: #b2f5ea;
             font-size: 16px;
-            margin-bottom: 25px;
+            font-weight: 400;
         }
-        .button {
+
+        .content {
+            padding: 50px 40px;
+            text-align: center;
+        }
+
+        .notification-icon {
+            font-size: 48px;
+            margin-bottom: 24px;
+        }
+
+        .notification-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 16px;
+        }
+
+        .notification-message {
+            font-size: 18px;
+            color: #4a5568;
+            margin-bottom: 32px;
+            line-height: 1.6;
+            text-align: left;
+            background: #f7fafc;
+            padding: 24px;
+            border-radius: 12px;
+            border-left: 4px solid #38b2ac;
+        }
+
+        .action-section {
+            margin: 40px 0;
+        }
+
+        .action-button {
             display: inline-block;
-            background-color: #4a6cf7;
+            background: linear-gradient(135deg, #38b2ac 0%, #4fd1c7 100%);
             color: #ffffff !important;
             text-decoration: none;
-            padding: 12px 24px;
-            border-radius: 6px;
-            font-weight: bold;
-            margin-top: 10px;
+            padding: 16px 32px;
+            border-radius: 12px;
+            font-weight: 700;
+            font-size: 18px;
+            box-shadow: 0 4px 12px rgba(56, 178, 172, 0.3);
+            transition: all 0.3s ease;
         }
+
+        .action-button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 6px 16px rgba(56, 178, 172, 0.4);
+        }
+
+        .info-section {
+            background: #edf2f7;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 32px 0;
+            text-align: left;
+        }
+
+        .info-title {
+            font-size: 16px;
+            font-weight: 600;
+            color: #2d3748;
+            margin-bottom: 12px;
+        }
+
+        .info-list {
+            list-style: none;
+            padding: 0;
+        }
+
+        .info-list li {
+            color: #4a5568;
+            font-size: 14px;
+            margin-bottom: 8px;
+            padding-left: 20px;
+            position: relative;
+        }
+
+        .info-list li::before {
+            content: '✓';
+            position: absolute;
+            left: 0;
+            color: #38b2ac;
+            font-weight: bold;
+        }
+
         .footer {
-            margin-top: 30px;
+            background: #f8fafc;
+            padding: 32px 40px;
             text-align: center;
-            font-size: 12px;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .footer-content {
             color: #718096;
-            border-top: 1px solid #eaeaea;
-            padding-top: 20px;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .footer-links {
+            margin-top: 16px;
+        }
+
+        .footer-links a {
+            color: #38b2ac;
+            text-decoration: none;
+            margin: 0 12px;
+            font-weight: 500;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        .unsubscribe {
+            margin-top: 20px;
+            font-size: 12px;
+            color: #a0aec0;
+        }
+
+        .unsubscribe a {
+            color: #a0aec0;
+            text-decoration: underline;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .action-button {
+                padding: 14px 24px;
+                font-size: 16px;
+            }
+
+            .footer {
+                padding: 24px 20px;
+            }
         }
     </style>
 </head>
 <body>
-    <div class="container">
+    <div class="email-wrapper">
         <div class="header">
-            <h1>MengedMate</h1>
-        </div>
-        
-        <div class="content">
-            <h2 class="notification-title">{{ notification.title }}</h2>
-            
-            <div class="notification-message">
-                {{ notification.message }}
+            <div class="logo">
+                <h1>🔔 MengedMate</h1>
+                <p>Notification Center</p>
             </div>
-            
-            {% if notification.link %}
-            <a href="{{ notification.link }}" class="button">View Details</a>
-            {% endif %}
         </div>
-        
+
+        <div class="content">
+            <div class="notification-icon">📢</div>
+            <h1 class="notification-title">{{ notification.title }}</h1>
+
+            <div class="notification-message">
+                {{ notification.message|safe }}
+            </div>
+
+            {% if notification.link %}
+            <div class="action-section">
+                <a href="{{ notification.link }}" class="action-button">View Details</a>
+            </div>
+            {% endif %}
+
+            <div class="info-section">
+                <div class="info-title">What's Next?</div>
+                <ul class="info-list">
+                    <li>Check your dashboard for more details</li>
+                    <li>Update your notification preferences anytime</li>
+                    <li>Contact support if you need assistance</li>
+                </ul>
+            </div>
+
+            <p style="color: #4a5568; margin-top: 32px;">
+                Stay connected with MengedMate for the latest updates.<br>
+                <strong>Happy charging!</strong><br>
+                The MengedMate Team
+            </p>
+        </div>
+
         <div class="footer">
-            <p>© 2023 MengedMate. All rights reserved.</p>
-            <p>You're receiving this email because you have an account with MengedMate.</p>
-            <p>To manage your notification preferences, visit your <a href="{{ frontend_url }}/settings/notifications">account settings</a>.</p>
+            <div class="footer-content">
+                <p><strong>MengedMate</strong> - Powering Your Electric Journey</p>
+                <p>&copy; {% now "Y" %} MengedMate. All rights reserved.</p>
+
+                <div class="footer-links">
+                    <a href="#">Dashboard</a>
+                    <a href="#">Settings</a>
+                    <a href="#">Support</a>
+                </div>
+
+                <div class="unsubscribe">
+                    <p>
+                        This email was sent to {{ user.email }}<br>
+                        <a href="#">Manage notification preferences</a> |
+                        <a href="#">Unsubscribe</a>
+                    </p>
+                </div>
+            </div>
         </div>
     </div>
 </body>

@@ -23,7 +23,7 @@ class DashboardStatsView(APIView):
             # Calculate stats
             total_stations = stations.count()
             active_stations = stations.filter(status='operational').count()
-            offline_stations = stations.filter(status__in=['under_maintenance', 'closed']).count()
+            offline_stations = stations.filter(status='closed').count()
             maintenance_stations = stations.filter(status='under_maintenance').count()
 
             # Get real revenue data from transactions
@@ -121,21 +121,55 @@ class AnalyticsUsageView(APIView):
         try:
             station_owner = StationOwner.objects.get(user=request.user)
 
-            # Mock hourly usage data (replace with actual usage model when available)
-            hourly_usage = []
-            for hour in range(24):
-                usage = {
-                    'hour': hour,
-                    'usage': random.randint(10, 100),
-                    'sessions': random.randint(5, 50)
-                }
-                hourly_usage.append(usage)
+            # Get real usage data from charging sessions
+            try:
+                from ocpp_integration.models import ChargingSession
+
+                # Get charging sessions for this station owner's stations
+                stations = ChargingStation.objects.filter(owner=station_owner)
+                charging_sessions = ChargingSession.objects.filter(
+                    ocpp_station__charging_station__in=stations
+                )
+
+                # Calculate hourly usage data
+                hourly_usage = []
+                for hour in range(24):
+                    hour_sessions = charging_sessions.filter(
+                        start_time__hour=hour
+                    )
+                    usage = sum(session.energy_consumed or 0 for session in hour_sessions)
+                    sessions_count = hour_sessions.count()
+
+                    hourly_usage.append({
+                        'hour': hour,
+                        'usage': float(usage),
+                        'sessions': sessions_count
+                    })
+
+                total_usage = sum(item['usage'] for item in hourly_usage)
+                total_sessions = sum(item['sessions'] for item in hourly_usage)
+                peak_hour = max(hourly_usage, key=lambda x: x['usage'])['hour'] if hourly_usage else 0
+
+            except Exception as e:
+                # Fallback to mock data if charging sessions not available
+                hourly_usage = []
+                for hour in range(24):
+                    usage = {
+                        'hour': hour,
+                        'usage': random.randint(10, 100),
+                        'sessions': random.randint(5, 50)
+                    }
+                    hourly_usage.append(usage)
+
+                total_usage = sum(item['usage'] for item in hourly_usage)
+                total_sessions = sum(item['sessions'] for item in hourly_usage)
+                peak_hour = max(hourly_usage, key=lambda x: x['usage'])['hour']
 
             return Response({
                 'hourly_usage': hourly_usage,
-                'total_usage': sum(item['usage'] for item in hourly_usage),
-                'total_sessions': sum(item['sessions'] for item in hourly_usage),
-                'peak_hour': max(hourly_usage, key=lambda x: x['usage'])['hour']
+                'total_usage': total_usage,
+                'total_sessions': total_sessions,
+                'peak_hour': peak_hour
             })
         except StationOwner.DoesNotExist:
             return Response({
@@ -266,11 +300,34 @@ class AnalyticsReportsView(APIView):
                 total=Sum('amount')
             )['total'] or 0
 
-            # Calculate total energy dispensed (mock data based on stations)
-            total_energy_dispensed = stations.count() * random.randint(800, 1200)
+            # Calculate total energy dispensed from real charging sessions
+            try:
+                from ocpp_integration.models import ChargingSession
+                charging_sessions = ChargingSession.objects.filter(
+                    ocpp_station__charging_station__in=stations,
+                    start_time__gte=start_date
+                )
+                total_energy_dispensed = sum(
+                    session.energy_consumed or 0 for session in charging_sessions
+                )
 
-            # Calculate average session duration (mock data)
-            avg_session_duration = random.randint(35, 55)
+                # Calculate average session duration from real data
+                completed_sessions = charging_sessions.filter(
+                    end_time__isnull=False
+                )
+                if completed_sessions.exists():
+                    total_duration = sum(
+                        (session.end_time - session.start_time).total_seconds() / 60
+                        for session in completed_sessions
+                    )
+                    avg_session_duration = total_duration / completed_sessions.count()
+                else:
+                    avg_session_duration = 0
+
+            except Exception as e:
+                # Fallback to mock data
+                total_energy_dispensed = stations.count() * random.randint(800, 1200)
+                avg_session_duration = random.randint(35, 55)
 
             # Generate monthly revenue data
             monthly_revenue = []

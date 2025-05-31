@@ -28,22 +28,25 @@ class ChargingConnectorInline(admin.StackedInline):
 
 @admin.register(StationOwner)
 class StationOwnerAdmin(admin.ModelAdmin):
-    list_display = ('company_name', 'user_email', 'verification_badge', 'is_profile_completed', 'created_at')
+    list_display = ('company_name', 'user_email', 'verification_badge', 'is_profile_completed', 'documents_uploaded', 'created_at')
     list_filter = ('verification_status', 'is_profile_completed', 'created_at')
     search_fields = ('company_name', 'user__email', 'business_registration_number')
-    readonly_fields = ('created_at', 'updated_at', 'verified_at', 'document_preview')
+    readonly_fields = ('created_at', 'updated_at', 'verified_at', 'business_document_preview', 'business_license_preview', 'id_proof_preview', 'utility_bill_preview')
     fieldsets = (
         (None, {
             'fields': ('user', 'company_name', 'business_registration_number')
         }),
-        ('Verification', {
+        ('Verification Status', {
             'fields': ('verification_status', 'verified_at', 'is_profile_completed')
         }),
-        ('Documents', {
-            'fields': ('business_document', 'document_preview')
+        ('Business Documents', {
+            'fields': ('business_document', 'business_document_preview', 'business_license', 'business_license_preview')
+        }),
+        ('Identity & Utility Documents', {
+            'fields': ('id_proof', 'id_proof_preview', 'utility_bill', 'utility_bill_preview')
         }),
         ('Contact Information', {
-            'fields': ('contact_phone', 'contact_email', 'website')
+            'fields': ('contact_phone', 'contact_email', 'website', 'description')
         }),
         ('Timestamps', {
             'fields': ('created_at', 'updated_at'),
@@ -52,6 +55,8 @@ class StationOwnerAdmin(admin.ModelAdmin):
     )
     list_per_page = 25
     save_on_top = True
+
+    actions = ['approve_verification', 'reject_verification', 'mark_pending']
 
     def user_email(self, obj):
         return obj.user.email
@@ -66,11 +71,174 @@ class StationOwnerAdmin(admin.ModelAdmin):
             return format_html('<span style="background-color: #dc3545; color: white; padding: 3px 8px; border-radius: 3px;">✗ Rejected</span>')
     verification_badge.short_description = 'Verification'
 
-    def document_preview(self, obj):
+    def documents_uploaded(self, obj):
+        docs = []
         if obj.business_document:
-            return format_html('<a href="{}" target="_blank">View Document</a>', obj.business_document.url)
-        return "No document uploaded"
-    document_preview.short_description = 'Document Preview'
+            docs.append('Business')
+        if obj.business_license:
+            docs.append('License')
+        if obj.id_proof:
+            docs.append('ID')
+        if obj.utility_bill:
+            docs.append('Utility')
+
+        if docs:
+            return format_html('<span style="color: green;">✓ {}</span>', ', '.join(docs))
+        return format_html('<span style="color: red;">✗ No documents</span>')
+    documents_uploaded.short_description = 'Documents'
+
+    def business_document_preview(self, obj):
+        if obj.business_document:
+            if obj.business_document.name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                return format_html(
+                    '<div style="margin: 10px 0;">'
+                    '<img src="{}" style="max-width: 300px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;" /><br>'
+                    '<a href="{}" target="_blank" style="margin-top: 5px; display: inline-block;">📄 View Full Size</a>'
+                    '</div>',
+                    obj.business_document.url, obj.business_document.url
+                )
+            else:
+                return format_html(
+                    '<div style="margin: 10px 0;">'
+                    '<a href="{}" target="_blank" style="background: #007cba; color: white; padding: 8px 12px; text-decoration: none; border-radius: 4px;">📄 Download Document</a>'
+                    '</div>',
+                    obj.business_document.url
+                )
+        return format_html('<span style="color: #999;">No business document uploaded</span>')
+    business_document_preview.short_description = 'Business Document Preview'
+
+    def business_license_preview(self, obj):
+        if obj.business_license:
+            if obj.business_license.name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                return format_html(
+                    '<div style="margin: 10px 0;">'
+                    '<img src="{}" style="max-width: 300px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;" /><br>'
+                    '<a href="{}" target="_blank" style="margin-top: 5px; display: inline-block;">📄 View Full Size</a>'
+                    '</div>',
+                    obj.business_license.url, obj.business_license.url
+                )
+            else:
+                return format_html(
+                    '<div style="margin: 10px 0;">'
+                    '<a href="{}" target="_blank" style="background: #007cba; color: white; padding: 8px 12px; text-decoration: none; border-radius: 4px;">📄 Download License</a>'
+                    '</div>',
+                    obj.business_license.url
+                )
+        return format_html('<span style="color: #999;">No business license uploaded</span>')
+    business_license_preview.short_description = 'Business License Preview'
+
+    def id_proof_preview(self, obj):
+        if obj.id_proof:
+            if obj.id_proof.name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                return format_html(
+                    '<div style="margin: 10px 0;">'
+                    '<img src="{}" style="max-width: 300px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;" /><br>'
+                    '<a href="{}" target="_blank" style="margin-top: 5px; display: inline-block;">📄 View Full Size</a>'
+                    '</div>',
+                    obj.id_proof.url, obj.id_proof.url
+                )
+            else:
+                return format_html(
+                    '<div style="margin: 10px 0;">'
+                    '<a href="{}" target="_blank" style="background: #007cba; color: white; padding: 8px 12px; text-decoration: none; border-radius: 4px;">📄 Download ID Proof</a>'
+                    '</div>',
+                    obj.id_proof.url
+                )
+        return format_html('<span style="color: #999;">No ID proof uploaded</span>')
+    id_proof_preview.short_description = 'ID Proof Preview'
+
+    def utility_bill_preview(self, obj):
+        if obj.utility_bill:
+            if obj.utility_bill.name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+                return format_html(
+                    '<div style="margin: 10px 0;">'
+                    '<img src="{}" style="max-width: 300px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;" /><br>'
+                    '<a href="{}" target="_blank" style="margin-top: 5px; display: inline-block;">📄 View Full Size</a>'
+                    '</div>',
+                    obj.utility_bill.url, obj.utility_bill.url
+                )
+            else:
+                return format_html(
+                    '<div style="margin: 10px 0;">'
+                    '<a href="{}" target="_blank" style="background: #007cba; color: white; padding: 8px 12px; text-decoration: none; border-radius: 4px;">📄 Download Utility Bill</a>'
+                    '</div>',
+                    obj.utility_bill.url
+                )
+        return format_html('<span style="color: #999;">No utility bill uploaded</span>')
+    utility_bill_preview.short_description = 'Utility Bill Preview'
+
+    # Admin Actions
+    def approve_verification(self, request, queryset):
+        from django.utils import timezone
+        from django.core.mail import EmailMultiAlternatives
+        from django.template.loader import render_to_string
+        from django.conf import settings
+
+        updated = 0
+        for station_owner in queryset:
+            if station_owner.verification_status != 'verified':
+                station_owner.verification_status = 'verified'
+                station_owner.verified_at = timezone.now()
+                station_owner.save()
+                updated += 1
+
+                # Send verification email
+                try:
+                    html_content = render_to_string('station_owner_verification_email.html', {
+                        'station_owner': station_owner
+                    })
+
+                    email = EmailMultiAlternatives(
+                        '[MengedMate] Station Owner Verification Approved',
+                        'Your station owner verification has been approved.',
+                        settings.DEFAULT_FROM_EMAIL,
+                        [station_owner.user.email]
+                    )
+                    email.attach_alternative(html_content, "text/html")
+                    email.send()
+                except Exception as e:
+                    pass  # Continue even if email fails
+
+        self.message_user(request, f'{updated} station owner(s) successfully verified.')
+    approve_verification.short_description = "✅ Approve selected station owners"
+
+    def reject_verification(self, request, queryset):
+        from django.core.mail import EmailMultiAlternatives
+        from django.template.loader import render_to_string
+        from django.conf import settings
+
+        updated = 0
+        for station_owner in queryset:
+            if station_owner.verification_status != 'rejected':
+                station_owner.verification_status = 'rejected'
+                station_owner.verified_at = None
+                station_owner.save()
+                updated += 1
+
+                # Send rejection email
+                try:
+                    html_content = render_to_string('station_owner_verification_email.html', {
+                        'station_owner': station_owner
+                    })
+
+                    email = EmailMultiAlternatives(
+                        '[MengedMate] Station Owner Verification - Additional Information Required',
+                        'Additional information is required for your station owner verification.',
+                        settings.DEFAULT_FROM_EMAIL,
+                        [station_owner.user.email]
+                    )
+                    email.attach_alternative(html_content, "text/html")
+                    email.send()
+                except Exception as e:
+                    pass  # Continue even if email fails
+
+        self.message_user(request, f'{updated} station owner(s) marked as requiring additional information.')
+    reject_verification.short_description = "❌ Request additional information"
+
+    def mark_pending(self, request, queryset):
+        updated = queryset.update(verification_status='pending', verified_at=None)
+        self.message_user(request, f'{updated} station owner(s) marked as pending verification.')
+    mark_pending.short_description = "⏳ Mark as pending verification"
 
 @admin.register(ChargingStation)
 class ChargingStationAdmin(admin.ModelAdmin):

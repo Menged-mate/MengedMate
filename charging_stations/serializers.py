@@ -135,7 +135,7 @@ class ChargingStationSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'address', 'city', 'state', 'zip_code', 'country',
             'latitude', 'longitude', 'description', 'opening_hours',
-            'is_active', 'is_operational', 'is_public', 'status', 'rating', 'rating_count',
+            'is_active', 'is_public', 'status', 'rating', 'rating_count',
             'price_range', 'available_connectors', 'total_connectors',
             'has_restroom', 'has_wifi', 'has_restaurant', 'has_shopping',
             'main_image', 'marker_icon', 'created_at', 'updated_at',
@@ -170,7 +170,7 @@ class MapStationSerializer(serializers.ModelSerializer):
         model = ChargingStation
         fields = [
             'id', 'name', 'latitude', 'longitude', 'rating',
-            'is_operational', 'status', 'price_range', 'available_connectors',
+            'status', 'price_range', 'available_connectors',
             'total_connectors', 'marker_icon', 'owner_name',
             'is_verified_owner', 'connector_types'
         ]
@@ -194,7 +194,7 @@ class StationDetailSerializer(serializers.ModelSerializer):
         fields = [
             'id', 'name', 'address', 'city', 'state', 'zip_code', 'country',
             'latitude', 'longitude', 'description', 'opening_hours',
-            'is_active', 'is_operational', 'status', 'rating', 'rating_count',
+            'is_active', 'status', 'rating', 'rating_count',
             'price_range', 'available_connectors', 'total_connectors',
             'has_restroom', 'has_wifi', 'has_restaurant', 'has_shopping',
             'main_image', 'created_at', 'updated_at',
