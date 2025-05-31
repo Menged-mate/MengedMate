@@ -101,10 +101,8 @@ class InitiatePaymentSerializer(serializers.Serializer):
     description = serializers.CharField(max_length=255, required=False, default="MengedMate Payment")
 
     def validate_phone_number(self, value):
-        # Remove any spaces or special characters
         cleaned_value = ''.join(filter(str.isdigit, value.replace('+', '')))
 
-        # Ethiopian number validation (primary)
         if value.startswith('09') or value.startswith('+2519') or value.startswith('2519'):
             if value.startswith('09'):
                 value = '+251' + value[1:]
@@ -112,7 +110,6 @@ class InitiatePaymentSerializer(serializers.Serializer):
                 value = '+' + value
             elif not value.startswith('+251'):
                 value = '+251' + value[4:] if value.startswith('2519') else value
-        # Basic international format validation
         elif not value.startswith('+'):
             raise serializers.ValidationError("Phone number must be in international format (+country_code)")
 

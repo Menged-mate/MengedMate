@@ -58,6 +58,7 @@ INSTALLED_APPS = [
     "authentication",
     "charging_stations",
     "payments",
+    "ocpp_integration",
 ]
 
 JAZZMIN_SETTINGS = {
@@ -489,4 +490,13 @@ CHAPA_SETTINGS = {
     'SANDBOX_URL': 'https://api.chapa.co',
     'PRODUCTION_URL': 'https://api.chapa.co',
     'USE_SANDBOX': os.environ.get('CHAPA_USE_SANDBOX', 'True').lower() == 'true',
+}
+
+OCPP_SETTINGS = {
+    'BASE_URL': os.environ.get('OCPP_BASE_URL', 'http://localhost:8000'),
+    'WEBSOCKET_URL': os.environ.get('OCPP_WEBSOCKET_URL', 'ws://localhost:8000/ws/ev-locator/'),
+    'WEBHOOK_URL': os.environ.get('OCPP_WEBHOOK_URL', f'{API_BASE_URL}/api/ocpp/webhook/'),
+    'API_KEY': os.environ.get('OCPP_API_KEY', 'your-ocpp-api-key'),
+    'TIMEOUT': int(os.environ.get('OCPP_TIMEOUT', '30')),
+    'RETRY_ATTEMPTS': int(os.environ.get('OCPP_RETRY_ATTEMPTS', '3')),
 }
