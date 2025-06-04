@@ -2,6 +2,10 @@ from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 import uuid
+import qrcode
+from io import BytesIO
+from django.core.files import File
+import hashlib
 
 class VerificationStatus(models.TextChoices):
     PENDING = 'pending', _('Pending')
@@ -138,10 +142,79 @@ class ChargingConnector(models.Model):
     connector_type = models.CharField(max_length=20, choices=ConnectorType.choices)
     power_kw = models.DecimalField(max_digits=6, decimal_places=2, help_text='Power in kW')
     quantity = models.PositiveIntegerField(default=1)
+    available_quantity = models.PositiveIntegerField(default=1)
     price_per_kwh = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
     is_available = models.BooleanField(default=True)
     status = models.CharField(max_length=20, choices=ConnectorStatus.choices, default=ConnectorStatus.AVAILABLE)
     description = models.TextField(blank=True, null=True)
+
+    qr_code_token = models.CharField(max_length=255, unique=True, blank=True, null=True)
+    qr_code_image = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.qr_code_token:
+            self.qr_code_token = self.generate_qr_token()
+
+        if not self.available_quantity:
+            self.available_quantity = self.quantity
+
+        super().save(*args, **kwargs)
+
+        if not self.qr_code_image:
+            self.generate_qr_code()
+
+    def generate_qr_token(self):
+        """Generate a unique token for QR code"""
+        unique_string = f"{self.station.id}-{self.connector_type}-{self.power_kw}-{uuid.uuid4()}"
+        return hashlib.sha256(unique_string.encode()).hexdigest()[:32]
+
+    def generate_qr_code(self):
+        """Generate QR code for this connector"""
+        if not self.qr_code_token:
+            return
+
+        qr_data = f"https://mengedmate.onrender.com/api/payments/qr-initiate/{self.qr_code_token}/"
+
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(qr_data)
+        qr.make(fit=True)
+
+        img = qr.make_image(fill_color="black", back_color="white")
+
+        buffer = BytesIO()
+        img.save(buffer, format='PNG')
+        buffer.seek(0)
+
+        filename = f"qr_connector_{self.qr_code_token}.png"
+        self.qr_code_image.save(filename, File(buffer), save=False)
+
+        ChargingConnector.objects.filter(id=self.id).update(qr_code_image=self.qr_code_image)
+
+    def get_qr_code_url(self):
+        """Get the QR code image URL"""
+        if self.qr_code_image:
+            return self.qr_code_image.url
+        return None
+
+    def update_availability(self):
+        """Update connector availability based on active sessions"""
+        from ocpp_integration.models import ChargingSession
+
+        active_sessions = ChargingSession.objects.filter(
+            ocpp_connector__charging_connector=self,
+            status__in=['started', 'charging', 'preparing']
+        ).count()
+
+        self.available_quantity = max(0, self.quantity - active_sessions)
+        self.is_available = self.available_quantity > 0 and self.status == 'available'
+        self.save(update_fields=['available_quantity', 'is_available'])
 
     def __str__(self):
         return f"{self.get_connector_type_display()} - {self.power_kw}kW"
@@ -158,3 +231,113 @@ class FavoriteStation(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.station.name}"
+
+
+class StationReview(models.Model):
+    """Model for station reviews and ratings"""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='station_reviews')
+    station = models.ForeignKey(ChargingStation, on_delete=models.CASCADE, related_name='reviews')
+    rating = models.PositiveIntegerField(
+        choices=[(i, i) for i in range(1, 6)],  # 1-5 star rating
+        help_text="Rating from 1 to 5 stars"
+    )
+    review_text = models.TextField(blank=True, null=True, help_text="Optional review text")
+
+    charging_speed_rating = models.PositiveIntegerField(
+        choices=[(i, i) for i in range(1, 6)],
+        blank=True, null=True,
+        help_text="Rating for charging speed (1-5 stars)"
+    )
+    location_rating = models.PositiveIntegerField(
+        choices=[(i, i) for i in range(1, 6)],
+        blank=True, null=True,
+        help_text="Rating for location convenience (1-5 stars)"
+    )
+    amenities_rating = models.PositiveIntegerField(
+        choices=[(i, i) for i in range(1, 6)],
+        blank=True, null=True,
+        help_text="Rating for amenities (1-5 stars)"
+    )
+
+    is_verified_review = models.BooleanField(default=False, help_text="Review from verified charging session")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'station')  
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['station', '-created_at']),
+            models.Index(fields=['rating']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.station.name} ({self.rating} stars)"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Update station rating after saving review
+        self.update_station_rating()
+
+    def delete(self, *args, **kwargs):
+        station = self.station
+        super().delete(*args, **kwargs)
+        self._update_station_rating_after_delete(station)
+
+    def update_station_rating(self):
+        """Update the station's overall rating and count"""
+        from django.db.models import Avg, Count
+
+        reviews = StationReview.objects.filter(station=self.station, is_active=True)
+
+        rating_data = reviews.aggregate(
+            avg_rating=Avg('rating'),
+            total_count=Count('id')
+        )
+
+        self.station.rating = round(rating_data['avg_rating'] or 0, 2)
+        self.station.rating_count = rating_data['total_count']
+        self.station.save(update_fields=['rating', 'rating_count'])
+
+    @staticmethod
+    def _update_station_rating_after_delete(station):
+        """Update station rating after a review is deleted"""
+        from django.db.models import Avg, Count
+
+        reviews = StationReview.objects.filter(station=station, is_active=True)
+        rating_data = reviews.aggregate(
+            avg_rating=Avg('rating'),
+            total_count=Count('id')
+        )
+
+        station.rating = round(rating_data['avg_rating'] or 0, 2)
+        station.rating_count = rating_data['total_count']
+        station.save(update_fields=['rating', 'rating_count'])
+
+
+class AppContent(models.Model):
+    """Model to store app content like About, Privacy Policy, Terms of Service"""
+
+    CONTENT_TYPES = [
+        ('about', 'About MengedMate'),
+        ('privacy_policy', 'Privacy Policy'),
+        ('terms_of_service', 'Terms of Service'),
+    ]
+
+    content_type = models.CharField(max_length=20, choices=CONTENT_TYPES, unique=True)
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    version = models.CharField(max_length=10, default='1.0')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['content_type']
+        verbose_name = 'App Content'
+        verbose_name_plural = 'App Contents'
+
+    def __str__(self):
+        return f"{self.get_content_type_display()} - v{self.version}"

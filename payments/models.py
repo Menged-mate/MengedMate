@@ -128,3 +128,61 @@ class PaymentSession(models.Model):
 
     def __str__(self):
         return f"{self.session_id} - {self.amount} {self.currency}"
+
+
+class QRPaymentSession(models.Model):
+    class PaymentType(models.TextChoices):
+        AMOUNT = 'amount', _('Fixed Amount')
+        KWH = 'kwh', _('Kilowatt Hours')
+
+    class SessionStatus(models.TextChoices):
+        PENDING = 'pending', _('Pending Payment')
+        PAYMENT_INITIATED = 'payment_initiated', _('Payment Initiated')
+        PAYMENT_COMPLETED = 'payment_completed', _('Payment Completed')
+        CHARGING_STARTED = 'charging_started', _('Charging Started')
+        CHARGING_COMPLETED = 'charging_completed', _('Charging Completed')
+        FAILED = 'failed', _('Failed')
+        EXPIRED = 'expired', _('Expired')
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='qr_payment_sessions')
+    connector = models.ForeignKey('charging_stations.ChargingConnector', on_delete=models.CASCADE, related_name='qr_sessions')
+
+    payment_type = models.CharField(max_length=10, choices=PaymentType.choices)
+    amount = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+    kwh_requested = models.DecimalField(max_digits=8, decimal_places=3, blank=True, null=True)
+    calculated_amount = models.DecimalField(max_digits=10, decimal_places=2, blank=True, null=True)
+
+    phone_number = models.CharField(max_length=15)
+    status = models.CharField(max_length=20, choices=SessionStatus.choices, default=SessionStatus.PENDING)
+
+    # Payment tracking
+    payment_transaction = models.ForeignKey(Transaction, on_delete=models.SET_NULL, null=True, blank=True)
+    charging_session = models.OneToOneField('ocpp_integration.ChargingSession', on_delete=models.SET_NULL, null=True, blank=True)
+
+    # Session metadata
+    session_token = models.CharField(max_length=100, unique=True)
+    expires_at = models.DateTimeField()
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+
+    def save(self, *args, **kwargs):
+        if not self.session_token:
+            self.session_token = str(uuid.uuid4())
+
+        if self.payment_type == 'kwh' and self.kwh_requested and self.connector.price_per_kwh:
+            self.calculated_amount = self.kwh_requested * self.connector.price_per_kwh
+        elif self.payment_type == 'amount' and self.amount:
+            self.calculated_amount = self.amount
+
+        super().save(*args, **kwargs)
+
+    def get_payment_amount(self):
+        """Get the amount to be charged"""
+        return self.calculated_amount or self.amount or 0
+
+    def __str__(self):
+        return f"QR Session {self.session_token} - {self.connector}"

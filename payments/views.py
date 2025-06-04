@@ -5,12 +5,14 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django.utils import timezone
-from .models import PaymentMethod, Transaction, Wallet, WalletTransaction, PaymentSession
+from .models import PaymentMethod, Transaction, Wallet, WalletTransaction, PaymentSession, QRPaymentSession
 from .serializers import (
     PaymentMethodSerializer, TransactionSerializer, WalletSerializer,
     WalletTransactionSerializer, PaymentSessionSerializer, InitiatePaymentSerializer,
-    PaymentCallbackSerializer, TransactionStatusSerializer, WithdrawSerializer
+    PaymentCallbackSerializer, TransactionStatusSerializer, WithdrawSerializer,
+    QRConnectorInfoSerializer, QRPaymentInitiateSerializer, QRPaymentSessionSerializer
 )
+from charging_stations.models import ChargingConnector
 from .services import PaymentService
 import logging
 
@@ -146,3 +148,184 @@ class PaymentSessionListView(generics.ListAPIView):
 
     def get_queryset(self):
         return PaymentSession.objects.filter(user=self.request.user)
+
+
+class QRConnectorInfoView(APIView):
+    permission_classes = [AllowAny]
+
+    def get(self, request, qr_token):
+        try:
+            connector = get_object_or_404(ChargingConnector, qr_code_token=qr_token)
+
+            if not connector.is_available or connector.available_quantity <= 0:
+                return Response({
+                    'success': False,
+                    'message': 'This connector is currently not available'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            serializer = QRConnectorInfoSerializer(connector)
+            return Response({
+                'success': True,
+                'connector': serializer.data
+            }, status=status.HTTP_200_OK)
+
+        except ChargingConnector.DoesNotExist:
+            return Response({
+                'success': False,
+                'message': 'Invalid QR code'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class QRPaymentInitiateView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, qr_token):
+        try:
+            connector = get_object_or_404(ChargingConnector, qr_code_token=qr_token)
+
+            if not connector.is_available or connector.available_quantity <= 0:
+                return Response({
+                    'success': False,
+                    'message': 'This connector is currently not available'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            serializer = QRPaymentInitiateSerializer(data=request.data)
+            if serializer.is_valid():
+                # Create QR payment session
+                expires_at = timezone.now() + timezone.timedelta(minutes=15)
+
+                qr_session = QRPaymentSession.objects.create(
+                    user=request.user,
+                    connector=connector,
+                    payment_type=serializer.validated_data['payment_type'],
+                    amount=serializer.validated_data.get('amount'),
+                    kwh_requested=serializer.validated_data.get('kwh_requested'),
+                    phone_number=serializer.validated_data['phone_number'],
+                    expires_at=expires_at
+                )
+
+                # Initiate payment with Chapa
+                payment_service = PaymentService()
+                payment_amount = qr_session.get_payment_amount()
+
+                if payment_amount <= 0:
+                    return Response({
+                        'success': False,
+                        'message': 'Invalid payment amount calculated'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+
+                result = payment_service.initiate_chapa_payment(
+                    user=request.user,
+                    amount=payment_amount,
+                    phone_number=qr_session.phone_number,
+                    description=f"Charging at {connector.station.name} - {connector.get_connector_type_display()}"
+                )
+
+                if result['success']:
+                    qr_session.status = 'payment_initiated'
+                    qr_session.save()
+
+                    session_serializer = QRPaymentSessionSerializer(qr_session)
+                    return Response({
+                        'success': True,
+                        'message': 'Payment initiated successfully',
+                        'qr_session': session_serializer.data,
+                        'payment_data': result
+                    }, status=status.HTTP_200_OK)
+                else:
+                    qr_session.status = 'failed'
+                    qr_session.save()
+                    return Response({
+                        'success': False,
+                        'message': result.get('message', 'Payment initiation failed')
+                    }, status=status.HTTP_400_BAD_REQUEST)
+
+            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+        except ChargingConnector.DoesNotExist:
+            return Response({
+                'success': False,
+                'message': 'Invalid QR code'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class QRPaymentSessionDetailView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def get(self, request, session_token):
+        try:
+            qr_session = get_object_or_404(QRPaymentSession, session_token=session_token, user=request.user)
+            serializer = QRPaymentSessionSerializer(qr_session)
+            return Response({
+                'success': True,
+                'qr_session': serializer.data
+            }, status=status.HTTP_200_OK)
+
+        except QRPaymentSession.DoesNotExist:
+            return Response({
+                'success': False,
+                'message': 'QR payment session not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class QRPaymentSessionListView(generics.ListAPIView):
+    serializer_class = QRPaymentSessionSerializer
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        return QRPaymentSession.objects.filter(user=self.request.user)
+
+
+class StartChargingFromQRView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, session_token):
+        try:
+            qr_session = get_object_or_404(
+                QRPaymentSession,
+                session_token=session_token,
+                user=request.user,
+                status='payment_completed'
+            )
+
+            # Check if connector is still available
+            if not qr_session.connector.is_available or qr_session.connector.available_quantity <= 0:
+                return Response({
+                    'success': False,
+                    'message': 'Connector is no longer available'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Import here to avoid circular imports
+            from ocpp_integration.services import OCPPService
+
+            ocpp_service = OCPPService()
+
+            # Start charging session
+            result = ocpp_service.start_charging_from_qr_payment(qr_session)
+
+            if result['success']:
+                qr_session.status = 'charging_started'
+                qr_session.charging_session = result['charging_session']
+                qr_session.save()
+
+                # Update connector availability
+                qr_session.connector.update_availability()
+
+                session_serializer = QRPaymentSessionSerializer(qr_session)
+                return Response({
+                    'success': True,
+                    'message': 'Charging session started successfully',
+                    'qr_session': session_serializer.data,
+                    'charging_session': result['charging_session_data']
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({
+                    'success': False,
+                    'message': result.get('error', 'Failed to start charging session')
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        except QRPaymentSession.DoesNotExist:
+            return Response({
+                'success': False,
+                'message': 'QR payment session not found or payment not completed'
+            }, status=status.HTTP_404_NOT_FOUND)

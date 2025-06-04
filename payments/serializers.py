@@ -1,5 +1,6 @@
 from rest_framework import serializers
-from .models import PaymentMethod, Transaction, Wallet, WalletTransaction, PaymentSession
+from .models import PaymentMethod, Transaction, Wallet, WalletTransaction, PaymentSession, QRPaymentSession
+from charging_stations.models import ChargingConnector
 
 
 class PaymentMethodSerializer(serializers.ModelSerializer):
@@ -157,3 +158,79 @@ class WithdrawSerializer(serializers.Serializer):
             raise serializers.ValidationError("Insufficient wallet balance")
 
         return value
+
+
+class QRConnectorInfoSerializer(serializers.ModelSerializer):
+    station_name = serializers.CharField(source='station.name', read_only=True)
+    station_address = serializers.CharField(source='station.address', read_only=True)
+    connector_type_display = serializers.CharField(source='get_connector_type_display', read_only=True)
+    qr_code_url = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ChargingConnector
+        fields = [
+            'id', 'station_name', 'station_address', 'connector_type',
+            'connector_type_display', 'power_kw', 'price_per_kwh',
+            'available_quantity', 'qr_code_url'
+        ]
+
+    def get_qr_code_url(self, obj):
+        return obj.get_qr_code_url()
+
+
+class QRPaymentInitiateSerializer(serializers.Serializer):
+    payment_type = serializers.ChoiceField(choices=QRPaymentSession.PaymentType.choices)
+    amount = serializers.DecimalField(max_digits=10, decimal_places=2, required=False)
+    kwh_requested = serializers.DecimalField(max_digits=8, decimal_places=3, required=False)
+    phone_number = serializers.CharField(max_length=15)
+
+    def validate(self, data):
+        payment_type = data.get('payment_type')
+        amount = data.get('amount')
+        kwh_requested = data.get('kwh_requested')
+
+        if payment_type == 'amount' and not amount:
+            raise serializers.ValidationError("Amount is required for amount-based payment")
+
+        if payment_type == 'kwh' and not kwh_requested:
+            raise serializers.ValidationError("kWh is required for kWh-based payment")
+
+        if payment_type == 'amount' and amount and amount <= 0:
+            raise serializers.ValidationError("Amount must be greater than 0")
+
+        if payment_type == 'kwh' and kwh_requested and kwh_requested <= 0:
+            raise serializers.ValidationError("kWh must be greater than 0")
+
+        return data
+
+    def validate_phone_number(self, value):
+        if not value.startswith('+251') and not value.startswith('251') and not value.startswith('09'):
+            raise serializers.ValidationError("Phone number must be a valid Ethiopian number")
+
+        if value.startswith('09'):
+            value = '+251' + value[1:]
+        elif value.startswith('251'):
+            value = '+' + value
+        elif not value.startswith('+251'):
+            raise serializers.ValidationError("Invalid phone number format")
+
+        return value
+
+
+class QRPaymentSessionSerializer(serializers.ModelSerializer):
+    connector_info = QRConnectorInfoSerializer(source='connector', read_only=True)
+    payment_type_display = serializers.CharField(source='get_payment_type_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    payment_amount = serializers.SerializerMethodField()
+
+    class Meta:
+        model = QRPaymentSession
+        fields = [
+            'id', 'session_token', 'payment_type', 'payment_type_display',
+            'amount', 'kwh_requested', 'calculated_amount', 'payment_amount',
+            'phone_number', 'status', 'status_display', 'connector_info',
+            'expires_at', 'created_at', 'updated_at'
+        ]
+
+    def get_payment_amount(self, obj):
+        return obj.get_payment_amount()

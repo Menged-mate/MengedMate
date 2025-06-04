@@ -135,11 +135,18 @@ class PaymentService:
             if not tx_ref:
                 return {'success': False, 'message': 'Missing tx_ref'}
 
+            # Check for regular payment session
             session = PaymentSession.objects.filter(
                 merchant_request_id=tx_ref
             ).first()
 
-            if not session:
+            # Check for QR payment session
+            from .models import QRPaymentSession
+            qr_session = QRPaymentSession.objects.filter(
+                payment_transaction__external_reference=tx_ref
+            ).first()
+
+            if not session and not qr_session:
                 return {'success': False, 'message': 'Session not found'}
 
             transaction = Transaction.objects.filter(
@@ -154,22 +161,47 @@ class PaymentService:
             if status == 'success':
                 transaction.status = Transaction.TransactionStatus.COMPLETED
                 transaction.completed_at = timezone.now()
-                session.status = PaymentSession.SessionStatus.COMPLETED
 
-                self.credit_wallet(transaction.user, transaction.amount, transaction)
+                if session:
+                    session.status = PaymentSession.SessionStatus.COMPLETED
+                    session.save()
+                    self.credit_wallet(transaction.user, transaction.amount, transaction)
+
+                if qr_session:
+                    qr_session.status = 'payment_completed'
+                    qr_session.payment_transaction = transaction
+                    qr_session.save()
+
+                    # Auto-start charging if configured
+                    self._auto_start_charging_if_enabled(qr_session)
             else:
                 transaction.status = Transaction.TransactionStatus.FAILED
-                session.status = PaymentSession.SessionStatus.CANCELLED
+
+                if session:
+                    session.status = PaymentSession.SessionStatus.CANCELLED
+                    session.save()
+
+                if qr_session:
+                    qr_session.status = 'failed'
+                    qr_session.save()
 
             transaction.callback_data = callback_data
             transaction.save()
-            session.save()
 
             return {'success': True, 'message': 'Callback processed successfully'}
 
         except Exception as e:
             logger.error(f"Callback processing failed: {e}")
             return {'success': False, 'message': str(e)}
+
+    def _auto_start_charging_if_enabled(self, qr_session):
+        """Auto-start charging if enabled in settings"""
+        try:
+            # For now, we'll require manual start, but this can be configured
+            # to auto-start charging after successful payment
+            pass
+        except Exception as e:
+            logger.error(f"Auto-start charging failed: {e}")
 
     def credit_wallet(self, user, amount, transaction):
         wallet, created = Wallet.objects.get_or_create(user=user)

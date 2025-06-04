@@ -1,6 +1,6 @@
 from django.contrib import admin
 from django.utils.html import format_html
-from .models import StationOwner, ChargingStation, StationImage, ChargingConnector
+from .models import StationOwner, ChargingStation, StationImage, ChargingConnector, AppContent, StationReview
 
 class StationImageInline(admin.TabularInline):
     model = StationImage
@@ -317,3 +317,93 @@ class ChargingConnectorAdmin(admin.ModelAdmin):
         else:
             return format_html('<span style="color: red;">Unavailable</span>')
     availability_status.short_description = 'Availability'
+
+
+@admin.register(AppContent)
+class AppContentAdmin(admin.ModelAdmin):
+    list_display = ('content_type_display', 'title', 'version', 'is_active', 'updated_at')
+    list_filter = ('content_type', 'is_active', 'created_at')
+    search_fields = ('title', 'content')
+    readonly_fields = ('created_at', 'updated_at')
+    fieldsets = (
+        (None, {
+            'fields': ('content_type', 'title', 'version', 'is_active')
+        }),
+        ('Content', {
+            'fields': ('content',),
+            'classes': ('wide',),
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
+
+    def content_type_display(self, obj):
+        return obj.get_content_type_display()
+    content_type_display.short_description = 'Content Type'
+
+
+@admin.register(StationReview)
+class StationReviewAdmin(admin.ModelAdmin):
+    list_display = ('user_email', 'station_name', 'rating_display', 'is_verified_review', 'is_active', 'created_at')
+    list_filter = ('rating', 'is_verified_review', 'is_active', 'created_at', 'station__city')
+    search_fields = ('user__email', 'station__name', 'review_text')
+    readonly_fields = ('created_at', 'updated_at')
+    fieldsets = (
+        (None, {
+            'fields': ('user', 'station', 'rating', 'review_text')
+        }),
+        ('Detailed Ratings', {
+            'fields': ('charging_speed_rating', 'location_rating', 'amenities_rating'),
+            'classes': ('collapse',),
+        }),
+        ('Status', {
+            'fields': ('is_verified_review', 'is_active')
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
+    list_per_page = 25
+    save_on_top = True
+
+    actions = ['mark_as_verified', 'mark_as_unverified', 'activate_reviews', 'deactivate_reviews']
+
+    def user_email(self, obj):
+        return obj.user.email
+    user_email.short_description = 'User Email'
+
+    def station_name(self, obj):
+        return obj.station.name
+    station_name.short_description = 'Station'
+
+    def rating_display(self, obj):
+        stars = '★' * obj.rating + '☆' * (5 - obj.rating)
+        return format_html(
+            '<span style="color: #ffc107; font-size: 16px;">{}</span> <span style="color: #666;">({}/5)</span>',
+            stars, obj.rating
+        )
+    rating_display.short_description = 'Rating'
+
+    # Admin Actions
+    def mark_as_verified(self, request, queryset):
+        updated = queryset.update(is_verified_review=True)
+        self.message_user(request, f'{updated} review(s) marked as verified.')
+    mark_as_verified.short_description = "✅ Mark as verified reviews"
+
+    def mark_as_unverified(self, request, queryset):
+        updated = queryset.update(is_verified_review=False)
+        self.message_user(request, f'{updated} review(s) marked as unverified.')
+    mark_as_unverified.short_description = "❌ Mark as unverified reviews"
+
+    def activate_reviews(self, request, queryset):
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f'{updated} review(s) activated.')
+    activate_reviews.short_description = "🔄 Activate reviews"
+
+    def deactivate_reviews(self, request, queryset):
+        updated = queryset.update(is_active=False)
+        self.message_user(request, f'{updated} review(s) deactivated.')
+    deactivate_reviews.short_description = "🚫 Deactivate reviews"

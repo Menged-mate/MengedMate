@@ -2,7 +2,7 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from .models import StationOwner, ChargingStation, StationImage, ChargingConnector, FavoriteStation
+from .models import StationOwner, ChargingStation, StationImage, ChargingConnector, FavoriteStation, StationReview
 import random
 import string
 
@@ -112,10 +112,18 @@ class ChargingConnectorSerializer(serializers.ModelSerializer):
 
     connector_type_display = serializers.CharField(source='get_connector_type_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    qr_code_url = serializers.SerializerMethodField()
 
     class Meta:
         model = ChargingConnector
-        fields = ['id', 'connector_type', 'connector_type_display', 'power_kw', 'quantity', 'price_per_kwh', 'is_available', 'status', 'status_display', 'description']
+        fields = [
+            'id', 'connector_type', 'connector_type_display', 'power_kw', 'quantity',
+            'available_quantity', 'price_per_kwh', 'is_available', 'status',
+            'status_display', 'description', 'qr_code_url', 'qr_code_token'
+        ]
+
+    def get_qr_code_url(self, obj):
+        return obj.get_qr_code_url()
 
 class StationImageSerializer(serializers.ModelSerializer):
 
@@ -218,3 +226,83 @@ class FavoriteStationSerializer(serializers.ModelSerializer):
         model = FavoriteStation
         fields = ['id', 'station', 'created_at']
         read_only_fields = ['id', 'created_at']
+
+
+class StationReviewSerializer(serializers.ModelSerializer):
+    """Serializer for creating and updating station reviews"""
+
+    user_name = serializers.SerializerMethodField()
+    user_email = serializers.SerializerMethodField()
+
+    class Meta:
+        model = StationReview
+        fields = [
+            'id', 'user', 'user_name', 'user_email', 'station', 'rating',
+            'review_text', 'charging_speed_rating', 'location_rating',
+            'amenities_rating', 'is_verified_review', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'user', 'user_name', 'user_email', 'is_verified_review', 'created_at', 'updated_at']
+
+    def get_user_name(self, obj):
+        return f"{obj.user.first_name} {obj.user.last_name}".strip() or obj.user.email.split('@')[0]
+
+    def get_user_email(self, obj):
+        # Return masked email for privacy
+        email = obj.user.email
+        if '@' in email:
+            username, domain = email.split('@', 1)
+            masked_username = username[:2] + '*' * (len(username) - 2) if len(username) > 2 else username
+            return f"{masked_username}@{domain}"
+        return email
+
+    def validate_rating(self, value):
+        if not (1 <= value <= 5):
+            raise serializers.ValidationError("Rating must be between 1 and 5 stars.")
+        return value
+
+    def validate_charging_speed_rating(self, value):
+        if value is not None and not (1 <= value <= 5):
+            raise serializers.ValidationError("Charging speed rating must be between 1 and 5 stars.")
+        return value
+
+    def validate_location_rating(self, value):
+        if value is not None and not (1 <= value <= 5):
+            raise serializers.ValidationError("Location rating must be between 1 and 5 stars.")
+        return value
+
+    def validate_amenities_rating(self, value):
+        if value is not None and not (1 <= value <= 5):
+            raise serializers.ValidationError("Amenities rating must be between 1 and 5 stars.")
+        return value
+
+    def create(self, validated_data):
+        # Set the user from the request context
+        validated_data['user'] = self.context['request'].user
+        return super().create(validated_data)
+
+
+class StationReviewListSerializer(serializers.ModelSerializer):
+    """Serializer for listing station reviews (read-only)"""
+
+    user_name = serializers.SerializerMethodField()
+    user_email = serializers.SerializerMethodField()
+
+    class Meta:
+        model = StationReview
+        fields = [
+            'id', 'user_name', 'user_email', 'rating', 'review_text',
+            'charging_speed_rating', 'location_rating', 'amenities_rating',
+            'is_verified_review', 'created_at'
+        ]
+
+    def get_user_name(self, obj):
+        return f"{obj.user.first_name} {obj.user.last_name}".strip() or obj.user.email.split('@')[0]
+
+    def get_user_email(self, obj):
+        # Return masked email for privacy
+        email = obj.user.email
+        if '@' in email:
+            username, domain = email.split('@', 1)
+            masked_username = username[:2] + '*' * (len(username) - 2) if len(username) > 2 else username
+            return f"{masked_username}@{domain}"
+        return email
