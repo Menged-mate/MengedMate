@@ -2,12 +2,15 @@ from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
 from django.utils.html import strip_tags
 from django.conf import settings
 from django.utils import timezone
+from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
 from .models import StationOwner, ChargingStation, StationImage, ChargingConnector
 from .serializers import (
     StationOwnerRegistrationSerializer,
@@ -231,3 +234,157 @@ class StationImageCreateView(generics.CreateAPIView):
             serializer.save(station=station)
         except (StationOwner.DoesNotExist, ChargingStation.DoesNotExist):
             raise permissions.PermissionDenied("You don't have permission to add images to this station.")
+
+
+class StationQRCodesView(APIView):
+    """View to get QR codes for all connectors of a station"""
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+
+    def get(self, request, station_id):
+        try:
+            station_owner = StationOwner.objects.get(user=request.user)
+            station = get_object_or_404(ChargingStation, id=station_id, owner=station_owner)
+
+            connectors = station.connectors.all()
+            qr_data = []
+
+            for connector in connectors:
+                qr_data.append({
+                    'connector_id': connector.id,
+                    'connector_type': connector.connector_type,
+                    'connector_type_display': connector.get_connector_type_display(),
+                    'power_kw': connector.power_kw,
+                    'quantity': connector.quantity,
+                    'available_quantity': connector.available_quantity,
+                    'price_per_kwh': connector.price_per_kwh,
+                    'qr_code_token': connector.qr_code_token,
+                    'qr_code_url': connector.get_qr_code_url(),
+                    'qr_payment_url': f"https://mengedmate.onrender.com/api/payments/qr-initiate/{connector.qr_code_token}/" if connector.qr_code_token else None,
+                    'is_available': connector.is_available,
+                    'status': connector.status,
+                    'status_display': connector.get_status_display()
+                })
+
+            return Response({
+                'success': True,
+                'station': {
+                    'id': station.id,
+                    'name': station.name,
+                    'address': station.address
+                },
+                'connectors': qr_data
+            })
+
+        except StationOwner.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'Station owner profile not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class ConnectorQRCodeView(APIView):
+    """View to get or regenerate QR code for a specific connector"""
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+
+    def get(self, request, connector_id):
+        try:
+            station_owner = StationOwner.objects.get(user=request.user)
+            connector = get_object_or_404(
+                ChargingConnector,
+                id=connector_id,
+                station__owner=station_owner
+            )
+
+            return Response({
+                'success': True,
+                'connector': {
+                    'id': connector.id,
+                    'connector_type': connector.connector_type,
+                    'connector_type_display': connector.get_connector_type_display(),
+                    'power_kw': connector.power_kw,
+                    'price_per_kwh': connector.price_per_kwh,
+                    'qr_code_token': connector.qr_code_token,
+                    'qr_code_url': connector.get_qr_code_url(),
+                    'qr_payment_url': f"https://mengedmate.onrender.com/api/payments/qr-initiate/{connector.qr_code_token}/" if connector.qr_code_token else None,
+                    'station_name': connector.station.name
+                }
+            })
+
+        except StationOwner.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'Station owner profile not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+    def post(self, request, connector_id):
+        """Regenerate QR code for connector"""
+        try:
+            station_owner = StationOwner.objects.get(user=request.user)
+            connector = get_object_or_404(
+                ChargingConnector,
+                id=connector_id,
+                station__owner=station_owner
+            )
+
+            # Clear existing QR code data to force regeneration
+            connector.qr_code_token = None
+            connector.qr_code_image = None
+            connector.save()  # This will trigger QR code generation
+
+            return Response({
+                'success': True,
+                'message': 'QR code regenerated successfully',
+                'connector': {
+                    'id': connector.id,
+                    'qr_code_token': connector.qr_code_token,
+                    'qr_code_url': connector.get_qr_code_url(),
+                    'qr_payment_url': f"https://mengedmate.onrender.com/api/payments/qr-initiate/{connector.qr_code_token}/" if connector.qr_code_token else None
+                }
+            })
+
+        except StationOwner.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'Station owner profile not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class DownloadQRCodeView(APIView):
+    """View to download QR code image for printing"""
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+
+    def get(self, request, connector_id):
+        try:
+            station_owner = StationOwner.objects.get(user=request.user)
+            connector = get_object_or_404(
+                ChargingConnector,
+                id=connector_id,
+                station__owner=station_owner
+            )
+
+            if not connector.qr_code_image:
+                return Response({
+                    'success': False,
+                    'error': 'QR code not found for this connector'
+                }, status=status.HTTP_404_NOT_FOUND)
+
+            # Return the QR code image file
+            try:
+                with open(connector.qr_code_image.path, 'rb') as f:
+                    response = HttpResponse(f.read(), content_type='image/png')
+                    response['Content-Disposition'] = f'attachment; filename="qr_code_{connector.station.name}_{connector.get_connector_type_display()}_{connector.power_kw}kW.png"'
+                    return response
+            except FileNotFoundError:
+                return Response({
+                    'success': False,
+                    'error': 'QR code image file not found'
+                }, status=status.HTTP_404_NOT_FOUND)
+
+        except StationOwner.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'Station owner profile not found'
+            }, status=status.HTTP_404_NOT_FOUND)
