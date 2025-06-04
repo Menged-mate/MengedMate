@@ -112,10 +112,18 @@ class ChargingConnectorSerializer(serializers.ModelSerializer):
 
     connector_type_display = serializers.CharField(source='get_connector_type_display', read_only=True)
     status_display = serializers.CharField(source='get_status_display', read_only=True)
+    qr_code_url = serializers.SerializerMethodField()
 
     class Meta:
         model = ChargingConnector
-        fields = ['id', 'connector_type', 'connector_type_display', 'power_kw', 'quantity', 'price_per_kwh', 'is_available', 'status', 'status_display', 'description']
+        fields = [
+            'id', 'connector_type', 'connector_type_display', 'power_kw', 'quantity',
+            'available_quantity', 'price_per_kwh', 'is_available', 'status',
+            'status_display', 'description', 'qr_code_url', 'qr_code_token'
+        ]
+
+    def get_qr_code_url(self, obj):
+        return obj.get_qr_code_url()
 
 class StationImageSerializer(serializers.ModelSerializer):
 
