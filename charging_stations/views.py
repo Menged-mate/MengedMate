@@ -11,7 +11,7 @@ from django.conf import settings
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
-from .models import StationOwner, ChargingStation, StationImage, ChargingConnector
+from .models import StationOwner, ChargingStation, StationImage, ChargingConnector, AppContent
 from .serializers import (
     StationOwnerRegistrationSerializer,
     StationOwnerProfileSerializer,
@@ -388,3 +388,48 @@ class DownloadQRCodeView(APIView):
                 'success': False,
                 'error': 'Station owner profile not found'
             }, status=status.HTTP_404_NOT_FOUND)
+
+
+class AppContentView(APIView):
+    """View to get app content like About, Privacy Policy, Terms of Service"""
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = [AnonymousAuthentication]
+
+    def get(self, request, content_type=None):
+        try:
+            if content_type:
+                # Get specific content type
+                content = get_object_or_404(AppContent, content_type=content_type, is_active=True)
+                return Response({
+                    'success': True,
+                    'content': {
+                        'content_type': content.content_type,
+                        'title': content.title,
+                        'content': content.content,
+                        'version': content.version,
+                        'updated_at': content.updated_at
+                    }
+                })
+            else:
+                # Get all active content
+                contents = AppContent.objects.filter(is_active=True).order_by('content_type')
+                content_data = []
+                for content in contents:
+                    content_data.append({
+                        'content_type': content.content_type,
+                        'title': content.title,
+                        'content': content.content,
+                        'version': content.version,
+                        'updated_at': content.updated_at
+                    })
+
+                return Response({
+                    'success': True,
+                    'contents': content_data
+                })
+
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

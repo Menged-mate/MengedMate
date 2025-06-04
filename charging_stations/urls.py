@@ -10,7 +10,8 @@ from .views import (
     StationImageCreateView,
     StationQRCodesView,
     ConnectorQRCodeView,
-    DownloadQRCodeView
+    DownloadQRCodeView,
+    AppContentView
 )
 from .map_views import (
     PublicStationListView,
@@ -63,4 +64,8 @@ urlpatterns = [
     path('notifications/', NotificationsView.as_view(), name='notifications'),
     path('notifications/<int:notification_id>/mark-read/', MarkNotificationReadView.as_view(), name='mark-notification-read'),
     path('notifications/mark-all-read/', MarkAllNotificationsReadView.as_view(), name='mark-all-notifications-read'),
+
+    # App Content
+    path('app-content/', AppContentView.as_view(), name='app-content-list'),
+    path('app-content/<str:content_type>/', AppContentView.as_view(), name='app-content-detail'),
 ]
