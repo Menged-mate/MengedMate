@@ -148,7 +148,6 @@ class ChargingConnector(models.Model):
     status = models.CharField(max_length=20, choices=ConnectorStatus.choices, default=ConnectorStatus.AVAILABLE)
     description = models.TextField(blank=True, null=True)
 
-    # QR Code fields
     qr_code_token = models.CharField(max_length=255, unique=True, blank=True, null=True)
     qr_code_image = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
     created_at = models.DateTimeField(auto_now_add=True)
@@ -176,7 +175,6 @@ class ChargingConnector(models.Model):
         if not self.qr_code_token:
             return
 
-        # QR code data contains the payment URL with connector token
         qr_data = f"https://mengedmate.onrender.com/api/payments/qr-initiate/{self.qr_code_token}/"
 
         qr = qrcode.QRCode(
@@ -190,7 +188,6 @@ class ChargingConnector(models.Model):
 
         img = qr.make_image(fill_color="black", back_color="white")
 
-        # Save to file
         buffer = BytesIO()
         img.save(buffer, format='PNG')
         buffer.seek(0)
@@ -198,7 +195,6 @@ class ChargingConnector(models.Model):
         filename = f"qr_connector_{self.qr_code_token}.png"
         self.qr_code_image.save(filename, File(buffer), save=False)
 
-        # Update without triggering save recursion
         ChargingConnector.objects.filter(id=self.id).update(qr_code_image=self.qr_code_image)
 
     def get_qr_code_url(self):
@@ -235,3 +231,29 @@ class FavoriteStation(models.Model):
 
     def __str__(self):
         return f"{self.user.email} - {self.station.name}"
+
+
+class AppContent(models.Model):
+    """Model to store app content like About, Privacy Policy, Terms of Service"""
+
+    CONTENT_TYPES = [
+        ('about', 'About MengedMate'),
+        ('privacy_policy', 'Privacy Policy'),
+        ('terms_of_service', 'Terms of Service'),
+    ]
+
+    content_type = models.CharField(max_length=20, choices=CONTENT_TYPES, unique=True)
+    title = models.CharField(max_length=255)
+    content = models.TextField()
+    version = models.CharField(max_length=10, default='1.0')
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['content_type']
+        verbose_name = 'App Content'
+        verbose_name_plural = 'App Contents'
+
+    def __str__(self):
+        return f"{self.get_content_type_display()} - v{self.version}"
