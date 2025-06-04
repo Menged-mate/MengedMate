@@ -49,7 +49,6 @@ urlpatterns = [
     path('stations/<uuid:station_id>/connectors/<uuid:id>/', ConnectorDetailView.as_view(), name='connector-detail'),
     path('stations/<uuid:station_id>/images/', StationImageCreateView.as_view(), name='station-image-create'),
 
-    # QR Code Management
     path('stations/<uuid:station_id>/qr-codes/', StationQRCodesView.as_view(), name='station-qr-codes'),
     path('connectors/<uuid:connector_id>/qr-code/', ConnectorQRCodeView.as_view(), name='connector-qr-code'),
     path('connectors/<uuid:connector_id>/qr-code/download/', DownloadQRCodeView.as_view(), name='download-qr-code'),
@@ -69,11 +68,9 @@ urlpatterns = [
     path('notifications/<int:notification_id>/mark-read/', MarkNotificationReadView.as_view(), name='mark-notification-read'),
     path('notifications/mark-all-read/', MarkAllNotificationsReadView.as_view(), name='mark-all-notifications-read'),
 
-    # App Content
     path('app-content/', AppContentView.as_view(), name='app-content-list'),
     path('app-content/<str:content_type>/', AppContentView.as_view(), name='app-content-detail'),
 
-    # Station Reviews
     path('stations/<uuid:station_id>/reviews/', StationReviewListCreateView.as_view(), name='station-reviews'),
     path('reviews/<int:id>/', StationReviewDetailView.as_view(), name='review-detail'),
     path('my-reviews/', UserReviewsView.as_view(), name='user-reviews'),
