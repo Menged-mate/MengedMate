@@ -7,7 +7,10 @@ from .views import (
     ChargingStationDetailView,
     ConnectorCreateView,
     ConnectorDetailView,
-    StationImageCreateView
+    StationImageCreateView,
+    StationQRCodesView,
+    ConnectorQRCodeView,
+    DownloadQRCodeView
 )
 from .map_views import (
     PublicStationListView,
@@ -41,6 +44,11 @@ urlpatterns = [
     path('stations/<uuid:station_id>/connectors/<uuid:id>/', ConnectorDetailView.as_view(), name='connector-detail'),
     path('stations/<uuid:station_id>/images/', StationImageCreateView.as_view(), name='station-image-create'),
 
+    # QR Code Management
+    path('stations/<uuid:station_id>/qr-codes/', StationQRCodesView.as_view(), name='station-qr-codes'),
+    path('connectors/<uuid:connector_id>/qr-code/', ConnectorQRCodeView.as_view(), name='connector-qr-code'),
+    path('connectors/<uuid:connector_id>/qr-code/download/', DownloadQRCodeView.as_view(), name='download-qr-code'),
+
     path('public/stations/', PublicStationListView.as_view(), name='public-station-list'),
     path('public/stations/<uuid:id>/', PublicStationDetailView.as_view(), name='public-station-detail'),
     path('public/nearby-stations/', NearbyStationsView.as_view(), name='nearby-stations'),
@@ -48,7 +56,6 @@ urlpatterns = [
     path('favorites/', FavoriteStationListView.as_view(), name='favorite-list'),
     path('favorites/<uuid:station_id>/toggle/', FavoriteStationToggleView.as_view(), name='favorite-toggle'),
 
-    # Dashboard endpoints
     path('dashboard/', DashboardStatsView.as_view(), name='dashboard-stats'),
     path('activities/', ActivitiesView.as_view(), name='activities'),
     path('analytics/usage/', AnalyticsUsageView.as_view(), name='analytics-usage'),
