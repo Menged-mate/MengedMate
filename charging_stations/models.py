@@ -233,6 +233,90 @@ class FavoriteStation(models.Model):
         return f"{self.user.email} - {self.station.name}"
 
 
+class StationReview(models.Model):
+    """Model for station reviews and ratings"""
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='station_reviews')
+    station = models.ForeignKey(ChargingStation, on_delete=models.CASCADE, related_name='reviews')
+    rating = models.PositiveIntegerField(
+        choices=[(i, i) for i in range(1, 6)],  # 1-5 star rating
+        help_text="Rating from 1 to 5 stars"
+    )
+    review_text = models.TextField(blank=True, null=True, help_text="Optional review text")
+
+    charging_speed_rating = models.PositiveIntegerField(
+        choices=[(i, i) for i in range(1, 6)],
+        blank=True, null=True,
+        help_text="Rating for charging speed (1-5 stars)"
+    )
+    location_rating = models.PositiveIntegerField(
+        choices=[(i, i) for i in range(1, 6)],
+        blank=True, null=True,
+        help_text="Rating for location convenience (1-5 stars)"
+    )
+    amenities_rating = models.PositiveIntegerField(
+        choices=[(i, i) for i in range(1, 6)],
+        blank=True, null=True,
+        help_text="Rating for amenities (1-5 stars)"
+    )
+
+    is_verified_review = models.BooleanField(default=False, help_text="Review from verified charging session")
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        unique_together = ('user', 'station')  
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['station', '-created_at']),
+            models.Index(fields=['rating']),
+        ]
+
+    def __str__(self):
+        return f"{self.user.email} - {self.station.name} ({self.rating} stars)"
+
+    def save(self, *args, **kwargs):
+        super().save(*args, **kwargs)
+        # Update station rating after saving review
+        self.update_station_rating()
+
+    def delete(self, *args, **kwargs):
+        station = self.station
+        super().delete(*args, **kwargs)
+        self._update_station_rating_after_delete(station)
+
+    def update_station_rating(self):
+        """Update the station's overall rating and count"""
+        from django.db.models import Avg, Count
+
+        reviews = StationReview.objects.filter(station=self.station, is_active=True)
+
+        rating_data = reviews.aggregate(
+            avg_rating=Avg('rating'),
+            total_count=Count('id')
+        )
+
+        self.station.rating = round(rating_data['avg_rating'] or 0, 2)
+        self.station.rating_count = rating_data['total_count']
+        self.station.save(update_fields=['rating', 'rating_count'])
+
+    @staticmethod
+    def _update_station_rating_after_delete(station):
+        """Update station rating after a review is deleted"""
+        from django.db.models import Avg, Count
+
+        reviews = StationReview.objects.filter(station=station, is_active=True)
+        rating_data = reviews.aggregate(
+            avg_rating=Avg('rating'),
+            total_count=Count('id')
+        )
+
+        station.rating = round(rating_data['avg_rating'] or 0, 2)
+        station.rating_count = rating_data['total_count']
+        station.save(update_fields=['rating', 'rating_count'])
+
+
 class AppContent(models.Model):
     """Model to store app content like About, Privacy Policy, Terms of Service"""
 

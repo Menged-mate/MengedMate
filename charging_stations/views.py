@@ -11,13 +11,15 @@ from django.conf import settings
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
-from .models import StationOwner, ChargingStation, StationImage, ChargingConnector, AppContent
+from .models import StationOwner, ChargingStation, StationImage, ChargingConnector, AppContent, StationReview
 from .serializers import (
     StationOwnerRegistrationSerializer,
     StationOwnerProfileSerializer,
     ChargingStationSerializer,
     ChargingConnectorSerializer,
-    StationImageSerializer
+    StationImageSerializer,
+    StationReviewSerializer,
+    StationReviewListSerializer
 )
 from authentication.authentication import AnonymousAuthentication, TokenAuthentication
 from rest_framework.authentication import SessionAuthentication
@@ -427,6 +429,133 @@ class AppContentView(APIView):
                     'success': True,
                     'contents': content_data
                 })
+
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class StationReviewListCreateView(generics.ListCreateAPIView):
+    """View to list and create station reviews"""
+
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+
+    def get_serializer_class(self):
+        if self.request.method == 'POST':
+            return StationReviewSerializer
+        return StationReviewListSerializer
+
+    def get_queryset(self):
+        station_id = self.kwargs.get('station_id')
+        return StationReview.objects.filter(
+            station_id=station_id,
+            is_active=True
+        ).order_by('-created_at')
+
+    def perform_create(self, serializer):
+        station_id = self.kwargs.get('station_id')
+        station = get_object_or_404(ChargingStation, id=station_id)
+
+        # Check if user already has a review for this station
+        existing_review = StationReview.objects.filter(
+            user=self.request.user,
+            station=station
+        ).first()
+
+        if existing_review:
+            # Update existing review instead of creating new one
+            for attr, value in serializer.validated_data.items():
+                setattr(existing_review, attr, value)
+            existing_review.save()
+            return existing_review
+        else:
+            # Create new review
+            return serializer.save(station=station)
+
+
+class StationReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """View to retrieve, update, or delete a specific review"""
+
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    serializer_class = StationReviewSerializer
+    lookup_field = 'id'
+
+    def get_queryset(self):
+        # Users can only access their own reviews
+        return StationReview.objects.filter(user=self.request.user)
+
+    def perform_update(self, serializer):
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        # Soft delete - mark as inactive instead of deleting
+        instance.is_active = False
+        instance.save()
+
+
+class UserReviewsView(generics.ListAPIView):
+    """View to get all reviews by the current user"""
+
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    serializer_class = StationReviewListSerializer
+
+    def get_queryset(self):
+        return StationReview.objects.filter(
+            user=self.request.user,
+            is_active=True
+        ).order_by('-created_at')
+
+
+class StationReviewStatsView(APIView):
+    """View to get review statistics for a station"""
+
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = [AnonymousAuthentication]
+
+    def get(self, request, station_id):
+        try:
+            station = get_object_or_404(ChargingStation, id=station_id)
+            reviews = StationReview.objects.filter(station=station, is_active=True)
+
+            # Calculate rating distribution
+            rating_distribution = {}
+            for i in range(1, 6):
+                rating_distribution[str(i)] = reviews.filter(rating=i).count()
+
+            # Calculate average ratings for different aspects
+            from django.db.models import Avg
+
+            avg_ratings = reviews.aggregate(
+                overall_rating=Avg('rating'),
+                charging_speed_rating=Avg('charging_speed_rating'),
+                location_rating=Avg('location_rating'),
+                amenities_rating=Avg('amenities_rating')
+            )
+
+            # Get recent reviews (last 5)
+            recent_reviews = reviews[:5]
+            recent_reviews_data = StationReviewListSerializer(recent_reviews, many=True).data
+
+            return Response({
+                'success': True,
+                'station_id': station_id,
+                'total_reviews': reviews.count(),
+                'overall_rating': round(avg_ratings['overall_rating'] or 0, 2),
+                'rating_distribution': rating_distribution,
+                'average_ratings': {
+                    'overall': round(avg_ratings['overall_rating'] or 0, 2),
+                    'charging_speed': round(avg_ratings['charging_speed_rating'] or 0, 2),
+                    'location': round(avg_ratings['location_rating'] or 0, 2),
+                    'amenities': round(avg_ratings['amenities_rating'] or 0, 2),
+                },
+                'recent_reviews': recent_reviews_data,
+                'verified_reviews_count': reviews.filter(is_verified_review=True).count()
+            })
 
         except Exception as e:
             return Response({

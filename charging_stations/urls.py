@@ -11,7 +11,11 @@ from .views import (
     StationQRCodesView,
     ConnectorQRCodeView,
     DownloadQRCodeView,
-    AppContentView
+    AppContentView,
+    StationReviewListCreateView,
+    StationReviewDetailView,
+    UserReviewsView,
+    StationReviewStatsView
 )
 from .map_views import (
     PublicStationListView,
@@ -68,4 +72,10 @@ urlpatterns = [
     # App Content
     path('app-content/', AppContentView.as_view(), name='app-content-list'),
     path('app-content/<str:content_type>/', AppContentView.as_view(), name='app-content-detail'),
+
+    # Station Reviews
+    path('stations/<uuid:station_id>/reviews/', StationReviewListCreateView.as_view(), name='station-reviews'),
+    path('reviews/<int:id>/', StationReviewDetailView.as_view(), name='review-detail'),
+    path('my-reviews/', UserReviewsView.as_view(), name='user-reviews'),
+    path('stations/<uuid:station_id>/review-stats/', StationReviewStatsView.as_view(), name='station-review-stats'),
 ]
