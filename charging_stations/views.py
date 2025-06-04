@@ -440,8 +440,16 @@ class AppContentView(APIView):
 class StationReviewListCreateView(generics.ListCreateAPIView):
     """View to list and create station reviews"""
 
-    permission_classes = [permissions.IsAuthenticated]
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    authentication_classes = [TokenAuthentication, SessionAuthentication, AnonymousAuthentication]
+
+    def get_permissions(self):
+        """
+        Allow public access for reading reviews (GET),
+        but require authentication for creating reviews (POST)
+        """
+        if self.request.method == 'GET':
+            return [permissions.AllowAny()]
+        return [permissions.IsAuthenticated()]
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
