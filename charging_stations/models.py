@@ -2,6 +2,10 @@ from django.db import models
 from django.conf import settings
 from django.utils.translation import gettext_lazy as _
 import uuid
+import qrcode
+from io import BytesIO
+from django.core.files import File
+import hashlib
 
 class VerificationStatus(models.TextChoices):
     PENDING = 'pending', _('Pending')
@@ -138,10 +142,83 @@ class ChargingConnector(models.Model):
     connector_type = models.CharField(max_length=20, choices=ConnectorType.choices)
     power_kw = models.DecimalField(max_digits=6, decimal_places=2, help_text='Power in kW')
     quantity = models.PositiveIntegerField(default=1)
+    available_quantity = models.PositiveIntegerField(default=1)
     price_per_kwh = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True)
     is_available = models.BooleanField(default=True)
     status = models.CharField(max_length=20, choices=ConnectorStatus.choices, default=ConnectorStatus.AVAILABLE)
     description = models.TextField(blank=True, null=True)
+
+    # QR Code fields
+    qr_code_token = models.CharField(max_length=255, unique=True, blank=True, null=True)
+    qr_code_image = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def save(self, *args, **kwargs):
+        if not self.qr_code_token:
+            self.qr_code_token = self.generate_qr_token()
+
+        if not self.available_quantity:
+            self.available_quantity = self.quantity
+
+        super().save(*args, **kwargs)
+
+        if not self.qr_code_image:
+            self.generate_qr_code()
+
+    def generate_qr_token(self):
+        """Generate a unique token for QR code"""
+        unique_string = f"{self.station.id}-{self.connector_type}-{self.power_kw}-{uuid.uuid4()}"
+        return hashlib.sha256(unique_string.encode()).hexdigest()[:32]
+
+    def generate_qr_code(self):
+        """Generate QR code for this connector"""
+        if not self.qr_code_token:
+            return
+
+        # QR code data contains the payment URL with connector token
+        qr_data = f"https://mengedmate.onrender.com/api/payments/qr-initiate/{self.qr_code_token}/"
+
+        qr = qrcode.QRCode(
+            version=1,
+            error_correction=qrcode.constants.ERROR_CORRECT_L,
+            box_size=10,
+            border=4,
+        )
+        qr.add_data(qr_data)
+        qr.make(fit=True)
+
+        img = qr.make_image(fill_color="black", back_color="white")
+
+        # Save to file
+        buffer = BytesIO()
+        img.save(buffer, format='PNG')
+        buffer.seek(0)
+
+        filename = f"qr_connector_{self.qr_code_token}.png"
+        self.qr_code_image.save(filename, File(buffer), save=False)
+
+        # Update without triggering save recursion
+        ChargingConnector.objects.filter(id=self.id).update(qr_code_image=self.qr_code_image)
+
+    def get_qr_code_url(self):
+        """Get the QR code image URL"""
+        if self.qr_code_image:
+            return self.qr_code_image.url
+        return None
+
+    def update_availability(self):
+        """Update connector availability based on active sessions"""
+        from ocpp_integration.models import ChargingSession
+
+        active_sessions = ChargingSession.objects.filter(
+            ocpp_connector__charging_connector=self,
+            status__in=['started', 'charging', 'preparing']
+        ).count()
+
+        self.available_quantity = max(0, self.quantity - active_sessions)
+        self.is_available = self.available_quantity > 0 and self.status == 'available'
+        self.save(update_fields=['available_quantity', 'is_available'])
 
     def __str__(self):
         return f"{self.get_connector_type_display()} - {self.power_kw}kW"
