@@ -222,6 +222,10 @@ class QRPaymentInitiateView(APIView):
                 )
 
                 if result['success']:
+                    # Link the QR session to the created transaction
+                    from .models import Transaction
+                    transaction = Transaction.objects.get(id=result['transaction_id'])
+                    qr_session.payment_transaction = transaction
                     qr_session.status = 'payment_initiated'
                     qr_session.save()
 
@@ -302,12 +306,10 @@ class StartChargingFromQRView(APIView):
                     'message': 'Connector is no longer available'
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-            # Import here to avoid circular imports
             from ocpp_integration.services import OCPPService
 
             ocpp_service = OCPPService()
 
-            # Start charging session
             result = ocpp_service.start_charging_from_qr_payment(qr_session)
 
             if result['success']:
