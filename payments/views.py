@@ -256,10 +256,17 @@ class QRPaymentSessionDetailView(APIView):
         try:
             qr_session = get_object_or_404(QRPaymentSession, session_token=session_token, user=request.user)
             serializer = QRPaymentSessionSerializer(qr_session)
-            return Response({
+
+            response_data = {
                 'success': True,
                 'qr_session': serializer.data
-            }, status=status.HTTP_200_OK)
+            }
+
+            # Include payment data if transaction exists and has provider response
+            if qr_session.payment_transaction and qr_session.payment_transaction.provider_response:
+                response_data['qr_session']['payment_data'] = qr_session.payment_transaction.provider_response
+
+            return Response(response_data, status=status.HTTP_200_OK)
 
         except QRPaymentSession.DoesNotExist:
             return Response({
