@@ -389,8 +389,7 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'MengedMate <noreply@m
 EMAIL_SUBJECT_PREFIX = '[MengedMate] '
 EMAIL_TIMEOUT = 60
 
-# Frontend URL for email links
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'http://localhost:3000')
+# Frontend URL for email links (will be overridden below)
 
 
 ACCOUNT_LOGIN_METHODS = {'email'}
@@ -488,12 +487,12 @@ ADMIN_EMAIL = 'admin@example.com'
 
 GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '')
 
-API_BASE_URL = os.environ.get('API_BASE_URL', '')
+API_BASE_URL = os.environ.get('API_BASE_URL', 'https://mengedmate.onrender.com')
 
 CHAPA_SETTINGS = {
     'SECRET_KEY': os.environ.get('CHAPA_SECRET_KEY', 'CHASECK_TEST-BjSm5vKqLLOfYqar7ilo0E1vyz6sagAe'),
     'PUBLIC_KEY': os.environ.get('CHAPA_PUBLIC_KEY', 'CHAPUBK_TEST-5FVf5w5JfADqLQsB4xk3b6jXQEdeb7EF'),
-    'CALLBACK_URL': os.environ.get('CHAPA_CALLBACK_URL', f'{API_BASE_URL}/api/payments/callback/'),
+    'CALLBACK_URL': os.environ.get('CHAPA_CALLBACK_URL', f'{API_BASE_URL}/payments/callback/'),
     'RETURN_URL': os.environ.get('CHAPA_RETURN_URL', f'{FRONTEND_URL}/payment/success'),
     'SANDBOX_URL': 'https://api.chapa.co',
     'PRODUCTION_URL': 'https://api.chapa.co',
