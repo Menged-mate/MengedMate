@@ -440,16 +440,8 @@ class AppContentView(APIView):
 class StationReviewListCreateView(generics.ListCreateAPIView):
     """View to list and create station reviews"""
 
-    authentication_classes = [TokenAuthentication, SessionAuthentication, AnonymousAuthentication]
-
-    def get_permissions(self):
-        """
-        Allow public access for reading reviews (GET),
-        but require authentication for creating reviews (POST)
-        """
-        if self.request.method == 'GET':
-            return [permissions.AllowAny()]
-        return [permissions.IsAuthenticated()]
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
 
     def get_serializer_class(self):
         if self.request.method == 'POST':
@@ -478,10 +470,9 @@ class StationReviewListCreateView(generics.ListCreateAPIView):
             for attr, value in serializer.validated_data.items():
                 setattr(existing_review, attr, value)
             existing_review.save()
-            return existing_review
         else:
             # Create new review
-            return serializer.save(station=station)
+            serializer.save(user=self.request.user, station=station)
 
 
 class StationReviewDetailView(generics.RetrieveUpdateDestroyAPIView):

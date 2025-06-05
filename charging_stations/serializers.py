@@ -241,7 +241,7 @@ class StationReviewSerializer(serializers.ModelSerializer):
             'review_text', 'charging_speed_rating', 'location_rating',
             'amenities_rating', 'is_verified_review', 'created_at', 'updated_at'
         ]
-        read_only_fields = ['id', 'user', 'user_name', 'user_email', 'is_verified_review', 'created_at', 'updated_at']
+        read_only_fields = ['id', 'user', 'user_name', 'user_email', 'station', 'is_verified_review', 'created_at', 'updated_at']
 
     def get_user_name(self, obj):
         return f"{obj.user.first_name} {obj.user.last_name}".strip() or obj.user.email.split('@')[0]
@@ -275,10 +275,7 @@ class StationReviewSerializer(serializers.ModelSerializer):
             raise serializers.ValidationError("Amenities rating must be between 1 and 5 stars.")
         return value
 
-    def create(self, validated_data):
-        # Set the user from the request context
-        validated_data['user'] = self.context['request'].user
-        return super().create(validated_data)
+
 
 
 class StationReviewListSerializer(serializers.ModelSerializer):

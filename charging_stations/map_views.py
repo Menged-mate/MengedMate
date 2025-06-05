@@ -163,14 +163,20 @@ class FavoriteStationToggleView(APIView):
             station = ChargingStation.objects.get(id=station_id, is_active=True, is_public=True)
         except ChargingStation.DoesNotExist:
             return Response({"detail": "Station not found."}, status=status.HTTP_404_NOT_FOUND)
-        
+
         favorite, created = FavoriteStation.objects.get_or_create(
             user=request.user,
             station=station
         )
-        
+
         if not created:
             favorite.delete()
-            return Response({"detail": "Station removed from favorites."}, status=status.HTTP_200_OK)
-        
-        return Response({"detail": "Station added to favorites."}, status=status.HTTP_201_CREATED)
+            return Response({
+                "detail": "Station removed from favorites.",
+                "is_favorite": False
+            }, status=status.HTTP_200_OK)
+
+        return Response({
+            "detail": "Station added to favorites.",
+            "is_favorite": True
+        }, status=status.HTTP_200_OK)
