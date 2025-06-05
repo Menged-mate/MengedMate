@@ -503,7 +503,7 @@ OCPP_SETTINGS = {
     'BASE_URL': os.environ.get('OCPP_BASE_URL', 'http://localhost:8000'),
     'WEBSOCKET_URL': os.environ.get('OCPP_WEBSOCKET_URL', 'ws://localhost:8000/ws/ev-locator/'),
     'WEBHOOK_URL': os.environ.get('OCPP_WEBHOOK_URL', f'{API_BASE_URL}/api/ocpp/webhook/'),
-    'API_KEY': os.environ.get('OCPP_API_KEY', 'your-ocpp-api-key'),
+    'API_KEY': os.environ.get('OCPP_API_KEY', ''),
     'TIMEOUT': int(os.environ.get('OCPP_TIMEOUT', '30')),
     'RETRY_ATTEMPTS': int(os.environ.get('OCPP_RETRY_ATTEMPTS', '3')),
 }
