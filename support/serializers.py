@@ -11,7 +11,7 @@ class SupportTicketSerializer(serializers.ModelSerializer):
     class Meta:
         model = SupportTicket
         fields = [
-            'id', 'subject', 'description', 'screenshot', 'status', 'status_display',
+            'id', 'user', 'subject', 'description', 'screenshot', 'status', 'status_display',
             'priority', 'priority_display', 'email', 'phone_number', 'user_email',
             'user_name', 'created_at', 'updated_at', 'resolved_at'
         ]

@@ -204,17 +204,23 @@ class QRPaymentInitiateSerializer(serializers.Serializer):
         return data
 
     def validate_phone_number(self, value):
-        if not value.startswith('+251') and not value.startswith('251') and not value.startswith('09'):
-            raise serializers.ValidationError("Phone number must be a valid Ethiopian number")
+        # Remove any spaces or special characters
+        cleaned_value = ''.join(filter(str.isdigit, value.replace('+', '')))
 
-        if value.startswith('09'):
-            value = '+251' + value[1:]
-        elif value.startswith('251'):
-            value = '+' + value
-        elif not value.startswith('+251'):
-            raise serializers.ValidationError("Invalid phone number format")
-
-        return value
+        # Check if it's a valid Ethiopian number
+        if cleaned_value.startswith('251'):
+            # Already has country code
+            if len(cleaned_value) != 12:  # 251 + 9 digits
+                raise serializers.ValidationError("Invalid Ethiopian phone number length")
+            return '+' + cleaned_value
+        elif cleaned_value.startswith('9') and len(cleaned_value) == 9:
+            # Local format (9xxxxxxxx)
+            return '+251' + cleaned_value
+        elif cleaned_value.startswith('09') and len(cleaned_value) == 10:
+            # Local format with leading 0 (09xxxxxxxx)
+            return '+251' + cleaned_value[1:]
+        else:
+            raise serializers.ValidationError("Phone number must be a valid Ethiopian number (09xxxxxxxx or +251xxxxxxxxx)")
 
 
 class QRPaymentSessionSerializer(serializers.ModelSerializer):

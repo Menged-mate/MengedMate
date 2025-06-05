@@ -31,6 +31,19 @@ class ChapaService:
 
         headers = self.get_headers()
 
+        # Convert phone number to local format for Chapa (09xxxxxxxx)
+        if phone_number.startswith('+251'):
+            phone_number = '0' + phone_number[4:]
+        elif phone_number.startswith('251'):
+            phone_number = '0' + phone_number[3:]
+
+        # Validate email for Chapa - reject common test domains
+        invalid_domains = ['example.com', 'test.com', 'localhost', 'invalid.com']
+        email_domain = email.split('@')[-1].lower() if '@' in email else ''
+        if email_domain in invalid_domains:
+            # Use a fallback email for testing
+            email = f"user_{account_reference}@gmail.com"
+
         payload = {
             'amount': str(amount),
             'currency': 'ETB',
@@ -53,7 +66,17 @@ class ChapaService:
             return {'success': True, 'data': response.json()}
         except requests.exceptions.RequestException as e:
             logger.error(f"Chapa payment initiation failed: {e}")
-            return {'success': False, 'message': str(e)}
+
+            # Return more detailed error information
+            error_message = str(e)
+            if hasattr(e, 'response') and e.response is not None:
+                try:
+                    error_data = e.response.json()
+                    error_message = error_data.get('message', str(e))
+                except:
+                    error_message = e.response.text or str(e)
+
+            return {'success': False, 'message': error_message}
 
     def query_transaction_status(self, tx_ref):
         url = f"{self.base_url}/v1/transaction/verify/{tx_ref}"
