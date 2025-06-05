@@ -59,6 +59,7 @@ INSTALLED_APPS = [
     "charging_stations",
     "payments",
     "ocpp_integration",
+    "support",
 ]
 
 JAZZMIN_SETTINGS = {

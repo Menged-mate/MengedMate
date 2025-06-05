@@ -114,6 +114,7 @@ urlpatterns = [
     path("api/auth/", include("authentication.urls")),
     path("api/payments/", include("payments.urls")),
     path("api/ocpp/", include("ocpp_integration.urls")),
+    path("api/support/", include("support.urls")),
     path("api/", include("charging_stations.urls")),
     path("api/test/", test_view, name="test"),
     path("api/register-test/", register_view, name="register-test"),
