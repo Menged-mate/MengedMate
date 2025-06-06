@@ -309,32 +309,44 @@ class StartChargingFromQRView(APIView):
                     'message': 'Connector is no longer available'
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-            from ocpp_integration.services import OCPPService
+            # Create a simple charging session using OCPP models but without OCPP service
+            from ocpp_integration.models import ChargingSession
+            import uuid
 
-            ocpp_service = OCPPService()
+            # Create charging session
+            charging_session = ChargingSession.objects.create(
+                transaction_id=str(uuid.uuid4()),
+                user=request.user,
+                payment_transaction_id=qr_session.payment_transaction.id if qr_session.payment_transaction else None,
+                id_tag=f"QR_{request.user.id}_{qr_session.session_token[:8]}",
+                status=ChargingSession.SessionStatus.STARTED,
+                payment_status=ChargingSession.PaymentStatus.AUTHORIZED,
+                start_time=timezone.now(),
+                max_power_kw=qr_session.connector.power_kw
+            )
 
-            result = ocpp_service.start_charging_from_qr_payment(qr_session)
+            # Update QR session status
+            qr_session.status = 'charging_started'
+            qr_session.save()
 
-            if result['success']:
-                qr_session.status = 'charging_started'
-                qr_session.charging_session = result['charging_session']
-                qr_session.save()
+            # Update connector status to occupied
+            qr_session.connector.is_available = False
+            qr_session.connector.available_quantity = max(0, qr_session.connector.available_quantity - 1)
+            qr_session.connector.save()
 
-                # Update connector availability
-                qr_session.connector.update_availability()
-
-                session_serializer = QRPaymentSessionSerializer(qr_session)
-                return Response({
-                    'success': True,
-                    'message': 'Charging session started successfully',
-                    'qr_session': session_serializer.data,
-                    'charging_session': result['charging_session_data']
-                }, status=status.HTTP_200_OK)
-            else:
-                return Response({
-                    'success': False,
-                    'message': result.get('error', 'Failed to start charging session')
-                }, status=status.HTTP_400_BAD_REQUEST)
+            session_serializer = QRPaymentSessionSerializer(qr_session)
+            return Response({
+                'success': True,
+                'message': 'Charging session started successfully',
+                'qr_session': session_serializer.data,
+                'charging_session': {
+                    'id': charging_session.id,
+                    'transaction_id': charging_session.transaction_id,
+                    'status': charging_session.status,
+                    'start_time': charging_session.start_time,
+                    'max_power_kw': charging_session.max_power_kw
+                }
+            }, status=status.HTTP_200_OK)
 
         except QRPaymentSession.DoesNotExist:
             return Response({

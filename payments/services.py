@@ -9,7 +9,6 @@ from .models import Transaction, PaymentSession, Wallet, WalletTransaction
 import uuid
 
 logger = logging.getLogger(__name__)
-import logging
 
 logger = logging.getLogger(__name__)
 
