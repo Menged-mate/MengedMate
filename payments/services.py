@@ -1,11 +1,14 @@
 import requests
 import base64
 import json
+import logging
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.utils import timezone
 from .models import Transaction, PaymentSession, Wallet, WalletTransaction
 import uuid
+
+logger = logging.getLogger(__name__)
 import logging
 
 logger = logging.getLogger(__name__)
@@ -126,7 +129,8 @@ class PaymentService:
         if result['success']:
             data = result['data']
             session.checkout_request_id = data.get('data', {}).get('checkout_url', '')
-            session.merchant_request_id = data.get('data', {}).get('tx_ref', '')
+            # The tx_ref is the account_reference we sent to Chapa (session.session_id)
+            session.merchant_request_id = session.session_id
             session.save()
 
             transaction = Transaction.objects.create(
@@ -136,7 +140,7 @@ class PaymentService:
                 phone_number=phone_number,
                 description=description,
                 reference_number=session.session_id,
-                external_reference=session.merchant_request_id,
+                external_reference=session.session_id,  # Use session_id as tx_ref
                 provider_response=data
             )
 
@@ -144,7 +148,7 @@ class PaymentService:
                 'success': True,
                 'session_id': session.session_id,
                 'checkout_url': session.checkout_request_id,
-                'tx_ref': session.merchant_request_id,
+                'tx_ref': session.session_id,  # Return the actual tx_ref
                 'transaction_id': transaction.id
             }
         else:
@@ -155,7 +159,10 @@ class PaymentService:
     def process_callback(self, callback_data):
         try:
             tx_ref = callback_data.get('tx_ref')
+            logger.info(f"Processing callback for tx_ref: {tx_ref}")
+
             if not tx_ref:
+                logger.error("Missing tx_ref in callback data")
                 return {'success': False, 'message': 'Missing tx_ref'}
 
             # Check for regular payment session
@@ -169,14 +176,20 @@ class PaymentService:
                 payment_transaction__external_reference=tx_ref
             ).first()
 
+            logger.info(f"Found session: {session}, QR session: {qr_session}")
+
             if not session and not qr_session:
+                logger.error(f"No session found for tx_ref: {tx_ref}")
                 return {'success': False, 'message': 'Session not found'}
 
             transaction = Transaction.objects.filter(
                 external_reference=tx_ref
             ).first()
 
+            logger.info(f"Found transaction: {transaction}")
+
             if not transaction:
+                logger.error(f"No transaction found for tx_ref: {tx_ref}")
                 return {'success': False, 'message': 'Transaction not found'}
 
             status = callback_data.get('status', 'failed')

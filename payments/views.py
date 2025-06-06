@@ -108,9 +108,12 @@ class InitiatePaymentView(APIView):
 def payment_callback(request):
     try:
         callback_data = request.data
+        logger.info(f"Payment callback received: {callback_data}")
 
         payment_service = PaymentService()
         result = payment_service.process_callback(callback_data)
+
+        logger.info(f"Callback processing result: {result}")
 
         return Response({
             'status': 'success',
@@ -337,4 +340,46 @@ class StartChargingFromQRView(APIView):
             return Response({
                 'success': False,
                 'message': 'QR payment session not found or payment not completed'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class TestCompletePaymentView(APIView):
+    """Test endpoint to manually complete a payment for testing purposes"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, session_token):
+        try:
+            qr_session = get_object_or_404(
+                QRPaymentSession,
+                session_token=session_token,
+                user=request.user,
+                status='payment_initiated'
+            )
+
+            if qr_session.payment_transaction:
+                # Mark transaction as completed
+                qr_session.payment_transaction.status = Transaction.TransactionStatus.COMPLETED
+                qr_session.payment_transaction.completed_at = timezone.now()
+                qr_session.payment_transaction.save()
+
+                # Mark QR session as payment completed
+                qr_session.status = 'payment_completed'
+                qr_session.save()
+
+                session_serializer = QRPaymentSessionSerializer(qr_session)
+                return Response({
+                    'success': True,
+                    'message': 'Payment marked as completed for testing',
+                    'qr_session': session_serializer.data
+                }, status=status.HTTP_200_OK)
+            else:
+                return Response({
+                    'success': False,
+                    'message': 'No payment transaction found'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        except QRPaymentSession.DoesNotExist:
+            return Response({
+                'success': False,
+                'message': 'QR payment session not found or not in payment_initiated status'
             }, status=status.HTTP_404_NOT_FOUND)
