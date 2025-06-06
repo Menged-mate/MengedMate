@@ -1,0 +1,2581 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>evmeri Technical Documentation - Complete Guide</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2563eb;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+        h2 {
+            color: #1e40af;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+            font-size: 1.8rem;
+        }
+        h3 {
+            color: #1e40af;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+        h4 {
+            color: #374151;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+        }
+        .toc {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .toc h2 {
+            margin-top: 0;
+            color: #2563eb;
+            border-bottom: 2px solid #2563eb;
+        }
+        .toc ol {
+            padding-left: 20px;
+        }
+        .toc li {
+            margin-bottom: 5px;
+        }
+        .toc a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+            color: #e11d48;
+        }
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            position: relative;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+        .architecture-diagram {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+            font-family: monospace;
+            white-space: pre;
+            overflow-x: auto;
+        }
+        blockquote {
+            border-left: 4px solid #2563eb;
+            margin: 20px 0;
+            padding: 15px 20px;
+            background: #f8fafc;
+            border-radius: 0 8px 8px 0;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        hr {
+            border: none;
+            height: 2px;
+            background: linear-gradient(to right, #2563eb, #60a5fa, #2563eb);
+            margin: 40px 0;
+        }
+        strong {
+            color: #1e40af;
+        }
+        .tech-stack {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 20px;
+            margin: 20px 0;
+        }
+        .tech-category {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 15px;
+        }
+        .tech-category h4 {
+            margin-top: 0;
+            color: #2563eb;
+        }
+        .copy-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            background: #374151;
+            color: white;
+            border: none;
+            padding: 5px 10px;
+            border-radius: 4px;
+            font-size: 0.8rem;
+            cursor: pointer;
+            opacity: 0.7;
+            transition: opacity 0.2s;
+        }
+        .copy-btn:hover {
+            opacity: 1;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="evmeri-technical-documentation">📱 evmeri - EV Charging Station Locator</h1>
+        <h2>Complete Technical Documentation</h2>
+
+        <hr>
+
+        <div class="toc">
+            <h2 id="table-of-contents">🧱 Table of Contents</h2>
+            <ol>
+                <li><a href="#overview">Overview</a></li>
+                <li><a href="#architecture">Architecture</a></li>
+                <li><a href="#installation-setup">Installation & Setup</a></li>
+                <li><a href="#environment-configuration">Environment Configuration</a></li>
+                <li><a href="#modules-features">Modules & Features</a></li>
+                <li><a href="#api-documentation">API Documentation</a></li>
+                <li><a href="#ui-ux-design">UI/UX Design</a></li>
+                <li><a href="#code-structure">Code Structure</a></li>
+                <li><a href="#build-deployment">Build & Deployment</a></li>
+                <li><a href="#testing">Testing</a></li>
+                <li><a href="#security">Security</a></li>
+                <li><a href="#analytics-monitoring">Analytics & Monitoring</a></li>
+                <li><a href="#changelog">Changelog</a></li>
+                <li><a href="#faq-troubleshooting">FAQ & Troubleshooting</a></li>
+                <li><a href="#contributing-guide">Contributing Guide</a></li>
+                <li><a href="#license">License</a></li>
+            </ol>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="overview">🧱 1. Overview</h2>
+
+            <h3>Project Name</h3>
+            <p><strong>evmeri</strong> - Electric Vehicle Charging Station Locator for Ethiopia</p>
+
+            <h3>Description</h3>
+            <p>evmeri is a comprehensive mobile and web application designed to help electric vehicle owners in Ethiopia locate, navigate to, and manage charging sessions at EV charging stations. The platform provides real-time station availability, payment integration, and station management tools for both users and station owners.</p>
+
+            <h3>Purpose & Goals</h3>
+            <ul>
+                <li><strong>Primary Goal</strong>: Accelerate EV adoption in Ethiopia by providing reliable charging infrastructure information</li>
+                <li><strong>User Experience</strong>: Simplify the process of finding and using EV charging stations</li>
+                <li><strong>Station Management</strong>: Provide tools for charging station owners to manage their infrastructure</li>
+                <li><strong>Payment Integration</strong>: Enable seamless payment processing for charging sessions</li>
+                <li><strong>Localization</strong>: Support for Ethiopian users with local payment methods and languages</li>
+            </ul>
+
+            <h3>Key Features</h3>
+            <ul>
+                <li>🗺️ <strong>Interactive Map</strong>: Real-time charging station locations using OpenStreetMap</li>
+                <li>📱 <strong>Mobile App</strong>: Native Flutter application for iOS and Android</li>
+                <li>🌐 <strong>Web Dashboard</strong>: Station owner management portal</li>
+                <li>💳 <strong>Payment Integration</strong>: Chapa payment gateway for Ethiopian market</li>
+                <li>🔍 <strong>Station Search</strong>: Find stations by location, connector type, and availability</li>
+                <li>⭐ <strong>Reviews & Ratings</strong>: User feedback system for stations</li>
+                <li>🚗 <strong>Navigation</strong>: Turn-by-turn directions to charging stations</li>
+                <li>📊 <strong>Analytics</strong>: Usage statistics and charging history</li>
+                <li>🔐 <strong>Authentication</strong>: Secure user registration and login</li>
+                <li>📧 <strong>Email Verification</strong>: Account verification system</li>
+                <li>🏪 <strong>Station Management</strong>: Tools for station owners to manage their infrastructure</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="architecture">🗺 2. Architecture</h2>
+
+            <h3>System Architecture Diagram</h3>
+            <div class="architecture-diagram">┌─────────────────┐    ┌─────────────────┐    ┌─────────────────┐
+│   Mobile App    │    │   Web Frontend  │    │   Admin Panel   │
+│   (Flutter)     │    │   (React/JSX)   │    │   (Django)      │
+└─────────┬───────┘    └─────────┬───────┘    └─────────┬───────┘
+          │                      │                      │
+          └──────────────────────┼──────────────────────┘
+                                 │
+                    ┌─────────────┴─────────────┐
+                    │     API Gateway           │
+                    │   (Django REST API)       │
+                    └─────────────┬─────────────┘
+                                  │
+          ┌───────────────────────┼───────────────────────┐
+          │                       │                       │
+    ┌─────┴─────┐         ┌───────┴───────┐       ┌───────┴───────┐
+    │ Database  │         │   External    │       │   Payment     │
+    │(PostgreSQL│         │   Services    │       │   Gateway     │
+    │/SQLite)   │         │               │       │   (Chapa)     │
+    └───────────┘         └───────────────┘       └───────────────┘
+                                  │
+                          ┌───────┴───────┐
+                          │ OpenStreetMap │
+                          │   Email SMTP  │
+                          │   File Storage│
+                          └───────────────┘</div>
+
+            <h3>Technology Stack</h3>
+            <div class="tech-stack">
+                <div class="tech-category">
+                    <h4>Frontend</h4>
+                    <ul>
+                        <li><strong>Mobile</strong>: Flutter 3.x (Dart)</li>
+                        <li><strong>Web</strong>: React 18+ with JSX</li>
+                        <li><strong>State Management</strong>: Provider (Flutter), React Hooks (Web)</li>
+                        <li><strong>Navigation</strong>: Flutter Navigator 2.0, React Router</li>
+                        <li><strong>Maps</strong>: OpenStreetMap with flutter_map</li>
+                        <li><strong>HTTP Client</strong>: http package (Flutter), fetch API (Web)</li>
+                    </ul>
+                </div>
+
+                <div class="tech-category">
+                    <h4>Backend</h4>
+                    <ul>
+                        <li><strong>Framework</strong>: Django 4.x with Django REST Framework</li>
+                        <li><strong>Database</strong>: PostgreSQL (Production), SQLite (Development)</li>
+                        <li><strong>Authentication</strong>: Django Token Authentication</li>
+                        <li><strong>API Documentation</strong>: Django REST Framework Browsable API</li>
+                        <li><strong>File Storage</strong>: Django File Storage</li>
+                        <li><strong>Email</strong>: SMTP with Gmail integration</li>
+                    </ul>
+                </div>
+
+                <div class="tech-category">
+                    <h4>External Services</h4>
+                    <ul>
+                        <li><strong>Maps</strong>: OpenStreetMap (Nominatim for geocoding)</li>
+                        <li><strong>Payments</strong>: Chapa Payment Gateway</li>
+                        <li><strong>Email</strong>: Gmail SMTP</li>
+                        <li><strong>Hosting</strong>: Render.com (Backend), Vercel (Frontend)</li>
+                    </ul>
+                </div>
+
+                <div class="tech-category">
+                    <h4>Development Tools</h4>
+                    <ul>
+                        <li><strong>Version Control</strong>: Git</li>
+                        <li><strong>IDE</strong>: VS Code, Android Studio</li>
+                        <li><strong>Testing</strong>: Flutter Test, Jest (Web)</li>
+                        <li><strong>CI/CD</strong>: GitHub Actions</li>
+                        <li><strong>Package Management</strong>: pub (Flutter), npm (Web), pip (Python)</li>
+                    </ul>
+                </div>
+            </div>
+            <h3>Component Architecture</h3>
+
+            <h4><strong>Frontend Components</strong></h4>
+            <ul>
+                <li><strong>Mobile App (Flutter)</strong>: Cross-platform mobile application</li>
+                <li><strong>Web Frontend (React)</strong>: Station owner dashboard and public website</li>
+                <li><strong>Admin Panel (Django)</strong>: System administration interface</li>
+            </ul>
+
+            <h4><strong>Backend Services</strong></h4>
+            <ul>
+                <li><strong>API Gateway</strong>: Django REST Framework handling all API requests</li>
+                <li><strong>Database</strong>: PostgreSQL for production, SQLite for development</li>
+                <li><strong>Authentication</strong>: Token-based authentication system</li>
+                <li><strong>File Storage</strong>: Django file storage for images and documents</li>
+            </ul>
+
+            <h4><strong>External Integrations</strong></h4>
+            <ul>
+                <li><strong>Payment Gateway</strong>: Chapa for Ethiopian payment processing</li>
+                <li><strong>Maps Service</strong>: OpenStreetMap with Nominatim geocoding</li>
+                <li><strong>Email Service</strong>: SMTP integration for notifications</li>
+                <li><strong>Push Notifications</strong>: Firebase Cloud Messaging</li>
+            </ul>
+
+            <h3>Data Flow</h3>
+
+            <h4><strong>User Registration Flow</strong></h4>
+            <pre><code>Mobile App → API Gateway → Database → Email Service
+    ↓
+User receives verification email
+    ↓
+Email verification → Account activation</code></pre>
+
+            <h4><strong>Station Discovery Flow</strong></h4>
+            <pre><code>Mobile App → Location Services → API Gateway → Database
+    ↓
+Filter by location/preferences
+    ↓
+Return nearby stations with real-time data</code></pre>
+
+            <h4><strong>Payment Processing Flow</strong></h4>
+            <pre><code>QR Code Scan → Payment Initiation → Chapa Gateway
+    ↓
+Payment Confirmation → Charging Session Start
+    ↓
+Real-time Updates → Session Completion → Receipt</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="installation-setup">⚙️ 3. Installation & Setup</h2>
+
+            <h3>Prerequisites</h3>
+
+            <h4><strong>System Requirements</strong></h4>
+            <ul>
+                <li><strong>Operating System</strong>: Ubuntu 20.04+ / macOS 10.15+ / Windows 10+</li>
+                <li><strong>RAM</strong>: 8GB minimum, 16GB recommended</li>
+                <li><strong>Storage</strong>: 20GB free space</li>
+                <li><strong>Internet</strong>: Stable broadband connection</li>
+            </ul>
+
+            <h4><strong>Required Software</strong></h4>
+            <pre><code>Backend Development:
+- Python 3.9+
+- Node.js 16+
+- PostgreSQL 13+
+- Git
+
+Mobile Development:
+- Flutter SDK 3.0+
+- Android Studio / Xcode
+- Android SDK / iOS SDK
+
+Web Development:
+- Node.js 16+
+- npm or yarn
+- Modern web browser</code></pre>
+
+            <h3>Backend Setup</h3>
+
+            <h4><strong>1. Clone Repository</strong></h4>
+            <pre><code>git clone https://github.com/your-username/evmeri-backend.git
+cd evmeri-backend</code></pre>
+
+            <h4><strong>2. Create Virtual Environment</strong></h4>
+            <pre><code># Using venv
+python3 -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Using conda
+conda create -n evmeri python=3.9
+conda activate evmeri</code></pre>
+
+            <h4><strong>3. Install Dependencies</strong></h4>
+            <pre><code>pip install -r requirements.txt</code></pre>
+
+            <h4><strong>4. Database Setup</strong></h4>
+            <pre><code># Install PostgreSQL (Ubuntu)
+sudo apt update
+sudo apt install postgresql postgresql-contrib
+
+# Create database
+sudo -u postgres createdb evmeri_db
+sudo -u postgres createuser evmeri_user
+sudo -u postgres psql -c "ALTER USER evmeri_user PASSWORD 'your_password';"
+sudo -u postgres psql -c "GRANT ALL PRIVILEGES ON DATABASE evmeri_db TO evmeri_user;"</code></pre>
+
+            <h4><strong>5. Environment Configuration</strong></h4>
+            <pre><code># Create .env file
+cp .env.example .env
+
+# Edit .env with your settings
+DATABASE_URL=postgresql://evmeri_user:your_password@localhost/evmeri_db
+SECRET_KEY=your_secret_key_here
+DEBUG=True
+CHAPA_SECRET_KEY=your_chapa_secret_key
+EMAIL_HOST_PASSWORD=your_email_password</code></pre>
+
+            <h4><strong>6. Run Migrations</strong></h4>
+            <pre><code>python manage.py makemigrations
+python manage.py migrate</code></pre>
+
+            <h4><strong>7. Create Superuser</strong></h4>
+            <pre><code>python manage.py createsuperuser</code></pre>
+
+            <h4><strong>8. Start Development Server</strong></h4>
+            <pre><code>python manage.py runserver</code></pre>
+
+            <h3>Mobile App Setup</h3>
+
+            <h4><strong>1. Install Flutter</strong></h4>
+            <pre><code># Download Flutter SDK
+git clone https://github.com/flutter/flutter.git -b stable
+export PATH="$PATH:`pwd`/flutter/bin"
+
+# Verify installation
+flutter doctor</code></pre>
+
+            <h4><strong>2. Clone Mobile Repository</strong></h4>
+            <pre><code>git clone https://github.com/your-username/evmeri-mobile.git
+cd evmeri-mobile</code></pre>
+
+            <h4><strong>3. Install Dependencies</strong></h4>
+            <pre><code>flutter pub get</code></pre>
+
+            <h4><strong>4. Configure API Endpoint</strong></h4>
+            <pre><code># Edit lib/config/api_config.dart
+class ApiConfig {
+  static const String baseUrl = 'http://localhost:8000/api';
+  static const String chapaPublicKey = 'your_chapa_public_key';
+}</code></pre>
+
+            <h4><strong>5. Run Mobile App</strong></h4>
+            <pre><code># For Android
+flutter run
+
+# For iOS (macOS only)
+flutter run -d ios</code></pre>
+
+            <h3>Web Frontend Setup</h3>
+
+            <h4><strong>1. Clone Web Repository</strong></h4>
+            <pre><code>git clone https://github.com/your-username/evmeri-web.git
+cd evmeri-web</code></pre>
+
+            <h4><strong>2. Install Dependencies</strong></h4>
+            <pre><code>npm install
+# or
+yarn install</code></pre>
+
+            <h4><strong>3. Configure Environment</strong></h4>
+            <pre><code># Create .env.local
+REACT_APP_API_URL=http://localhost:8000/api
+REACT_APP_CHAPA_PUBLIC_KEY=your_chapa_public_key</code></pre>
+
+            <h4><strong>4. Start Development Server</strong></h4>
+            <pre><code>npm start
+# or
+yarn start</code></pre>
+
+            <h3>Docker Setup (Alternative)</h3>
+
+            <h4><strong>1. Using Docker Compose</strong></h4>
+            <pre><code># Clone main repository
+git clone https://github.com/your-username/evmeri.git
+cd evmeri
+
+# Start all services
+docker-compose up -d
+
+# View logs
+docker-compose logs -f</code></pre>
+
+            <h4><strong>2. Docker Compose Configuration</strong></h4>
+            <pre><code>version: '3.8'
+services:
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: evmeri_db
+      POSTGRES_USER: evmeri_user
+      POSTGRES_PASSWORD: password
+    volumes:
+      - postgres_data:/var/lib/postgresql/data
+
+  backend:
+    build: ./backend
+    ports:
+      - "8000:8000"
+    depends_on:
+      - db
+    environment:
+      - DATABASE_URL=postgresql://evmeri_user:password@db/evmeri_db
+
+  frontend:
+    build: ./web_frontend
+    ports:
+      - "3000:3000"
+    depends_on:
+      - backend
+
+volumes:
+  postgres_data:</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="environment-configuration">🔧 4. Environment Configuration</h2>
+
+            <h3>Backend Environment Variables</h3>
+
+            <h4><strong>Core Settings</strong></h4>
+            <pre><code># .env file for Django backend
+DEBUG=True
+SECRET_KEY=your-secret-key-here
+ALLOWED_HOSTS=localhost,127.0.0.1,your-domain.com
+
+# Database Configuration
+DATABASE_URL=postgresql://user:password@localhost/evmeri_db
+
+# Email Configuration
+EMAIL_BACKEND=django.core.mail.backends.smtp.EmailBackend
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_USE_TLS=True
+EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_PASSWORD=your-app-password
+
+# Chapa Payment Configuration
+CHAPA_SECRET_KEY=your-chapa-secret-key
+CHAPA_PUBLIC_KEY=your-chapa-public-key
+CHAPA_RETURN_URL=http://localhost:3000/payment/callback
+
+# File Storage
+MEDIA_URL=/media/
+MEDIA_ROOT=media/
+STATIC_URL=/static/
+STATIC_ROOT=staticfiles/
+
+# Security Settings
+CORS_ALLOWED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000
+CSRF_TRUSTED_ORIGINS=http://localhost:3000,http://127.0.0.1:3000</code></pre>
+
+            <h3>Mobile App Configuration</h3>
+
+            <h4><strong>API Configuration</strong></h4>
+            <pre><code>// lib/config/api_config.dart
+class ApiConfig {
+  static const String baseUrl = 'https://your-api-domain.com/api';
+  static const String chapaPublicKey = 'CHAPA_PUBLIC_KEY';
+  static const int timeoutDuration = 30; // seconds
+
+  // Development vs Production
+  static const bool isProduction = bool.fromEnvironment('dart.vm.product');
+
+  static String get apiUrl {
+    return isProduction
+      ? 'https://api.evmeri.com/api'
+      : 'http://localhost:8000/api';
+  }
+}</code></pre>
+
+            <h4><strong>Firebase Configuration</strong></h4>
+            <pre><code>// android/app/google-services.json (for Android)
+// ios/Runner/GoogleService-Info.plist (for iOS)
+
+// lib/config/firebase_config.dart
+class FirebaseConfig {
+  static const String projectId = 'evmeri-app';
+  static const String messagingSenderId = 'your-sender-id';
+  static const String appId = 'your-app-id';
+}</code></pre>
+
+            <h3>Web Frontend Configuration</h3>
+
+            <h4><strong>Environment Variables</strong></h4>
+            <pre><code># .env.local for React app
+REACT_APP_API_URL=http://localhost:8000/api
+REACT_APP_CHAPA_PUBLIC_KEY=your-chapa-public-key
+REACT_APP_GOOGLE_MAPS_API_KEY=your-google-maps-key
+REACT_APP_FIREBASE_API_KEY=your-firebase-api-key
+REACT_APP_FIREBASE_PROJECT_ID=evmeri-web
+
+# Production settings
+REACT_APP_ENVIRONMENT=development
+REACT_APP_VERSION=1.0.0</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="modules-features">🧩 5. Modules & Features</h2>
+
+            <h3>Authentication Module</h3>
+
+            <h4><strong>Backend Implementation</strong></h4>
+            <p><strong>Location</strong>: <code>authentication/</code></p>
+            <p><strong>Key Files</strong>:</p>
+            <ul>
+                <li><code>models.py</code> - Custom User model with additional fields</li>
+                <li><code>views.py</code> - Registration, login, verification views</li>
+                <li><code>serializers.py</code> - API serializers for user data</li>
+                <li><code>urls.py</code> - Authentication endpoint routing</li>
+            </ul>
+
+            <p><strong>Features</strong>:</p>
+            <ul>
+                <li>User registration with email verification</li>
+                <li>Token-based authentication</li>
+                <li>Password reset functionality</li>
+                <li>Profile management</li>
+                <li>Social authentication support</li>
+            </ul>
+
+            <h4><strong>API Endpoints</strong></h4>
+            <pre><code>POST /api/auth/register/          # User registration
+POST /api/auth/login/             # User login
+POST /api/auth/verify-email/      # Email verification
+POST /api/auth/forgot-password/   # Password reset request
+POST /api/auth/reset-password/    # Password reset confirmation
+POST /api/auth/logout/            # User logout
+GET  /api/auth/profile/           # User profile
+PUT  /api/auth/profile/           # Update profile</code></pre>
+
+            <h4><strong>Mobile App Integration</strong></h4>
+            <p><strong>Location</strong>: <code>mobile_frontend/lib/services/auth_service.dart</code></p>
+            <pre><code>class AuthService {
+  static Future<User?> login(String email, String password) async {
+    final response = await http.post(
+      Uri.parse('${ApiConfig.baseUrl}/auth/login/'),
+      headers: {'Content-Type': 'application/json'},
+      body: jsonEncode({
+        'email': email,
+        'password': password,
+      }),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      await _saveToken(data['token']);
+      return User.fromJson(data['user']);
+    }
+    return null;
+  }
+}</code></pre>
+
+            <h3>Charging Station Management</h3>
+
+            <h4><strong>Backend Models</strong></h4>
+            <p><strong>Location</strong>: <code>charging_stations/models.py</code></p>
+            <pre><code>class ChargingStation(models.Model):
+    name = models.CharField(max_length=200)
+    description = models.TextField(blank=True)
+    address = models.CharField(max_length=500)
+    latitude = models.DecimalField(max_digits=9, decimal_places=6)
+    longitude = models.DecimalField(max_digits=9, decimal_places=6)
+    status = models.CharField(max_length=20, choices=STATUS_CHOICES)
+    owner = models.ForeignKey(User, on_delete=models.CASCADE)
+    amenities = models.ManyToManyField(Amenity, blank=True)
+    rating = models.DecimalField(max_digits=3, decimal_places=2, default=0)
+    rating_count = models.IntegerField(default=0)
+    created_at = models.DateTimeField(auto_now_add=True)
+
+class ChargingConnector(models.Model):
+    station = models.ForeignKey(ChargingStation, on_delete=models.CASCADE)
+    connector_type = models.CharField(max_length=50)
+    power_kw = models.DecimalField(max_digits=5, decimal_places=2)
+    status = models.CharField(max_length=20, choices=CONNECTOR_STATUS_CHOICES)
+    price_per_kwh = models.DecimalField(max_digits=6, decimal_places=2)</code></pre>
+
+            <h4><strong>Station Discovery API</strong></h4>
+            <pre><code>class NearbyStationsView(APIView):
+    def get(self, request):
+        lat = float(request.GET.get('lat'))
+        lng = float(request.GET.get('lng'))
+        radius = float(request.GET.get('radius', 10))
+
+        # Calculate distance using Haversine formula
+        stations = ChargingStation.objects.filter(
+            latitude__range=(lat - radius/111, lat + radius/111),
+            longitude__range=(lng - radius/111, lng + radius/111),
+            status='operational'
+        ).annotate(
+            distance=Distance(
+                Point(lng, lat, srid=4326),
+                Point('longitude', 'latitude', srid=4326)
+            )
+        ).order_by('distance')
+
+        serializer = StationSerializer(stations, many=True)
+        return Response({'results': serializer.data})</code></pre>
+
+            <h3>Payment System Module</h3>
+
+            <h4><strong>Chapa Integration</strong></h4>
+            <p><strong>Location</strong>: <code>payments/</code></p>
+            <p><strong>Features</strong>:</p>
+            <ul>
+                <li>QR code payment initiation</li>
+                <li>Real-time payment status tracking</li>
+                <li>Transaction history</li>
+                <li>Refund processing</li>
+                <li>Multiple payment methods (Mobile Money, Bank Transfer)</li>
+            </ul>
+
+            <h4><strong>Payment Flow Implementation</strong></h4>
+            <pre><code>class QRPaymentInitiationView(APIView):
+    def post(self, request):
+        connector_id = request.data.get('connector_id')
+        amount = request.data.get('amount')
+        phone_number = request.data.get('phone_number')
+
+        # Create QR session
+        qr_session = QRSession.objects.create(
+            user=request.user,
+            connector_id=connector_id,
+            amount=amount,
+            status='pending'
+        )
+
+        # Initialize Chapa payment
+        payment_data = {
+            'amount': amount,
+            'currency': 'ETB',
+            'email': request.user.email,
+            'phone_number': phone_number,
+            'tx_ref': f'evmeri-{qr_session.id}',
+            'return_url': settings.CHAPA_RETURN_URL,
+        }
+
+        chapa_response = chapa_client.initialize_payment(payment_data)
+
+        return Response({
+            'session_token': qr_session.session_token,
+            'payment_url': chapa_response['data']['checkout_url'],
+            'qr_session': QRSessionSerializer(qr_session).data
+        })</code></pre>
+
+            <h3>Map Integration Module</h3>
+
+            <h4><strong>OpenStreetMap Implementation</strong></h4>
+            <p><strong>Location</strong>: <code>mobile_frontend/lib/screens/map_screen.dart</code></p>
+            <pre><code>class MapScreen extends StatefulWidget {
+  @override
+  _MapScreenState createState() => _MapScreenState();
+}
+
+class _MapScreenState extends State<MapScreen> {
+  MapController mapController = MapController();
+  List<Marker> stationMarkers = [];
+  LatLng? currentLocation;
+
+  @override
+  Widget build(BuildContext context) {
+    return Scaffold(
+      body: FlutterMap(
+        mapController: mapController,
+        options: MapOptions(
+          center: currentLocation ?? LatLng(9.0320, 38.7469),
+          zoom: 13.0,
+          onMapReady: _onMapReady,
+        ),
+        children: [
+          TileLayer(
+            urlTemplate: 'https://tile.openstreetmap.org/{z}/{x}/{y}.png',
+            userAgentPackageName: 'com.evmeri.app',
+          ),
+          MarkerLayer(markers: stationMarkers),
+          CurrentLocationLayer(),
+        ],
+      ),
+      floatingActionButton: FloatingActionButton(
+        onPressed: _centerOnCurrentLocation,
+        child: Icon(Icons.my_location),
+      ),
+    );
+  }
+}</code></pre>
+
+            <h3>Navigation Module</h3>
+
+            <h4><strong>Turn-by-Turn Navigation</strong></h4>
+            <p><strong>Features</strong>:</p>
+            <ul>
+                <li>Real-time GPS tracking</li>
+                <li>Voice guidance in multiple languages</li>
+                <li>Route optimization for EVs</li>
+                <li>Traffic-aware routing</li>
+                <li>Offline map support</li>
+            </ul>
+
+            <pre><code>class NavigationService {
+  static Future<Route> calculateRoute(
+    LatLng start,
+    LatLng destination,
+    {RoutePreference preference = RoutePreference.fastest}
+  ) async {
+    final response = await http.get(
+      Uri.parse('https://router.project-osrm.org/route/v1/driving/'
+        '${start.longitude},${start.latitude};'
+        '${destination.longitude},${destination.latitude}'
+        '?overview=full&geometries=geojson&steps=true'),
+    );
+
+    if (response.statusCode == 200) {
+      final data = jsonDecode(response.body);
+      return Route.fromOSRM(data['routes'][0]);
+    }
+    throw Exception('Failed to calculate route');
+  }
+}</code></pre>
+
+            <h3>Notification System</h3>
+
+            <h4><strong>Push Notifications</strong></h4>
+            <p><strong>Technologies</strong>:</p>
+            <ul>
+                <li><strong>Firebase Cloud Messaging</strong> (FCM) for mobile</li>
+                <li><strong>Web Push API</strong> for web notifications</li>
+                <li><strong>Email notifications</strong> for important updates</li>
+            </ul>
+
+            <p><strong>Implementation</strong>:</p>
+            <pre><code>class NotificationService {
+  static FirebaseMessaging messaging = FirebaseMessaging.instance;
+
+  static Future<void> initialize() async {
+    NotificationSettings settings = await messaging.requestPermission(
+      alert: true,
+      badge: true,
+      sound: true,
+    );
+
+    FirebaseMessaging.onMessage.listen((RemoteMessage message) {
+      _showLocalNotification(message);
+    });
+
+    FirebaseMessaging.onMessageOpenedApp.listen((RemoteMessage message) {
+      _handleNotificationTap(message);
+    });
+  }
+
+  static Future<void> subscribeToTopic(String topic) async {
+    await messaging.subscribeToTopic(topic);
+  }
+}</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="api-documentation">🧾 6. API Documentation</h2>
+
+            <h3>Base Configuration</h3>
+            <ul>
+                <li><strong>Base URL</strong>: <code>https://mengedmate.onrender.com/api</code></li>
+                <li><strong>Authentication</strong>: Token-based authentication</li>
+                <li><strong>Content Type</strong>: <code>application/json</code></li>
+                <li><strong>API Version</strong>: v1</li>
+            </ul>
+
+            <h3>Authentication Headers</h3>
+            <pre><code>Authorization: Token your_token_here
+Content-Type: application/json</code></pre>
+
+            <h3>Authentication Endpoints</h3>
+
+            <h4><strong>User Registration</strong></h4>
+            <pre><code>POST /api/auth/register/
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password1": "securepassword123",
+  "password2": "securepassword123",
+  "first_name": "John",
+  "last_name": "Doe"
+}
+
+Response (201):
+{
+  "success": true,
+  "message": "Registration successful. Please verify your email.",
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "first_name": "John",
+    "last_name": "Doe"
+  }
+}</code></pre>
+
+            <h4><strong>User Login</strong></h4>
+            <pre><code>POST /api/auth/login/
+Content-Type: application/json
+
+{
+  "email": "user@example.com",
+  "password": "securepassword123"
+}
+
+Response (200):
+{
+  "success": true,
+  "token": "your_auth_token_here",
+  "user": {
+    "id": "uuid",
+    "email": "user@example.com",
+    "first_name": "John",
+    "last_name": "Doe",
+    "is_verified": true
+  }
+}</code></pre>
+
+            <h3>Station Endpoints</h3>
+
+            <h4><strong>Get Nearby Stations</strong></h4>
+            <pre><code>GET /api/public/nearby-stations/?lat=9.0320&lng=38.7469&radius=10
+
+Response (200):
+{
+  "success": true,
+  "results": [
+    {
+      "id": "station_uuid",
+      "name": "EVMERI Station 1",
+      "address": "Addis Ababa, Ethiopia",
+      "latitude": 9.0320,
+      "longitude": 38.7469,
+      "distance": 2.5,
+      "status": "operational",
+      "connectors": [
+        {
+          "id": "connector_uuid",
+          "connector_type": "Type 2",
+          "power_kw": 22.0,
+          "status": "available",
+          "price_per_kwh": 6.0
+        }
+      ],
+      "amenities": ["parking", "restroom", "wifi"],
+      "rating": 4.5,
+      "rating_count": 128
+    }
+  ],
+  "count": 1
+}</code></pre>
+
+            <h4><strong>Get Station Details</strong></h4>
+            <pre><code>GET /api/stations/{station_id}/
+Authorization: Token your_token_here
+
+Response (200):
+{
+  "id": "station_uuid",
+  "name": "EVMERI Station 1",
+  "description": "Fast charging station in city center",
+  "address": "Addis Ababa, Ethiopia",
+  "latitude": 9.0320,
+  "longitude": 38.7469,
+  "status": "operational",
+  "owner": {
+    "company_name": "EVMERI Inc",
+    "contact_email": "mengedmate@gmail.com"
+  },
+  "connectors": [...],
+  "amenities": [...],
+  "operating_hours": {
+    "monday": "00:00-23:59",
+    "tuesday": "00:00-23:59"
+  },
+  "images": [
+    {
+      "id": "image_uuid",
+      "image_url": "https://example.com/station1.jpg",
+      "is_main": true
+    }
+  ],
+  "rating": 4.5,
+  "rating_count": 128
+}</code></pre>
+
+            <h3>Payment Endpoints</h3>
+
+            <h4><strong>Initiate QR Payment</strong></h4>
+            <pre><code>POST /api/payments/qr-sessions/
+Authorization: Token your_token_here
+Content-Type: application/json
+
+{
+  "connector_id": "connector_uuid",
+  "payment_type": "amount",
+  "amount": 100.00,
+  "phone_number": "+251900123456"
+}
+
+Response (201):
+{
+  "success": true,
+  "session_token": "unique_session_token",
+  "payment_url": "https://checkout.chapa.co/checkout/payment/...",
+  "qr_session": {
+    "id": "session_uuid",
+    "amount": 100.00,
+    "status": "pending",
+    "expires_at": "2024-01-01T12:00:00Z"
+  }
+}</code></pre>
+
+            <h3>Error Responses</h3>
+            <pre><code>HTTP 400 Bad Request
+{
+  "success": false,
+  "error": "Validation error",
+  "details": {
+    "email": ["This field is required."],
+    "password": ["Password too short."]
+  }
+}
+
+HTTP 401 Unauthorized
+{
+  "success": false,
+  "error": "Authentication required",
+  "message": "Please provide a valid authentication token."
+}
+
+HTTP 404 Not Found
+{
+  "success": false,
+  "error": "Resource not found",
+  "message": "The requested station does not exist."
+}</code></pre>
+
+            <h3>Rate Limiting</h3>
+            <ul>
+                <li><strong>Authenticated requests</strong>: 1000 requests per hour</li>
+                <li><strong>Public endpoints</strong>: 100 requests per hour</li>
+                <li><strong>Payment endpoints</strong>: 10 requests per minute</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="ui-ux-design">📱 7. UI/UX Design</h2>
+
+            <h3>Design System</h3>
+
+            <h4><strong>Color Palette</strong></h4>
+            <ul>
+                <li><strong>Primary Blue</strong>: <code>#2563eb</code> - Main brand color</li>
+                <li><strong>Secondary Blue</strong>: <code>#3b82f6</code> - Accent color</li>
+                <li><strong>Success Green</strong>: <code>#10b981</code> - Success states</li>
+                <li><strong>Warning Orange</strong>: <code>#f59e0b</code> - Warning states</li>
+                <li><strong>Error Red</strong>: <code>#ef4444</code> - Error states</li>
+                <li><strong>Gray Scale</strong>: <code>#f8fafc</code> to <code>#1f2937</code> - Text and backgrounds</li>
+            </ul>
+
+            <h4><strong>Typography</strong></h4>
+            <ul>
+                <li><strong>Primary Font</strong>: Inter (Web), System Default (Mobile)</li>
+                <li><strong>Headings</strong>: Bold weights (600-700)</li>
+                <li><strong>Body Text</strong>: Regular weight (400)</li>
+                <li><strong>Captions</strong>: Medium weight (500)</li>
+            </ul>
+
+            <h4><strong>Spacing System</strong></h4>
+            <ul>
+                <li><strong>Base Unit</strong>: 4px</li>
+                <li><strong>Scale</strong>: 4px, 8px, 12px, 16px, 20px, 24px, 32px, 40px, 48px, 64px</li>
+            </ul>
+
+            <h3>Mobile App Design</h3>
+
+            <h4><strong>Navigation Structure</strong></h4>
+            <pre><code>Main Screen (Bottom Navigation)
+├── Home (Map View)
+│   ├── Station Details
+│   ├── Navigation Screen
+│   └── QR Scanner
+├── Stations (List View)
+│   ├── Station Details
+│   ├── Leave Review
+│   └── Favorites Toggle
+├── Favorites
+│   └── Saved Stations
+└── Settings
+    ├── Profile
+    ├── Charging History
+    ├── Change Password
+    ├── FAQs
+    ├── Report Issue
+    └── About evmeri</code></pre>
+
+            <h4><strong>Key Screens</strong></h4>
+            <p><strong>1. Home/Map Screen</strong></p>
+            <ul>
+                <li>Full-screen OpenStreetMap</li>
+                <li>Custom station markers with status colors</li>
+                <li>Floating search bar</li>
+                <li>Current location button</li>
+                <li>Nearby stations bottom sheet</li>
+            </ul>
+
+            <p><strong>2. Station Details Screen</strong></p>
+            <ul>
+                <li>Station image carousel</li>
+                <li>Real-time availability status</li>
+                <li>Connector information with pricing</li>
+                <li>Amenities list with icons</li>
+                <li>Reviews and ratings</li>
+                <li>Navigation and QR scan buttons</li>
+            </ul>
+
+            <h4><strong>Custom Widgets</strong></h4>
+            <pre><code>class StationMarker extends StatelessWidget {
+  final Station station;
+  final VoidCallback onTap;
+
+  @override
+  Widget build(BuildContext context) {
+    return GestureDetector(
+      onTap: onTap,
+      child: Container(
+        width: 40,
+        height: 40,
+        decoration: BoxDecoration(
+          color: _getStatusColor(station.status),
+          shape: BoxShape.circle,
+          border: Border.all(color: Colors.white, width: 2),
+          boxShadow: [
+            BoxShadow(
+              color: Colors.black26,
+              blurRadius: 4,
+              offset: Offset(0, 2),
+            ),
+          ],
+        ),
+        child: Icon(
+          Icons.ev_station,
+          color: Colors.white,
+          size: 20,
+        ),
+      ),
+    );
+  }
+}</code></pre>
+
+            <h3>Web Dashboard Design</h3>
+
+            <h4><strong>Layout Structure</strong></h4>
+            <ul>
+                <li><strong>Header</strong>: Navigation, user menu, notifications</li>
+                <li><strong>Sidebar</strong>: Main navigation menu</li>
+                <li><strong>Main Content</strong>: Dashboard content area</li>
+                <li><strong>Footer</strong>: Links and copyright information</li>
+            </ul>
+
+            <h4><strong>Dashboard Components</strong></h4>
+            <ul>
+                <li><strong>Statistics Cards</strong>: Key metrics display</li>
+                <li><strong>Charts</strong>: Usage analytics and trends</li>
+                <li><strong>Data Tables</strong>: Station and transaction lists</li>
+                <li><strong>Forms</strong>: Station management forms</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="code-structure">🏗️ 8. Code Structure</h2>
+
+            <h3>Backend Structure</h3>
+
+            <h4><strong>Django Project Layout</strong></h4>
+            <pre><code>evmeri_backend/
+├── manage.py
+├── requirements.txt
+├── .env.example
+├── evmeri_backend/
+│   ├── __init__.py
+│   ├── settings.py
+│   ├── urls.py
+│   └── wsgi.py
+├── authentication/
+│   ├── models.py
+│   ├── views.py
+│   ├── serializers.py
+│   ├── urls.py
+│   └── tests.py
+├── charging_stations/
+│   ├── models.py
+│   ├── views.py
+│   ├── serializers.py
+│   ├── urls.py
+│   └── admin.py
+├── payments/
+│   ├── models.py
+│   ├── views.py
+│   ├── services.py
+│   └── utils.py
+├── notifications/
+│   ├── models.py
+│   ├── services.py
+│   └── tasks.py
+└── static/
+    └── media/</code></pre>
+
+            <h4><strong>Key Backend Files</strong></h4>
+            <p><strong>Settings Configuration</strong>:</p>
+            <pre><code># settings.py
+INSTALLED_APPS = [
+    'django.contrib.admin',
+    'django.contrib.auth',
+    'rest_framework',
+    'corsheaders',
+    'authentication',
+    'charging_stations',
+    'payments',
+    'notifications',
+]
+
+REST_FRAMEWORK = {
+    'DEFAULT_AUTHENTICATION_CLASSES': [
+        'rest_framework.authentication.TokenAuthentication',
+    ],
+    'DEFAULT_PERMISSION_CLASSES': [
+        'rest_framework.permissions.IsAuthenticated',
+    ],
+    'DEFAULT_PAGINATION_CLASS': 'rest_framework.pagination.PageNumberPagination',
+    'PAGE_SIZE': 20
+}</code></pre>
+
+            <h3>Mobile App Structure</h3>
+
+            <h4><strong>Flutter Project Layout</strong></h4>
+            <pre><code>mobile_frontend/
+├── pubspec.yaml
+├── android/
+├── ios/
+└── lib/
+    ├── main.dart
+    ├── config/
+    │   ├── api_config.dart
+    │   ├── app_config.dart
+    │   └── theme_config.dart
+    ├── models/
+    │   ├── user.dart
+    │   ├── station.dart
+    │   ├── connector.dart
+    │   └── payment.dart
+    ├── services/
+    │   ├── auth_service.dart
+    │   ├── station_service.dart
+    │   ├── payment_service.dart
+    │   └── notification_service.dart
+    ├── screens/
+    │   ├── auth/
+    │   ├── home/
+    │   ├── stations/
+    │   ├── navigation/
+    │   └── profile/
+    ├── widgets/
+    │   ├── common/
+    │   ├── station/
+    │   └── payment/
+    └── utils/
+        ├── constants.dart
+        ├── helpers.dart
+        └── validators.dart</code></pre>
+
+            <h4><strong>Key Mobile Files</strong></h4>
+            <p><strong>Main App Configuration</strong>:</p>
+            <pre><code>// main.dart
+void main() async {
+  WidgetsFlutterBinding.ensureInitialized();
+  await Firebase.initializeApp();
+  await NotificationService.initialize();
+  runApp(EvmeriApp());
+}
+
+class EvmeriApp extends StatelessWidget {
+  @override
+  Widget build(BuildContext context) {
+    return MaterialApp(
+      title: 'evmeri',
+      theme: ThemeConfig.lightTheme,
+      darkTheme: ThemeConfig.darkTheme,
+      home: SplashScreen(),
+      routes: AppRoutes.routes,
+    );
+  }
+}</code></pre>
+
+            <h3>Web Frontend Structure</h3>
+
+            <h4><strong>React Project Layout</strong></h4>
+            <pre><code>web_frontend/
+├── package.json
+├── public/
+│   ├── index.html
+│   └── favicon.ico
+└── src/
+    ├── index.js
+    ├── App.js
+    ├── components/
+    │   ├── common/
+    │   ├── auth/
+    │   ├── dashboard/
+    │   └── stations/
+    ├── pages/
+    │   ├── Login.jsx
+    │   ├── Dashboard.jsx
+    │   ├── Stations.jsx
+    │   └── Profile.jsx
+    ├── services/
+    │   ├── api.js
+    │   ├── auth.js
+    │   └── stations.js
+    ├── utils/
+    │   ├── constants.js
+    │   ├── helpers.js
+    │   └── validators.js
+    └── styles/
+        ├── globals.css
+        └── components/</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="build-deployment">🚀 9. Build & Deployment</h2>
+
+            <h3>Backend Deployment</h3>
+
+            <h4><strong>Production Settings</strong></h4>
+            <pre><code># settings/production.py
+DEBUG = False
+ALLOWED_HOSTS = ['mengedmate.onrender.com', 'api.evmeri.com']
+
+DATABASES = {
+    'default': dj_database_url.parse(os.environ.get('DATABASE_URL'))
+}
+
+# Security settings
+SECURE_SSL_REDIRECT = True
+SECURE_BROWSER_XSS_FILTER = True
+SECURE_CONTENT_TYPE_NOSNIFF = True
+SECURE_HSTS_SECONDS = 31536000
+SECURE_HSTS_INCLUDE_SUBDOMAINS = True
+
+# Static files
+STATIC_ROOT = os.path.join(BASE_DIR, 'staticfiles')
+STATICFILES_STORAGE = 'whitenoise.storage.CompressedManifestStaticFilesStorage'</code></pre>
+
+            <h4><strong>Render.com Deployment</strong></h4>
+            <pre><code># render.yaml
+services:
+  - type: web
+    name: evmeri-backend
+    env: python
+    buildCommand: pip install -r requirements.txt
+    startCommand: gunicorn evmeri_backend.wsgi:application
+    envVars:
+      - key: DATABASE_URL
+        fromDatabase:
+          name: evmeri-db
+          property: connectionString
+      - key: SECRET_KEY
+        generateValue: true
+      - key: WEB_CONCURRENCY
+        value: 4
+
+databases:
+  - name: evmeri-db
+    databaseName: evmeri
+    user: evmeri</code></pre>
+
+            <h3>Mobile App Deployment</h3>
+
+            <h4><strong>Android Build</strong></h4>
+            <pre><code># Build APK
+flutter build apk --release
+
+# Build App Bundle (for Play Store)
+flutter build appbundle --release
+
+# Build configuration
+android {
+    compileSdkVersion 33
+    defaultConfig {
+        applicationId "com.evmeri.app"
+        minSdkVersion 21
+        targetSdkVersion 33
+        versionCode 1
+        versionName "1.0.0"
+    }
+
+    signingConfigs {
+        release {
+            keyAlias keystoreProperties['keyAlias']
+            keyPassword keystoreProperties['keyPassword']
+            storeFile keystoreProperties['storeFile']
+            storePassword keystoreProperties['storePassword']
+        }
+    }
+}</code></pre>
+
+            <h4><strong>iOS Build</strong></h4>
+            <pre><code># Build iOS app
+flutter build ios --release
+
+# Archive for App Store
+flutter build ipa --release
+
+# iOS configuration
+ios/Runner/Info.plist:
+<key>CFBundleDisplayName</key>
+<string>evmeri</string>
+<key>CFBundleIdentifier</key>
+<string>com.evmeri.app</string>
+<key>CFBundleVersion</key>
+<string>1.0.0</string></code></pre>
+
+            <h3>Web Frontend Deployment</h3>
+
+            <h4><strong>Vercel Deployment</strong></h4>
+            <pre><code># vercel.json
+{
+  "version": 2,
+  "builds": [
+    {
+      "src": "package.json",
+      "use": "@vercel/static-build",
+      "config": {
+        "distDir": "build"
+      }
+    }
+  ],
+  "routes": [
+    {
+      "src": "/static/(.*)",
+      "headers": {
+        "cache-control": "s-maxage=31536000,immutable"
+      }
+    },
+    {
+      "src": "/(.*)",
+      "dest": "/index.html"
+    }
+  ]
+}</code></pre>
+
+            <h4><strong>Build Scripts</strong></h4>
+            <pre><code># package.json
+{
+  "scripts": {
+    "start": "react-scripts start",
+    "build": "react-scripts build",
+    "test": "react-scripts test",
+    "eject": "react-scripts eject",
+    "build:prod": "REACT_APP_ENV=production npm run build"
+  }
+}</code></pre>
+
+            <h3>CI/CD Pipeline</h3>
+
+            <h4><strong>GitHub Actions</strong></h4>
+            <pre><code># .github/workflows/deploy.yml
+name: Deploy to Production
+
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v2
+      - name: Set up Python
+        uses: actions/setup-python@v2
+        with:
+          python-version: 3.9
+      - name: Install dependencies
+        run: pip install -r requirements.txt
+      - name: Run tests
+        run: python manage.py test
+
+  deploy:
+    needs: test
+    runs-on: ubuntu-latest
+    steps:
+      - name: Deploy to Render
+        run: curl -X POST ${{ secrets.RENDER_DEPLOY_HOOK }}</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="testing">🧪 10. Testing</h2>
+
+            <h3>Backend Testing</h3>
+
+            <h4><strong>Unit Tests</strong></h4>
+            <pre><code># tests/test_authentication.py
+from django.test import TestCase
+from django.contrib.auth import get_user_model
+from rest_framework.test import APIClient
+from rest_framework import status
+
+User = get_user_model()
+
+class AuthenticationTestCase(TestCase):
+    def setUp(self):
+        self.client = APIClient()
+        self.user_data = {
+            'email': 'test@example.com',
+            'password1': 'testpass123',
+            'password2': 'testpass123',
+            'first_name': 'Test',
+            'last_name': 'User'
+        }
+
+    def test_user_registration(self):
+        response = self.client.post('/api/auth/register/', self.user_data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+        self.assertTrue(User.objects.filter(email='test@example.com').exists())
+
+    def test_user_login(self):
+        user = User.objects.create_user(
+            email='test@example.com',
+            password='testpass123'
+        )
+        login_data = {
+            'email': 'test@example.com',
+            'password': 'testpass123'
+        }
+        response = self.client.post('/api/auth/login/', login_data)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('token', response.data)</code></pre>
+
+            <h4><strong>Integration Tests</strong></h4>
+            <pre><code># tests/test_stations.py
+class StationAPITestCase(TestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='owner@example.com',
+            password='testpass123'
+        )
+        self.client = APIClient()
+        self.client.force_authenticate(user=self.user)
+
+    def test_create_station(self):
+        station_data = {
+            'name': 'Test Station',
+            'address': 'Test Address',
+            'latitude': 9.0320,
+            'longitude': 38.7469,
+            'status': 'operational'
+        }
+        response = self.client.post('/api/stations/', station_data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)
+
+    def test_nearby_stations(self):
+        # Create test station
+        ChargingStation.objects.create(
+            name='Nearby Station',
+            latitude=9.0320,
+            longitude=38.7469,
+            owner=self.user
+        )
+
+        response = self.client.get('/api/public/nearby-stations/?lat=9.0320&lng=38.7469&radius=10')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)</code></pre>
+
+            <h4><strong>Running Tests</strong></h4>
+            <pre><code># Run all tests
+python manage.py test
+
+# Run specific app tests
+python manage.py test authentication
+
+# Run with coverage
+coverage run --source='.' manage.py test
+coverage report
+coverage html</code></pre>
+
+            <h3>Mobile App Testing</h3>
+
+            <h4><strong>Unit Tests</strong></h4>
+            <pre><code>// test/services/auth_service_test.dart
+import 'package:flutter_test/flutter_test.dart';
+import 'package:mockito/mockito.dart';
+import 'package:evmeri/services/auth_service.dart';
+
+class MockHttpClient extends Mock implements HttpClient {}
+
+void main() {
+  group('AuthService Tests', () {
+    late AuthService authService;
+    late MockHttpClient mockHttpClient;
+
+    setUp(() {
+      mockHttpClient = MockHttpClient();
+      authService = AuthService(httpClient: mockHttpClient);
+    });
+
+    test('should login user successfully', () async {
+      // Arrange
+      when(mockHttpClient.post(any, body: anyNamed('body')))
+          .thenAnswer((_) async => MockResponse(200, '{"token": "test_token"}'));
+
+      // Act
+      final result = await authService.login('test@example.com', 'password');
+
+      // Assert
+      expect(result.isSuccess, true);
+      expect(result.data['token'], 'test_token');
+    });
+  });
+}</code></pre>
+
+            <h4><strong>Widget Tests</strong></h4>
+            <pre><code>// test/widgets/station_card_test.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:evmeri/widgets/station_card.dart';
+import 'package:evmeri/models/station.dart';
+
+void main() {
+  testWidgets('StationCard displays station information', (WidgetTester tester) async {
+    // Arrange
+    final station = Station(
+      id: '1',
+      name: 'Test Station',
+      address: 'Test Address',
+      distance: 2.5,
+      rating: 4.5,
+    );
+
+    // Act
+    await tester.pumpWidget(
+      MaterialApp(
+        home: Scaffold(
+          body: StationCard(station: station),
+        ),
+      ),
+    );
+
+    // Assert
+    expect(find.text('Test Station'), findsOneWidget);
+    expect(find.text('Test Address'), findsOneWidget);
+    expect(find.text('2.5 km'), findsOneWidget);
+  });
+}</code></pre>
+
+            <h4><strong>Integration Tests</strong></h4>
+            <pre><code>// integration_test/app_test.dart
+import 'package:flutter/material.dart';
+import 'package:flutter_test/flutter_test.dart';
+import 'package:integration_test/integration_test.dart';
+import 'package:evmeri/main.dart' as app;
+
+void main() {
+  IntegrationTestWidgetsFlutterBinding.ensureInitialized();
+
+  group('App Integration Tests', () {
+    testWidgets('complete user flow', (WidgetTester tester) async {
+      app.main();
+      await tester.pumpAndSettle();
+
+      // Test login flow
+      await tester.tap(find.byKey(Key('login_button')));
+      await tester.pumpAndSettle();
+
+      await tester.enterText(find.byKey(Key('email_field')), 'test@example.com');
+      await tester.enterText(find.byKey(Key('password_field')), 'password');
+
+      await tester.tap(find.byKey(Key('submit_button')));
+      await tester.pumpAndSettle();
+
+      // Verify navigation to home screen
+      expect(find.byKey(Key('home_screen')), findsOneWidget);
+    });
+  });
+}</code></pre>
+
+            <h3>Web Frontend Testing</h3>
+
+            <h4><strong>Jest Unit Tests</strong></h4>
+            <pre><code>// src/services/__tests__/authService.test.js
+import authService from '../authService';
+import axios from 'axios';
+
+jest.mock('axios');
+const mockedAxios = axios as jest.Mocked<typeof axios>;
+
+describe('AuthService', () => {
+  beforeEach(() => {
+    jest.clearAllMocks();
+  });
+
+  test('should login user successfully', async () => {
+    const mockResponse = {
+      data: {
+        success: true,
+        token: 'test_token',
+        user: { id: '1', email: 'test@example.com' }
+      }
+    };
+
+    mockedAxios.post.mockResolvedValue(mockResponse);
+
+    const result = await authService.login('test@example.com', 'password');
+
+    expect(result.success).toBe(true);
+    expect(result.token).toBe('test_token');
+    expect(mockedAxios.post).toHaveBeenCalledWith('/api/auth/login/', {
+      email: 'test@example.com',
+      password: 'password'
+    });
+  });
+});</code></pre>
+
+            <h4><strong>React Testing Library</strong></h4>
+            <pre><code>// src/components/__tests__/StationCard.test.jsx
+import React from 'react';
+import { render, screen, fireEvent } from '@testing-library/react';
+import StationCard from '../StationCard';
+
+const mockStation = {
+  id: '1',
+  name: 'Test Station',
+  address: 'Test Address',
+  distance: 2.5,
+  rating: 4.5,
+  connectors: [
+    { type: 'Type 2', status: 'available', power: 22 }
+  ]
+};
+
+describe('StationCard', () => {
+  test('renders station information correctly', () => {
+    render(<StationCard station={mockStation} />);
+
+    expect(screen.getByText('Test Station')).toBeInTheDocument();
+    expect(screen.getByText('Test Address')).toBeInTheDocument();
+    expect(screen.getByText('2.5 km')).toBeInTheDocument();
+    expect(screen.getByText('4.5')).toBeInTheDocument();
+  });
+
+  test('calls onNavigate when navigate button is clicked', () => {
+    const mockOnNavigate = jest.fn();
+    render(<StationCard station={mockStation} onNavigate={mockOnNavigate} />);
+
+    fireEvent.click(screen.getByText('Navigate'));
+    expect(mockOnNavigate).toHaveBeenCalledWith(mockStation.id);
+  });
+});</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="security">🔐 11. Security</h2>
+
+            <h3>Authentication & Authorization</h3>
+
+            <h4><strong>Token-Based Authentication</strong></h4>
+            <ul>
+                <li><strong>JWT Tokens</strong>: Secure token generation and validation</li>
+                <li><strong>Token Expiration</strong>: Automatic token refresh mechanism</li>
+                <li><strong>Secure Storage</strong>: Encrypted token storage on mobile devices</li>
+                <li><strong>Session Management</strong>: Proper session handling and cleanup</li>
+            </ul>
+
+            <h4><strong>Password Security</strong></h4>
+            <pre><code># Django password validation
+AUTH_PASSWORD_VALIDATORS = [
+    {
+        'NAME': 'django.contrib.auth.password_validation.UserAttributeSimilarityValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.MinimumLengthValidator',
+        'OPTIONS': {
+            'min_length': 8,
+        }
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.CommonPasswordValidator',
+    },
+    {
+        'NAME': 'django.contrib.auth.password_validation.NumericPasswordValidator',
+    },
+]
+
+# Password hashing
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+]</code></pre>
+
+            <h3>Data Protection</h3>
+
+            <h4><strong>Encryption</strong></h4>
+            <ul>
+                <li><strong>Data at Rest</strong>: Database encryption for sensitive data</li>
+                <li><strong>Data in Transit</strong>: HTTPS/TLS encryption for all communications</li>
+                <li><strong>API Security</strong>: Request/response encryption</li>
+                <li><strong>File Storage</strong>: Encrypted file storage for user documents</li>
+            </ul>
+
+            <h4><strong>Input Validation</strong></h4>
+            <pre><code># Django serializer validation
+class StationSerializer(serializers.ModelSerializer):
+    class Meta:
+        model = ChargingStation
+        fields = '__all__'
+
+    def validate_latitude(self, value):
+        if not -90 <= value <= 90:
+            raise serializers.ValidationError("Invalid latitude")
+        return value
+
+    def validate_longitude(self, value):
+        if not -180 <= value <= 180:
+            raise serializers.ValidationError("Invalid longitude")
+        return value</code></pre>
+
+            <h3>API Security</h3>
+
+            <h4><strong>Rate Limiting</strong></h4>
+            <pre><code># Django rate limiting
+REST_FRAMEWORK = {
+    'DEFAULT_THROTTLE_CLASSES': [
+        'rest_framework.throttling.AnonRateThrottle',
+        'rest_framework.throttling.UserRateThrottle'
+    ],
+    'DEFAULT_THROTTLE_RATES': {
+        'anon': '100/hour',
+        'user': '1000/hour',
+        'payment': '10/min'
+    }
+}</code></pre>
+
+            <h4><strong>CORS Configuration</strong></h4>
+            <pre><code># CORS settings
+CORS_ALLOWED_ORIGINS = [
+    "https://evmeri.vercel.app",
+    "https://www.evmeri.com",
+]
+
+CORS_ALLOW_CREDENTIALS = True
+
+CORS_ALLOWED_HEADERS = [
+    'accept',
+    'accept-encoding',
+    'authorization',
+    'content-type',
+    'dnt',
+    'origin',
+    'user-agent',
+    'x-csrftoken',
+    'x-requested-with',
+]</code></pre>
+
+            <h3>Mobile Security</h3>
+
+            <h4><strong>Secure Storage</strong></h4>
+            <pre><code>// Flutter secure storage
+import 'package:flutter_secure_storage/flutter_secure_storage.dart';
+
+class SecureStorageService {
+  static const _storage = FlutterSecureStorage(
+    aOptions: AndroidOptions(
+      encryptedSharedPreferences: true,
+    ),
+    iOptions: IOSOptions(
+      accessibility: IOSAccessibility.first_unlock_this_device,
+    ),
+  );
+
+  static Future<void> storeToken(String token) async {
+    await _storage.write(key: 'auth_token', value: token);
+  }
+
+  static Future<String?> getToken() async {
+    return await _storage.read(key: 'auth_token');
+  }
+}</code></pre>
+
+            <h4><strong>Certificate Pinning</strong></h4>
+            <pre><code>// HTTP client with certificate pinning
+class SecureHttpClient {
+  static HttpClient createSecureClient() {
+    final client = HttpClient();
+    client.badCertificateCallback = (cert, host, port) {
+      // Implement certificate pinning logic
+      return _validateCertificate(cert, host);
+    };
+    return client;
+  }
+}</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="analytics-monitoring">📊 12. Analytics & Monitoring</h2>
+
+            <h3>Application Monitoring</h3>
+
+            <h4><strong>Error Tracking</strong></h4>
+            <ul>
+                <li><strong>Sentry Integration</strong>: Real-time error tracking and reporting</li>
+                <li><strong>Crash Analytics</strong>: Mobile app crash reporting</li>
+                <li><strong>Performance Monitoring</strong>: API response time tracking</li>
+                <li><strong>User Session Recording</strong>: User interaction analysis</li>
+            </ul>
+
+            <h4><strong>Logging Configuration</strong></h4>
+            <pre><code># Django logging settings
+LOGGING = {
+    'version': 1,
+    'disable_existing_loggers': False,
+    'formatters': {
+        'verbose': {
+            'format': '{levelname} {asctime} {module} {process:d} {thread:d} {message}',
+            'style': '{',
+        },
+    },
+    'handlers': {
+        'file': {
+            'level': 'INFO',
+            'class': 'logging.FileHandler',
+            'filename': 'evmeri.log',
+            'formatter': 'verbose',
+        },
+        'console': {
+            'level': 'DEBUG',
+            'class': 'logging.StreamHandler',
+            'formatter': 'verbose',
+        },
+    },
+    'root': {
+        'handlers': ['console', 'file'],
+        'level': 'INFO',
+    },
+}</code></pre>
+
+            <h3>Business Analytics</h3>
+
+            <h4><strong>Key Metrics</strong></h4>
+            <ul>
+                <li><strong>User Metrics</strong>: Registration, retention, engagement</li>
+                <li><strong>Station Metrics</strong>: Usage, availability, ratings</li>
+                <li><strong>Payment Metrics</strong>: Transaction volume, success rates</li>
+                <li><strong>Performance Metrics</strong>: App performance, API response times</li>
+            </ul>
+
+            <h4><strong>Analytics Implementation</strong></h4>
+            <pre><code>// Firebase Analytics (Mobile)
+class AnalyticsService {
+  static FirebaseAnalytics analytics = FirebaseAnalytics.instance;
+
+  static Future<void> logEvent(String name, Map<String, dynamic> parameters) async {
+    await analytics.logEvent(
+      name: name,
+      parameters: parameters,
+    );
+  }
+
+  static Future<void> logStationView(String stationId) async {
+    await logEvent('station_view', {
+      'station_id': stationId,
+      'timestamp': DateTime.now().millisecondsSinceEpoch,
+    });
+  }
+
+  static Future<void> logChargingSession(String sessionId, double amount) async {
+    await logEvent('charging_session_start', {
+      'session_id': sessionId,
+      'amount': amount,
+    });
+  }
+}</code></pre>
+
+            <h3>Performance Monitoring</h3>
+
+            <h4><strong>Database Monitoring</strong></h4>
+            <pre><code># Database query optimization
+class OptimizedStationViewSet(viewsets.ModelViewSet):
+    queryset = ChargingStation.objects.select_related('owner').prefetch_related(
+        'connectors', 'amenities', 'reviews'
+    )
+
+    def get_queryset(self):
+        queryset = super().get_queryset()
+
+        # Add distance annotation for nearby queries
+        lat = self.request.query_params.get('lat')
+        lng = self.request.query_params.get('lng')
+
+        if lat and lng:
+            user_location = Point(float(lng), float(lat), srid=4326)
+            queryset = queryset.annotate(
+                distance=Distance('location', user_location)
+            ).order_by('distance')
+
+        return queryset</code></pre>
+
+            <h4><strong>API Performance</strong></h4>
+            <pre><code># Custom middleware for API monitoring
+class APIMonitoringMiddleware:
+    def __init__(self, get_response):
+        self.get_response = get_response
+
+    def __call__(self, request):
+        start_time = time.time()
+
+        response = self.get_response(request)
+
+        duration = time.time() - start_time
+
+        # Log API performance
+        logger.info(f"API {request.path} - {response.status_code} - {duration:.3f}s")
+
+        # Send metrics to monitoring service
+        if duration > 1.0:  # Log slow requests
+            logger.warning(f"Slow API request: {request.path} took {duration:.3f}s")
+
+        return response</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="changelog">📝 13. Changelog</h2>
+
+            <h3>Version 1.0.0 (2024-01-15)</h3>
+            <h4><strong>🎉 Initial Release</strong></h4>
+            <ul>
+                <li><strong>Core Features</strong>:
+                    <ul>
+                        <li>User registration and authentication system</li>
+                        <li>Charging station discovery with map interface</li>
+                        <li>Real-time station availability tracking</li>
+                        <li>QR code payment integration with Chapa</li>
+                        <li>Turn-by-turn navigation to stations</li>
+                        <li>Station reviews and ratings system</li>
+                    </ul>
+                </li>
+                <li><strong>Mobile App</strong>:
+                    <ul>
+                        <li>Flutter-based cross-platform mobile application</li>
+                        <li>OpenStreetMap integration for station locations</li>
+                        <li>Offline map support for poor connectivity areas</li>
+                        <li>Push notifications for charging session updates</li>
+                    </ul>
+                </li>
+                <li><strong>Web Dashboard</strong>:
+                    <ul>
+                        <li>React-based station owner management portal</li>
+                        <li>Station analytics and usage statistics</li>
+                        <li>Connector management and pricing controls</li>
+                        <li>Revenue tracking and reporting</li>
+                    </ul>
+                </li>
+                <li><strong>Backend API</strong>:
+                    <ul>
+                        <li>Django REST Framework API</li>
+                        <li>PostgreSQL database with spatial extensions</li>
+                        <li>Token-based authentication</li>
+                        <li>Comprehensive API documentation</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>Version 0.9.0 (2023-12-01)</h3>
+            <h4><strong>🚀 Beta Release</strong></h4>
+            <ul>
+                <li><strong>Added</strong>:
+                    <ul>
+                        <li>Beta testing program launch</li>
+                        <li>User feedback collection system</li>
+                        <li>Performance optimizations</li>
+                        <li>Security enhancements</li>
+                    </ul>
+                </li>
+                <li><strong>Fixed</strong>:
+                    <ul>
+                        <li>Map rendering issues on older devices</li>
+                        <li>Payment processing edge cases</li>
+                        <li>Navigation accuracy improvements</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>Version 0.8.0 (2023-11-15)</h3>
+            <h4><strong>🔧 Pre-Release Testing</strong></h4>
+            <ul>
+                <li><strong>Added</strong>:
+                    <ul>
+                        <li>Comprehensive testing suite</li>
+                        <li>Load testing and performance benchmarks</li>
+                        <li>Security audit and penetration testing</li>
+                        <li>Documentation completion</li>
+                    </ul>
+                </li>
+                <li><strong>Improved</strong>:
+                    <ul>
+                        <li>API response times by 40%</li>
+                        <li>Mobile app startup time</li>
+                        <li>Database query optimization</li>
+                    </ul>
+                </li>
+            </ul>
+
+            <h3>Upcoming Features (Roadmap)</h3>
+            <h4><strong>Version 1.1.0 (Q2 2024)</strong></h4>
+            <ul>
+                <li>Multi-language support (Amharic, Oromo)</li>
+                <li>Advanced route planning with multiple stops</li>
+                <li>Fleet management features</li>
+                <li>Carbon footprint tracking</li>
+                <li>Social features and community</li>
+            </ul>
+
+            <h4><strong>Version 1.2.0 (Q3 2024)</strong></h4>
+            <ul>
+                <li>OCPP protocol integration</li>
+                <li>Smart charging scheduling</li>
+                <li>Energy grid integration</li>
+                <li>Renewable energy tracking</li>
+                <li>Advanced analytics dashboard</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="faq-troubleshooting">❓ 14. FAQ & Troubleshooting</h2>
+
+            <h3>Frequently Asked Questions</h3>
+
+            <h4><strong>General Questions</strong></h4>
+            <p><strong>Q: What is evmeri?</strong></p>
+            <p>A: evmeri is Ethiopia's premier electric vehicle charging network platform that helps EV owners find, navigate to, and pay for charging sessions at stations across the country.</p>
+
+            <p><strong>Q: Is evmeri free to use?</strong></p>
+            <p>A: Yes, the basic evmeri app is free to download and use. You only pay for the actual charging sessions at stations.</p>
+
+            <p><strong>Q: Which vehicles are supported?</strong></p>
+            <p>A: evmeri supports all electric vehicles with standard charging connectors including Type 2, CCS, CHAdeMO, and Tesla connectors.</p>
+
+            <h4><strong>Technical Questions</strong></h4>
+            <p><strong>Q: How do I report a bug?</strong></p>
+            <p>A: You can report bugs through the app's "Report Issue" feature or by emailing our support team at support@evmeri.com.</p>
+
+            <p><strong>Q: Can I use evmeri offline?</strong></p>
+            <p>A: Limited functionality is available offline, including cached maps and recently viewed station information. However, real-time data requires an internet connection.</p>
+
+            <p><strong>Q: How accurate is the station availability information?</strong></p>
+            <p>A: Station availability is updated in real-time. However, there may be a slight delay (1-2 minutes) between actual status changes and app updates.</p>
+
+            <h3>Common Issues & Solutions</h3>
+
+            <h4><strong>App Issues</strong></h4>
+            <p><strong>Issue: App crashes on startup</strong></p>
+            <ul>
+                <li>Solution: Clear app cache and restart</li>
+                <li>Update to the latest app version</li>
+                <li>Restart your device</li>
+                <li>Reinstall the app if problem persists</li>
+            </ul>
+
+            <p><strong>Issue: Map not loading</strong></p>
+            <ul>
+                <li>Check internet connection</li>
+                <li>Enable location services</li>
+                <li>Clear app cache</li>
+                <li>Try switching between WiFi and mobile data</li>
+            </ul>
+
+            <p><strong>Issue: GPS location inaccurate</strong></p>
+            <ul>
+                <li>Ensure location services are enabled</li>
+                <li>Use the app outdoors for better GPS signal</li>
+                <li>Restart location services</li>
+                <li>Check for device software updates</li>
+            </ul>
+
+            <h4><strong>Payment Issues</strong></h4>
+            <p><strong>Issue: Payment failed</strong></p>
+            <ul>
+                <li>Verify payment method details</li>
+                <li>Check account balance</li>
+                <li>Ensure stable internet connection</li>
+                <li>Try alternative payment method</li>
+                <li>Contact support if issue persists</li>
+            </ul>
+
+            <p><strong>Issue: Charging session won't start</strong></p>
+            <ul>
+                <li>Verify payment was successful</li>
+                <li>Check connector compatibility</li>
+                <li>Ensure connector is properly inserted</li>
+                <li>Try restarting the session</li>
+                <li>Contact station support</li>
+            </ul>
+
+            <h4><strong>Account Issues</strong></h4>
+            <p><strong>Issue: Can't log in</strong></p>
+            <ul>
+                <li>Verify email and password</li>
+                <li>Check if account is verified</li>
+                <li>Use "Forgot Password" if needed</li>
+                <li>Clear app cache</li>
+                <li>Contact support for account issues</li>
+            </ul>
+
+            <h3>Performance Optimization</h3>
+
+            <h4><strong>Mobile App Performance</strong></h4>
+            <ul>
+                <li><strong>Close unused apps</strong>: Free up device memory</li>
+                <li><strong>Update regularly</strong>: Keep app updated for best performance</li>
+                <li><strong>Clear cache</strong>: Regularly clear app cache</li>
+                <li><strong>Restart device</strong>: Periodic device restarts help performance</li>
+            </ul>
+
+            <h4><strong>Network Optimization</strong></h4>
+            <ul>
+                <li><strong>Use WiFi when available</strong>: Faster and more stable connection</li>
+                <li><strong>Check signal strength</strong>: Move to areas with better signal</li>
+                <li><strong>Disable VPN</strong>: VPNs can slow down connections</li>
+                <li><strong>Close background apps</strong>: Reduce network usage</li>
+            </ul>
+
+            <h3>Getting Help</h3>
+
+            <h4><strong>Support Channels</strong></h4>
+            <ul>
+                <li><strong>In-App Support</strong>: Use "Help & Support" in app settings</li>
+                <li><strong>Email Support</strong>: support@evmeri.com</li>
+                <li><strong>Phone Support</strong>: +251-11-XXX-XXXX (Business hours)</li>
+                <li><strong>Live Chat</strong>: Available on website during business hours</li>
+                <li><strong>Community Forum</strong>: community.evmeri.com</li>
+            </ul>
+
+            <h4><strong>Emergency Support</strong></h4>
+            <ul>
+                <li><strong>24/7 Emergency Line</strong>: +251-11-XXX-XXXX</li>
+                <li><strong>Emergency Features</strong>: Use emergency button in app</li>
+                <li><strong>Station Emergency</strong>: Contact station operator directly</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="contributing-guide">🤝 15. Contributing Guide</h2>
+
+            <h3>Getting Started</h3>
+
+            <h4><strong>Prerequisites</strong></h4>
+            <ul>
+                <li>Git knowledge and GitHub account</li>
+                <li>Development environment setup (see Installation section)</li>
+                <li>Understanding of our tech stack</li>
+                <li>Familiarity with our coding standards</li>
+            </ul>
+
+            <h4><strong>Development Workflow</strong></h4>
+            <ol>
+                <li><strong>Fork the Repository</strong>: Create your own fork of the project</li>
+                <li><strong>Create Feature Branch</strong>: <code>git checkout -b feature/your-feature-name</code></li>
+                <li><strong>Make Changes</strong>: Implement your feature or fix</li>
+                <li><strong>Write Tests</strong>: Add tests for your changes</li>
+                <li><strong>Run Tests</strong>: Ensure all tests pass</li>
+                <li><strong>Commit Changes</strong>: Use conventional commit messages</li>
+                <li><strong>Push Branch</strong>: Push to your fork</li>
+                <li><strong>Create Pull Request</strong>: Submit PR for review</li>
+            </ol>
+
+            <h3>Coding Standards</h3>
+
+            <h4><strong>Python/Django Standards</strong></h4>
+            <pre><code># Follow PEP 8 style guide
+# Use Black for code formatting
+black --line-length 88 .
+
+# Use isort for import sorting
+isort .
+
+# Use flake8 for linting
+flake8 --max-line-length 88 --extend-ignore E203,W503
+
+# Example function documentation
+def calculate_distance(lat1: float, lng1: float, lat2: float, lng2: float) -> float:
+    """
+    Calculate distance between two points using Haversine formula.
+
+    Args:
+        lat1: Latitude of first point
+        lng1: Longitude of first point
+        lat2: Latitude of second point
+        lng2: Longitude of second point
+
+    Returns:
+        Distance in kilometers
+    """
+    # Implementation here
+    pass</code></pre>
+
+            <h4><strong>Flutter/Dart Standards</strong></h4>
+            <pre><code>// Follow Dart style guide
+// Use dartfmt for formatting
+dart format .
+
+// Use dart analyze for linting
+dart analyze
+
+// Example class documentation
+/// Service class for handling authentication operations.
+///
+/// This class provides methods for user login, registration,
+/// and token management.
+class AuthService {
+  /// Logs in a user with email and password.
+  ///
+  /// Returns [User] object on success, null on failure.
+  static Future<User?> login(String email, String password) async {
+    // Implementation here
+  }
+}</code></pre>
+
+            <h4><strong>React/JavaScript Standards</strong></h4>
+            <pre><code>// Use ESLint and Prettier
+// Follow Airbnb style guide
+
+// Example component documentation
+/**
+ * StationCard component displays charging station information
+ * @param {Object} station - Station object with details
+ * @param {Function} onNavigate - Callback for navigation
+ * @returns {JSX.Element} Rendered station card
+ */
+const StationCard = ({ station, onNavigate }) => {
+  // Implementation here
+};</code></pre>
+
+            <h3>Commit Guidelines</h3>
+
+            <h4><strong>Conventional Commits</strong></h4>
+            <pre><code># Format: type(scope): description
+
+# Types:
+feat: new feature
+fix: bug fix
+docs: documentation changes
+style: formatting changes
+refactor: code refactoring
+test: adding tests
+chore: maintenance tasks
+
+# Examples:
+feat(auth): add two-factor authentication
+fix(payment): resolve Chapa integration issue
+docs(api): update endpoint documentation
+test(stations): add unit tests for station service</code></pre>
+
+            <h3>Pull Request Process</h3>
+
+            <h4><strong>PR Requirements</strong></h4>
+            <ul>
+                <li><strong>Clear Description</strong>: Explain what changes were made and why</li>
+                <li><strong>Tests Included</strong>: Add tests for new features and bug fixes</li>
+                <li><strong>Documentation Updated</strong>: Update relevant documentation</li>
+                <li><strong>Code Review</strong>: Address all review comments</li>
+                <li><strong>CI Passing</strong>: All automated checks must pass</li>
+            </ul>
+
+            <h4><strong>PR Template</strong></h4>
+            <pre><code>## Description
+Brief description of changes
+
+## Type of Change
+- [ ] Bug fix
+- [ ] New feature
+- [ ] Breaking change
+- [ ] Documentation update
+
+## Testing
+- [ ] Unit tests added/updated
+- [ ] Integration tests added/updated
+- [ ] Manual testing completed
+
+## Checklist
+- [ ] Code follows style guidelines
+- [ ] Self-review completed
+- [ ] Documentation updated
+- [ ] Tests pass locally</code></pre>
+
+            <h3>Issue Reporting</h3>
+
+            <h4><strong>Bug Reports</strong></h4>
+            <ul>
+                <li><strong>Clear Title</strong>: Descriptive issue title</li>
+                <li><strong>Steps to Reproduce</strong>: Detailed reproduction steps</li>
+                <li><strong>Expected Behavior</strong>: What should happen</li>
+                <li><strong>Actual Behavior</strong>: What actually happens</li>
+                <li><strong>Environment</strong>: Device, OS, app version</li>
+                <li><strong>Screenshots</strong>: Visual evidence if applicable</li>
+            </ul>
+
+            <h4><strong>Feature Requests</strong></h4>
+            <ul>
+                <li><strong>Problem Statement</strong>: What problem does this solve?</li>
+                <li><strong>Proposed Solution</strong>: How should it work?</li>
+                <li><strong>Alternatives</strong>: Other possible solutions</li>
+                <li><strong>Use Cases</strong>: Who would benefit?</li>
+                <li><strong>Priority</strong>: How important is this feature?</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="license">📄 16. License</h2>
+
+            <h3>MIT License</h3>
+
+            <pre><code>MIT License
+
+Copyright (c) 2024 evmeri
+
+Permission is hereby granted, free of charge, to any person obtaining a copy
+of this software and associated documentation files (the "Software"), to deal
+in the Software without restriction, including without limitation the rights
+to use, copy, modify, merge, publish, distribute, sublicense, and/or sell
+copies of the Software, and to permit persons to whom the Software is
+furnished to do so, subject to the following conditions:
+
+The above copyright notice and this permission notice shall be included in all
+copies or substantial portions of the Software.
+
+THE SOFTWARE IS PROVIDED "AS IS", WITHOUT WARRANTY OF ANY KIND, EXPRESS OR
+IMPLIED, INCLUDING BUT NOT LIMITED TO THE WARRANTIES OF MERCHANTABILITY,
+FITNESS FOR A PARTICULAR PURPOSE AND NONINFRINGEMENT. IN NO EVENT SHALL THE
+AUTHORS OR COPYRIGHT HOLDERS BE LIABLE FOR ANY CLAIM, DAMAGES OR OTHER
+LIABILITY, WHETHER IN AN ACTION OF CONTRACT, TORT OR OTHERWISE, ARISING FROM,
+OUT OF OR IN CONNECTION WITH THE SOFTWARE OR THE USE OR OTHER DEALINGS IN THE
+SOFTWARE.</code></pre>
+
+            <h3>Third-Party Licenses</h3>
+
+            <h4><strong>Backend Dependencies</strong></h4>
+            <ul>
+                <li><strong>Django</strong>: BSD License</li>
+                <li><strong>Django REST Framework</strong>: BSD License</li>
+                <li><strong>PostgreSQL</strong>: PostgreSQL License</li>
+                <li><strong>Pillow</strong>: PIL Software License</li>
+                <li><strong>Requests</strong>: Apache License 2.0</li>
+            </ul>
+
+            <h4><strong>Mobile Dependencies</strong></h4>
+            <ul>
+                <li><strong>Flutter</strong>: BSD License</li>
+                <li><strong>flutter_map</strong>: BSD License</li>
+                <li><strong>http</strong>: BSD License</li>
+                <li><strong>provider</strong>: MIT License</li>
+                <li><strong>firebase_core</strong>: BSD License</li>
+            </ul>
+
+            <h4><strong>Web Dependencies</strong></h4>
+            <ul>
+                <li><strong>React</strong>: MIT License</li>
+                <li><strong>React Router</strong>: MIT License</li>
+                <li><strong>Axios</strong>: MIT License</li>
+                <li><strong>Material-UI</strong>: MIT License</li>
+            </ul>
+
+            <h3>Attribution</h3>
+
+            <h4><strong>Map Data</strong></h4>
+            <ul>
+                <li><strong>OpenStreetMap</strong>: © OpenStreetMap contributors</li>
+                <li><strong>Nominatim</strong>: © OpenStreetMap contributors</li>
+                <li><strong>Map Tiles</strong>: Various providers with appropriate attribution</li>
+            </ul>
+
+            <h4><strong>Icons and Assets</strong></h4>
+            <ul>
+                <li><strong>Material Icons</strong>: Apache License 2.0</li>
+                <li><strong>Feather Icons</strong>: MIT License</li>
+                <li><strong>Custom Icons</strong>: Created by evmeri team</li>
+            </ul>
+
+            <h3>Contact Information</h3>
+
+            <p>For licensing questions or commercial use inquiries:</p>
+            <ul>
+                <li><strong>Email</strong>: legal@evmeri.com</li>
+                <li><strong>Website</strong>: https://evmeri.com/legal</li>
+                <li><strong>Address</strong>: Addis Ababa, Ethiopia</li>
+            </ul>
+
+            <h3>Disclaimer</h3>
+
+            <p>This software is provided "as is" without warranty of any kind. The authors and contributors are not liable for any damages or issues arising from the use of this software. Users are responsible for ensuring compliance with local laws and regulations when using electric vehicle charging services.</p>
+
+            <p>The evmeri platform facilitates connections between EV owners and charging station operators but does not guarantee the availability, functionality, or safety of charging stations. Users should exercise caution and follow proper safety procedures when using charging equipment.</p>
+        </div>
+    </div>
+
+    <script>
+        // Add copy functionality to code blocks
+        document.addEventListener('DOMContentLoaded', function() {
+            const codeBlocks = document.querySelectorAll('pre');
+            codeBlocks.forEach(block => {
+                const button = document.createElement('button');
+                button.innerHTML = '📋 Copy';
+                button.className = 'copy-btn';
+                
+                button.addEventListener('click', function() {
+                    const code = block.querySelector('code');
+                    const text = code ? code.textContent : block.textContent;
+                    navigator.clipboard.writeText(text).then(() => {
+                        button.innerHTML = '✅ Copied!';
+                        setTimeout(() => {
+                            button.innerHTML = '📋 Copy';
+                        }, 2000);
+                    });
+                });
+                
+                block.style.position = 'relative';
+                block.appendChild(button);
+            });
+        });
+    </script>
+</body>
+</html>

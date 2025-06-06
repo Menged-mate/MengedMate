@@ -1,7 +1,12 @@
 from django.shortcuts import render
 from django.http import JsonResponse
 from django.views.generic import TemplateView
+from django.conf import settings
 from .models import DocumentationSection, APIEndpoint, TechnologyComponent
+import os
+
+
+
 
 
 class DocumentationHomeView(TemplateView):
@@ -114,3 +119,65 @@ def api_endpoint_detail(request, endpoint_id):
         return JsonResponse(data)
     except APIEndpoint.DoesNotExist:
         return JsonResponse({'error': 'Endpoint not found'}, status=404)
+
+
+class UserDocumentationView(TemplateView):
+    """User documentation page displaying static HTML file"""
+    template_name = 'docs/static_documentation.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Read the static HTML file
+        try:
+            base_dir = settings.BASE_DIR
+            static_doc_path = os.path.join(base_dir, 'docs', 'static', 'docs', 'user_documentation.html')
+
+            with open(static_doc_path, 'r', encoding='utf-8') as file:
+                html_content = file.read()
+
+            context['documentation_content'] = html_content
+            context['documentation_title'] = 'User Documentation'
+            context['documentation_type'] = 'user'
+
+        except FileNotFoundError:
+            context['documentation_content'] = '<p>User documentation file not found.</p>'
+            context['documentation_title'] = 'User Documentation - File Not Found'
+            context['documentation_type'] = 'user'
+        except Exception as e:
+            context['documentation_content'] = f'<p>Error loading documentation: {str(e)}</p>'
+            context['documentation_title'] = 'User Documentation - Error'
+            context['documentation_type'] = 'user'
+
+        return context
+
+
+class TechnicalDocumentationView(TemplateView):
+    """Technical documentation page displaying static HTML file"""
+    template_name = 'docs/static_documentation.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Read the static HTML file
+        try:
+            base_dir = settings.BASE_DIR
+            static_doc_path = os.path.join(base_dir, 'docs', 'static', 'docs', 'technical_documentation.html')
+
+            with open(static_doc_path, 'r', encoding='utf-8') as file:
+                html_content = file.read()
+
+            context['documentation_content'] = html_content
+            context['documentation_title'] = 'Technical Documentation'
+            context['documentation_type'] = 'technical'
+
+        except FileNotFoundError:
+            context['documentation_content'] = '<p>Technical documentation file not found.</p>'
+            context['documentation_title'] = 'Technical Documentation - File Not Found'
+            context['documentation_type'] = 'technical'
+        except Exception as e:
+            context['documentation_content'] = f'<p>Error loading documentation: {str(e)}</p>'
+            context['documentation_title'] = 'Technical Documentation - Error'
+            context['documentation_type'] = 'technical'
+
+        return context

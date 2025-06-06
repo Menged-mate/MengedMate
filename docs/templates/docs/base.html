@@ -320,6 +320,8 @@
                 <nav>
                     <ul>
                         <li><a href="{% url 'docs:home' %}" {% if request.resolver_match.url_name == 'home' %}class="active"{% endif %}>Home</a></li>
+                        <li><a href="{% url 'docs:user_documentation' %}" {% if request.resolver_match.url_name == 'user_documentation' %}class="active"{% endif %}>User Guide</a></li>
+                        <li><a href="{% url 'docs:technical_documentation' %}" {% if request.resolver_match.url_name == 'technical_documentation' %}class="active"{% endif %}>Technical</a></li>
                         <li><a href="{% url 'docs:architecture' %}" {% if request.resolver_match.url_name == 'architecture' %}class="active"{% endif %}>Architecture</a></li>
                         <li><a href="{% url 'docs:api' %}" {% if request.resolver_match.url_name == 'api' %}class="active"{% endif %}>API</a></li>
                         <li><a href="{% url 'docs:database' %}" {% if request.resolver_match.url_name == 'database' %}class="active"{% endif %}>Database</a></li>

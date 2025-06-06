@@ -9,13 +9,34 @@
         <p>Comprehensive technical documentation for the evmeri EV Charging Station Management Platform</p>
     </div>
 
-    <div class="grid">
-        <div class="feature-card">
-            <div class="icon">🏗️</div>
-            <h3>System Architecture</h3>
-            <p>Understand the overall system design, components, and how they interact with each other.</p>
-            <a href="{% url 'docs:architecture' %}" class="btn">View Architecture</a>
+    <div class="card">
+        <h2>📚 Complete Documentation</h2>
+        <div class="grid">
+            <div class="feature-card" style="border: 2px solid #2563eb;">
+                <div class="icon">👥</div>
+                <h3>User Guide</h3>
+                <p>Complete user documentation for EV owners and station owners. Learn how to use evmeri effectively.</p>
+                <a href="{% url 'docs:user_documentation' %}" class="btn" style="background: #2563eb;">View User Guide</a>
+            </div>
+
+            <div class="feature-card" style="border: 2px solid #059669;">
+                <div class="icon">🔧</div>
+                <h3>Technical Documentation</h3>
+                <p>Comprehensive technical documentation for developers, including architecture, APIs, and deployment.</p>
+                <a href="{% url 'docs:technical_documentation' %}" class="btn" style="background: #059669;">View Technical Docs</a>
+            </div>
         </div>
+    </div>
+
+    <div class="card">
+        <h2>🔧 Developer Resources</h2>
+        <div class="grid">
+            <div class="feature-card">
+                <div class="icon">🏗️</div>
+                <h3>System Architecture</h3>
+                <p>Understand the overall system design, components, and how they interact with each other.</p>
+                <a href="{% url 'docs:architecture' %}" class="btn">View Architecture</a>
+            </div>
 
         <div class="feature-card">
             <div class="icon">🔧</div>
@@ -64,6 +85,7 @@
             <h3>Troubleshooting</h3>
             <p>Common issues, debugging tips, and solutions for development and production.</p>
             <a href="{% url 'docs:troubleshooting' %}" class="btn">View Troubleshooting</a>
+        </div>
         </div>
     </div>
 

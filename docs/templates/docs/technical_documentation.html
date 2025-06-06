@@ -1,0 +1,347 @@
+{% extends 'docs/base.html' %}
+
+{% block title %}{{ documentation_title }} - evmeri Docs{% endblock %}
+
+{% block extra_css %}
+<style>
+    .documentation-container {
+        max-width: 1200px;
+        margin: 0 auto;
+        padding: 20px;
+        display: grid;
+        grid-template-columns: 250px 1fr;
+        gap: 30px;
+    }
+
+    .toc-sidebar {
+        position: sticky;
+        top: 20px;
+        height: fit-content;
+        background: #f8f9fa;
+        border-radius: 8px;
+        padding: 20px;
+        border: 1px solid #e9ecef;
+    }
+
+    .toc-sidebar h3 {
+        margin-top: 0;
+        color: #2563eb;
+        font-size: 1.1rem;
+        margin-bottom: 15px;
+    }
+
+    .toc-sidebar ul {
+        list-style: none;
+        padding: 0;
+        margin: 0;
+    }
+
+    .toc-sidebar li {
+        margin-bottom: 8px;
+    }
+
+    .toc-sidebar a {
+        color: #6c757d;
+        text-decoration: none;
+        font-size: 0.9rem;
+        display: block;
+        padding: 5px 10px;
+        border-radius: 4px;
+        transition: all 0.2s ease;
+    }
+
+    .toc-sidebar a:hover {
+        background: #e9ecef;
+        color: #2563eb;
+    }
+
+    .toc-level-1 { padding-left: 0; font-weight: 600; }
+    .toc-level-2 { padding-left: 15px; }
+    .toc-level-3 { padding-left: 30px; font-size: 0.85rem; }
+    .toc-level-4 { padding-left: 45px; font-size: 0.8rem; }
+
+    .documentation-content {
+        background: white;
+        border-radius: 8px;
+        padding: 30px;
+        box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        line-height: 1.6;
+    }
+
+    .documentation-content h1 {
+        color: #2563eb;
+        border-bottom: 3px solid #2563eb;
+        padding-bottom: 10px;
+        margin-bottom: 30px;
+    }
+
+    .documentation-content h2 {
+        color: #1e40af;
+        margin-top: 40px;
+        margin-bottom: 20px;
+        padding-bottom: 8px;
+        border-bottom: 2px solid #e5e7eb;
+    }
+
+    .documentation-content h3 {
+        color: #1e40af;
+        margin-top: 30px;
+        margin-bottom: 15px;
+    }
+
+    .documentation-content h4 {
+        color: #374151;
+        margin-top: 25px;
+        margin-bottom: 12px;
+    }
+
+    .documentation-content code {
+        background: #f1f5f9;
+        padding: 2px 6px;
+        border-radius: 4px;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        font-size: 0.9em;
+        color: #e11d48;
+    }
+
+    .documentation-content pre {
+        background: #1e293b;
+        color: #e2e8f0;
+        padding: 20px;
+        border-radius: 8px;
+        overflow-x: auto;
+        margin: 20px 0;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        position: relative;
+    }
+
+    .documentation-content pre code {
+        background: none;
+        padding: 0;
+        color: inherit;
+    }
+
+    .documentation-content blockquote {
+        border-left: 4px solid #2563eb;
+        margin: 20px 0;
+        padding: 15px 20px;
+        background: #f8fafc;
+        border-radius: 0 8px 8px 0;
+    }
+
+    .documentation-content table {
+        width: 100%;
+        border-collapse: collapse;
+        margin: 20px 0;
+        background: white;
+        border-radius: 8px;
+        overflow: hidden;
+        box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+
+    .documentation-content th,
+    .documentation-content td {
+        padding: 12px 15px;
+        text-align: left;
+        border-bottom: 1px solid #e5e7eb;
+    }
+
+    .documentation-content th {
+        background: #f8fafc;
+        font-weight: 600;
+        color: #374151;
+    }
+
+    .documentation-content ul,
+    .documentation-content ol {
+        margin: 15px 0;
+        padding-left: 25px;
+    }
+
+    .documentation-content li {
+        margin-bottom: 8px;
+    }
+
+    .documentation-content a {
+        color: #2563eb;
+        text-decoration: none;
+    }
+
+    .documentation-content a:hover {
+        text-decoration: underline;
+    }
+
+    .documentation-content img {
+        max-width: 100%;
+        height: auto;
+        border-radius: 8px;
+        margin: 20px 0;
+        box-shadow: 0 4px 12px rgba(0,0,0,0.1);
+    }
+
+    /* Technical documentation specific styles */
+    .documentation-content .highlight {
+        background: #1e293b;
+        border-radius: 8px;
+        margin: 20px 0;
+    }
+
+    .documentation-content .highlight pre {
+        margin: 0;
+        background: none;
+    }
+
+    .code-block-header {
+        background: #374151;
+        color: #e5e7eb;
+        padding: 8px 15px;
+        font-size: 0.85rem;
+        border-radius: 8px 8px 0 0;
+        margin: 0;
+        font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+    }
+
+    .back-to-top {
+        position: fixed;
+        bottom: 30px;
+        right: 30px;
+        background: #2563eb;
+        color: white;
+        border: none;
+        border-radius: 50%;
+        width: 50px;
+        height: 50px;
+        cursor: pointer;
+        box-shadow: 0 4px 12px rgba(37, 99, 235, 0.3);
+        transition: all 0.3s ease;
+        display: none;
+    }
+
+    .back-to-top:hover {
+        background: #1d4ed8;
+        transform: translateY(-2px);
+    }
+
+    @media (max-width: 768px) {
+        .documentation-container {
+            grid-template-columns: 1fr;
+            gap: 20px;
+            padding: 15px;
+        }
+
+        .toc-sidebar {
+            position: static;
+            order: 2;
+        }
+
+        .documentation-content {
+            padding: 20px;
+        }
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="documentation-container">
+    <aside class="toc-sidebar">
+        <h3>🔧 Table of Contents</h3>
+        {% if toc_items %}
+            <ul>
+                {% for item in toc_items %}
+                    <li>
+                        <a href="#{{ item.anchor }}" class="toc-level-{{ item.level }}">
+                            {{ item.title }}
+                        </a>
+                    </li>
+                {% endfor %}
+            </ul>
+        {% else %}
+            <p>Loading table of contents...</p>
+        {% endif %}
+    </aside>
+
+    <main class="documentation-content">
+        {{ documentation_content|safe }}
+    </main>
+</div>
+
+<button class="back-to-top" onclick="scrollToTop()" id="backToTop">
+    ↑
+</button>
+{% endblock %}
+
+{% block extra_js %}
+<script>
+    // Show/hide back to top button
+    window.onscroll = function() {
+        const button = document.getElementById('backToTop');
+        if (document.body.scrollTop > 300 || document.documentElement.scrollTop > 300) {
+            button.style.display = 'block';
+        } else {
+            button.style.display = 'none';
+        }
+    };
+
+    function scrollToTop() {
+        document.body.scrollTop = 0;
+        document.documentElement.scrollTop = 0;
+    }
+
+    // Smooth scrolling for anchor links
+    document.addEventListener('DOMContentLoaded', function() {
+        const links = document.querySelectorAll('a[href^="#"]');
+        links.forEach(link => {
+            link.addEventListener('click', function(e) {
+                e.preventDefault();
+                const target = document.querySelector(this.getAttribute('href'));
+                if (target) {
+                    target.scrollIntoView({
+                        behavior: 'smooth',
+                        block: 'start'
+                    });
+                }
+            });
+        });
+    });
+
+    // Copy code block functionality
+    document.addEventListener('DOMContentLoaded', function() {
+        const codeBlocks = document.querySelectorAll('pre');
+        codeBlocks.forEach(block => {
+            const button = document.createElement('button');
+            button.innerHTML = '📋 Copy';
+            button.style.cssText = `
+                position: absolute;
+                top: 10px;
+                right: 10px;
+                background: #374151;
+                color: white;
+                border: none;
+                padding: 5px 10px;
+                border-radius: 4px;
+                font-size: 0.8rem;
+                cursor: pointer;
+                opacity: 0.7;
+                transition: opacity 0.2s;
+            `;
+            
+            button.addEventListener('click', function() {
+                const code = block.querySelector('code');
+                const text = code ? code.textContent : block.textContent;
+                navigator.clipboard.writeText(text).then(() => {
+                    button.innerHTML = '✅ Copied!';
+                    setTimeout(() => {
+                        button.innerHTML = '📋 Copy';
+                    }, 2000);
+                });
+            });
+            
+            button.addEventListener('mouseenter', () => button.style.opacity = '1');
+            button.addEventListener('mouseleave', () => button.style.opacity = '0.7');
+            
+            block.style.position = 'relative';
+            block.appendChild(button);
+        });
+    });
+</script>
+{% endblock %}

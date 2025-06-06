@@ -1,0 +1,2518 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>evmeri User Guide - Complete Documentation</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background: #f8f9fa;
+        }
+        .container {
+            background: white;
+            border-radius: 8px;
+            padding: 40px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        h1 {
+            color: #2563eb;
+            border-bottom: 3px solid #2563eb;
+            padding-bottom: 10px;
+            margin-bottom: 30px;
+            font-size: 2.5rem;
+        }
+        h2 {
+            color: #1e40af;
+            margin-top: 40px;
+            margin-bottom: 20px;
+            padding-bottom: 8px;
+            border-bottom: 2px solid #e5e7eb;
+            font-size: 1.8rem;
+        }
+        h3 {
+            color: #1e40af;
+            margin-top: 30px;
+            margin-bottom: 15px;
+            font-size: 1.4rem;
+        }
+        h4 {
+            color: #374151;
+            margin-top: 25px;
+            margin-bottom: 12px;
+            font-size: 1.2rem;
+        }
+        .toc {
+            background: #f8fafc;
+            border: 1px solid #e5e7eb;
+            border-radius: 8px;
+            padding: 20px;
+            margin: 20px 0;
+        }
+        .toc h2 {
+            margin-top: 0;
+            color: #2563eb;
+            border-bottom: 2px solid #2563eb;
+        }
+        .toc ol {
+            padding-left: 20px;
+        }
+        .toc li {
+            margin-bottom: 5px;
+        }
+        .toc a {
+            color: #2563eb;
+            text-decoration: none;
+        }
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        ul, ol {
+            margin: 15px 0;
+            padding-left: 25px;
+        }
+        li {
+            margin-bottom: 8px;
+        }
+        code {
+            background: #f1f5f9;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+            font-size: 0.9em;
+            color: #e11d48;
+        }
+        pre {
+            background: #1e293b;
+            color: #e2e8f0;
+            padding: 20px;
+            border-radius: 8px;
+            overflow-x: auto;
+            margin: 20px 0;
+            font-family: 'Monaco', 'Menlo', 'Ubuntu Mono', monospace;
+        }
+        pre code {
+            background: none;
+            padding: 0;
+            color: inherit;
+        }
+        blockquote {
+            border-left: 4px solid #2563eb;
+            margin: 20px 0;
+            padding: 15px 20px;
+            background: #f8fafc;
+            border-radius: 0 8px 8px 0;
+        }
+        .emoji {
+            font-size: 1.2em;
+        }
+        .section {
+            margin-bottom: 40px;
+        }
+        hr {
+            border: none;
+            height: 2px;
+            background: linear-gradient(to right, #2563eb, #60a5fa, #2563eb);
+            margin: 40px 0;
+        }
+        strong {
+            color: #1e40af;
+        }
+        .highlight {
+            background: #fef3c7;
+            padding: 2px 4px;
+            border-radius: 3px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1 id="evmeri-user-guide">🚗⚡ evmeri User Guide</h1>
+        <h2>Complete User Documentation for EV Owners & Station Owners</h2>
+
+        <hr>
+
+        <div class="toc">
+            <h2 id="table-of-contents">📖 Table of Contents</h2>
+            <ol>
+                <li><a href="#welcome-to-evmeri">Welcome to evmeri</a></li>
+                <li><a href="#getting-started">Getting Started</a></li>
+                <li><a href="#account-management">Account Management</a></li>
+                <li><a href="#finding-charging-stations">Finding Charging Stations</a></li>
+                <li><a href="#navigation-directions">Navigation & Directions</a></li>
+                <li><a href="#charging-your-vehicle">Charging Your Vehicle</a></li>
+                <li><a href="#payment-billing">Payment & Billing</a></li>
+                <li><a href="#reviews-ratings">Reviews & Ratings</a></li>
+                <li><a href="#favorites-history">Favorites & History</a></li>
+                <li><a href="#station-owner-guide">Station Owner Guide</a></li>
+                <li><a href="#mobile-app-features">Mobile App Features</a></li>
+                <li><a href="#web-dashboard">Web Dashboard</a></li>
+                <li><a href="#troubleshooting">Troubleshooting</a></li>
+                <li><a href="#safety-best-practices">Safety & Best Practices</a></li>
+                <li><a href="#support-contact">Support & Contact</a></li>
+                <li><a href="#terms-privacy">Terms & Privacy</a></li>
+            </ol>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="welcome-to-evmeri">🌟 1. Welcome to evmeri</h2>
+
+            <h3>What is evmeri?</h3>
+            <p>evmeri is Ethiopia's premier electric vehicle (EV) charging network platform that connects EV owners with charging stations across the country. Whether you're driving a Tesla, Nissan Leaf, BMW i3, or any other electric vehicle, evmeri helps you find, navigate to, and pay for charging sessions with ease.</p>
+
+            <h3>Why Choose evmeri?</h3>
+
+            <h4>🗺️ <strong>Comprehensive Coverage</strong></h4>
+            <ul>
+                <li><strong>Nationwide Network</strong>: Access to charging stations across Ethiopia</li>
+                <li><strong>Real-time Information</strong>: Live availability and status updates</li>
+                <li><strong>Growing Network</strong>: New stations added regularly</li>
+            </ul>
+
+            <h4>📱 <strong>User-Friendly Experience</strong></h4>
+            <ul>
+                <li><strong>Intuitive Mobile App</strong>: Easy-to-use interface for iOS and Android</li>
+                <li><strong>Web Dashboard</strong>: Comprehensive management for station owners</li>
+                <li><strong>Multiple Languages</strong>: Available in English and Amharic</li>
+            </ul>
+
+            <h4>💳 <strong>Seamless Payments</strong></h4>
+            <ul>
+                <li><strong>Local Payment Methods</strong>: Support for Ethiopian payment systems</li>
+                <li><strong>Secure Transactions</strong>: Bank-level security for all payments</li>
+                <li><strong>Transparent Pricing</strong>: Clear pricing with no hidden fees</li>
+            </ul>
+
+            <h4>🔍 <strong>Smart Features</strong></h4>
+            <ul>
+                <li><strong>Intelligent Search</strong>: Find stations by location, connector type, and availability</li>
+                <li><strong>Turn-by-turn Navigation</strong>: GPS directions to any charging station</li>
+                <li><strong>Reviews & Ratings</strong>: Community-driven station quality information</li>
+            </ul>
+
+            <h3>Who Can Use evmeri?</h3>
+
+            <h4>🚗 <strong>EV Owners</strong></h4>
+            <ul>
+                <li>Private electric vehicle owners</li>
+                <li>Fleet operators and businesses</li>
+                <li>Ride-sharing drivers with electric vehicles</li>
+                <li>Tourists and visitors with EVs</li>
+            </ul>
+
+            <h4>🏢 <strong>Station Owners</strong></h4>
+            <ul>
+                <li>Businesses wanting to offer EV charging</li>
+                <li>Property owners (hotels, malls, offices)</li>
+                <li>Government institutions</li>
+                <li>Charging network operators</li>
+            </ul>
+
+            <h3>Getting the Most from evmeri</h3>
+
+            <h4><strong>Before You Start</strong></h4>
+            <ol>
+                <li><strong>Download the App</strong>: Available on Google Play Store and Apple App Store</li>
+                <li><strong>Create Your Account</strong>: Quick registration with email verification</li>
+                <li><strong>Set Up Payment</strong>: Add your preferred payment method</li>
+                <li><strong>Explore Features</strong>: Familiarize yourself with the app's capabilities</li>
+            </ol>
+
+            <h4><strong>Essential Tips</strong></h4>
+            <ul>
+                <li><strong>Plan Your Route</strong>: Check charging stations along your journey</li>
+                <li><strong>Monitor Battery</strong>: Start looking for charging when battery reaches 20-30%</li>
+                <li><strong>Have Backup Options</strong>: Always know alternative charging locations</li>
+                <li><strong>Stay Updated</strong>: Enable notifications for important updates</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="getting-started">🚀 2. Getting Started</h2>
+
+            <h3>System Requirements</h3>
+
+            <h4>📱 <strong>Mobile App Requirements</strong></h4>
+            <p><strong>Android:</strong></p>
+            <ul>
+                <li>Android 6.0 (API level 23) or higher</li>
+                <li>2GB RAM minimum, 4GB recommended</li>
+                <li>100MB free storage space</li>
+                <li>GPS and internet connection</li>
+            </ul>
+
+            <p><strong>iOS:</strong></p>
+            <ul>
+                <li>iOS 12.0 or later</li>
+                <li>iPhone 6s or newer</li>
+                <li>100MB free storage space</li>
+                <li>Location services enabled</li>
+            </ul>
+
+            <h4>🌐 <strong>Web Dashboard Requirements</strong></h4>
+            <ul>
+                <li>Modern web browser (Chrome 80+, Firefox 75+, Safari 13+, Edge 80+)</li>
+                <li>Stable internet connection</li>
+                <li>JavaScript enabled</li>
+                <li>Cookies enabled for authentication</li>
+            </ul>
+
+            <h3>Download and Installation</h3>
+
+            <h4><strong>Mobile App Installation</strong></h4>
+
+            <p><strong>Android (Google Play Store):</strong></p>
+            <ol>
+                <li>Open Google Play Store on your device</li>
+                <li>Search for "evmeri" or "evmeri EV charging"</li>
+                <li>Tap "Install" on the official evmeri app</li>
+                <li>Wait for download and installation to complete</li>
+                <li>Tap "Open" to launch the app</li>
+            </ol>
+
+            <p><strong>iOS (Apple App Store):</strong></p>
+            <ol>
+                <li>Open App Store on your iPhone/iPad</li>
+                <li>Search for "evmeri" in the search tab</li>
+                <li>Tap "Get" next to the evmeri app</li>
+                <li>Authenticate with Face ID, Touch ID, or passcode</li>
+                <li>Wait for download and installation</li>
+                <li>Tap "Open" to launch the app</li>
+            </ol>
+
+            <p><strong>Alternative Installation:</strong></p>
+            <ul>
+                <li><strong>APK Download</strong>: Available from evmeri.com for Android</li>
+                <li><strong>TestFlight</strong>: Beta versions available for iOS testers</li>
+            </ul>
+
+            <h4><strong>Web Dashboard Access</strong></h4>
+            <ol>
+                <li>Open your web browser</li>
+                <li>Navigate to https://evmeri.com</li>
+                <li>Click "Station Owner Login" or "Dashboard"</li>
+                <li>No installation required - runs in browser</li>
+            </ol>
+            <h3>First-Time Setup</h3>
+
+            <h4><strong>Account Creation</strong></h4>
+            <ol>
+                <li><strong>Launch the App</strong>: Open evmeri on your device</li>
+                <li><strong>Choose Registration</strong>: Tap "Create Account" or "Sign Up"</li>
+                <li><strong>Select User Type</strong>:
+                    <ul>
+                        <li><strong>EV Owner</strong>: For personal vehicle charging</li>
+                        <li><strong>Station Owner</strong>: For managing charging stations</li>
+                    </ul>
+                </li>
+                <li><strong>Fill Registration Form</strong>:
+                    <pre><code>Required Information:
+- Full Name (First and Last)
+- Email Address (must be valid)
+- Phone Number (Ethiopian format: +251...)
+- Password (minimum 8 characters)
+- Confirm Password</code></pre>
+                </li>
+                <li><strong>Accept Terms</strong>: Read and accept Terms of Service and Privacy Policy</li>
+                <li><strong>Submit Registration</strong>: Tap "Create Account"</li>
+            </ol>
+
+            <h4><strong>Email Verification</strong></h4>
+            <ol>
+                <li><strong>Check Your Email</strong>: Look for verification email from evmeri</li>
+                <li><strong>Check Spam Folder</strong>: If not in inbox, check spam/junk folder</li>
+                <li><strong>Click Verification Link</strong>: Tap the link in the email</li>
+                <li><strong>Return to App</strong>: Go back to the evmeri app</li>
+                <li><strong>Login</strong>: Use your email and password to log in</li>
+            </ol>
+
+            <p><strong>Verification Troubleshooting:</strong></p>
+            <ul>
+                <li><strong>Didn't receive email?</strong> Tap "Resend verification email"</li>
+                <li><strong>Link expired?</strong> Request a new verification email</li>
+                <li><strong>Wrong email?</strong> Contact support to update email address</li>
+            </ul>
+
+            <h4><strong>Profile Setup</strong></h4>
+            <ol>
+                <li><strong>Add Profile Photo</strong>: Upload a clear photo (optional but recommended)</li>
+                <li><strong>Vehicle Information</strong> (for EV owners):
+                    <pre><code>Vehicle Details:
+- Make and Model (e.g., Tesla Model 3)
+- Year of Manufacture
+- Battery Capacity (kWh)
+- Connector Types (Type 2, CCS, CHAdeMO)
+- Charging Speed Preference</code></pre>
+                </li>
+                <li><strong>Location Preferences</strong>:
+                    <ul>
+                        <li>Home address (for nearby station recommendations)</li>
+                        <li>Work address (for route planning)</li>
+                        <li>Preferred search radius</li>
+                    </ul>
+                </li>
+                <li><strong>Notification Settings</strong>:
+                    <ul>
+                        <li>Charging session updates</li>
+                        <li>Payment confirmations</li>
+                        <li>New station alerts</li>
+                        <li>Promotional offers</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h4><strong>Payment Setup</strong></h4>
+            <ol>
+                <li><strong>Navigate to Payment Settings</strong>: Go to Profile > Payment Methods</li>
+                <li><strong>Choose Payment Method</strong>:
+                    <ul>
+                        <li><strong>Mobile Money</strong>: M-Birr, HelloCash, etc.</li>
+                        <li><strong>Bank Account</strong>: Direct bank transfer</li>
+                        <li><strong>Credit/Debit Card</strong>: Visa, Mastercard</li>
+                    </ul>
+                </li>
+                <li><strong>Add Payment Details</strong>:
+                    <pre><code>For Mobile Money:
+- Phone Number
+- Provider (M-Birr, HelloCash, etc.)
+- PIN (for verification)
+
+For Bank Account:
+- Account Number
+- Bank Name
+- Account Holder Name
+
+For Credit/Debit Card:
+- Card Number
+- Expiry Date
+- CVV Code
+- Cardholder Name</code></pre>
+                </li>
+                <li><strong>Verify Payment Method</strong>: Complete verification process</li>
+                <li><strong>Set Default</strong>: Choose your preferred default payment method</li>
+            </ol>
+
+            <h3>Initial App Tour</h3>
+
+            <h4><strong>Home Screen Overview</strong></h4>
+            <ul>
+                <li><strong>Map View</strong>: Interactive map showing nearby charging stations</li>
+                <li><strong>Search Bar</strong>: Quick search for stations by name or location</li>
+                <li><strong>Filter Button</strong>: Filter stations by connector type, availability, etc.</li>
+                <li><strong>Current Location</strong>: Your current position on the map</li>
+                <li><strong>Station Markers</strong>: Color-coded markers indicating station status</li>
+            </ul>
+
+            <h4><strong>Bottom Navigation</strong></h4>
+            <ul>
+                <li><strong>🏠 Home</strong>: Map view and nearby stations</li>
+                <li><strong>🔍 Stations</strong>: List view of all stations</li>
+                <li><strong>❤️ Favorites</strong>: Your saved favorite stations</li>
+                <li><strong>⚙️ Settings</strong>: Account settings and app preferences</li>
+            </ul>
+
+            <h4><strong>Key Features to Explore</strong></h4>
+            <ol>
+                <li><strong>Search Functionality</strong>: Try searching for stations near you</li>
+                <li><strong>Station Details</strong>: Tap on a station marker to see details</li>
+                <li><strong>Navigation</strong>: Test the turn-by-turn directions feature</li>
+                <li><strong>QR Scanner</strong>: Locate the QR code scanner for payments</li>
+                <li><strong>Charging History</strong>: View your past charging sessions</li>
+            </ol>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="account-management">👤 3. Account Management</h2>
+
+            <h3>Profile Management</h3>
+
+            <h4><strong>Viewing Your Profile</strong></h4>
+            <ol>
+                <li><strong>Access Profile</strong>: Tap Settings > Profile or your profile picture</li>
+                <li><strong>Profile Information Displayed</strong>:
+                    <pre><code>Personal Information:
+- Full Name
+- Email Address
+- Phone Number
+- Profile Photo
+- Account Creation Date
+- Verification Status
+
+Vehicle Information:
+- Vehicle Make/Model
+- Battery Capacity
+- Connector Types
+- Charging Preferences
+
+Account Statistics:
+- Total Charging Sessions
+- Total Energy Consumed
+- Total Amount Spent
+- Favorite Stations Count</code></pre>
+                </li>
+            </ol>
+
+            <h4><strong>Editing Profile Information</strong></h4>
+            <ol>
+                <li><strong>Navigate to Edit</strong>: Profile > Edit Profile</li>
+                <li><strong>Update Information</strong>:
+                    <ul>
+                        <li><strong>Personal Details</strong>: Name, phone number</li>
+                        <li><strong>Vehicle Information</strong>: Add/remove vehicles</li>
+                        <li><strong>Preferences</strong>: Charging speed, connector types</li>
+                        <li><strong>Profile Photo</strong>: Upload new photo (max 5MB)</li>
+                    </ul>
+                </li>
+                <li><strong>Save Changes</strong>: Tap "Save" to update your profile</li>
+                <li><strong>Verification</strong>: Some changes may require email verification</li>
+            </ol>
+
+            <h4><strong>Managing Multiple Vehicles</strong></h4>
+            <ol>
+                <li><strong>Add Vehicle</strong>: Profile > Vehicles > Add New Vehicle</li>
+                <li><strong>Vehicle Details</strong>:
+                    <pre><code>Required Information:
+- Vehicle Make (Tesla, Nissan, BMW, etc.)
+- Model (Model 3, Leaf, i3, etc.)
+- Year
+- Battery Capacity (kWh)
+- Connector Types Supported
+- Nickname (optional, e.g., "My Tesla")</code></pre>
+                </li>
+                <li><strong>Set Primary Vehicle</strong>: Choose which vehicle to use for recommendations</li>
+                <li><strong>Switch Vehicles</strong>: Easily switch between vehicles for different trips</li>
+                <li><strong>Remove Vehicle</strong>: Delete vehicles you no longer own</li>
+            </ol>
+            <h3>Account Security</h3>
+
+            <h4><strong>Password Management</strong></h4>
+            <ol>
+                <li><strong>Change Password</strong>: Settings > Security > Change Password</li>
+                <li><strong>Current Password</strong>: Enter your current password</li>
+                <li><strong>New Password Requirements</strong>:
+                    <pre><code>Password must contain:
+- At least 8 characters
+- At least one uppercase letter
+- At least one lowercase letter
+- At least one number
+- At least one special character (!@#$%^&*)</code></pre>
+                </li>
+                <li><strong>Confirm New Password</strong>: Re-enter new password</li>
+                <li><strong>Update</strong>: Tap "Change Password"</li>
+            </ol>
+
+            <h4><strong>Two-Factor Authentication (2FA)</strong></h4>
+            <ol>
+                <li><strong>Enable 2FA</strong>: Settings > Security > Two-Factor Authentication</li>
+                <li><strong>Choose Method</strong>:
+                    <ul>
+                        <li><strong>SMS</strong>: Receive codes via text message</li>
+                        <li><strong>Email</strong>: Receive codes via email</li>
+                        <li><strong>Authenticator App</strong>: Use Google Authenticator or similar</li>
+                    </ul>
+                </li>
+                <li><strong>Setup Process</strong>:
+                    <ul>
+                        <li>Enter phone number or email</li>
+                        <li>Receive verification code</li>
+                        <li>Enter code to confirm</li>
+                        <li>Save backup codes (important!)</li>
+                    </ul>
+                </li>
+                <li><strong>Login with 2FA</strong>: Enter code after password during login</li>
+            </ol>
+
+            <h4><strong>Account Recovery</strong></h4>
+            <ol>
+                <li><strong>Forgot Password</strong>: Use "Forgot Password" on login screen</li>
+                <li><strong>Recovery Process</strong>:
+                    <ul>
+                        <li>Enter your email address</li>
+                        <li>Check email for reset link</li>
+                        <li>Click link to reset password</li>
+                        <li>Create new password</li>
+                        <li>Login with new password</li>
+                    </ul>
+                </li>
+                <li><strong>Account Locked</strong>: Contact support if account is locked</li>
+                <li><strong>Backup Codes</strong>: Use saved backup codes if 2FA device unavailable</li>
+            </ol>
+
+            <h3>Privacy Settings</h3>
+
+            <h4><strong>Data Privacy Controls</strong></h4>
+            <ol>
+                <li><strong>Privacy Settings</strong>: Settings > Privacy</li>
+                <li><strong>Location Sharing</strong>:
+                    <ul>
+                        <li><strong>Always</strong>: For best experience (recommended)</li>
+                        <li><strong>While Using App</strong>: Limited functionality</li>
+                        <li><strong>Never</strong>: Basic functionality only</li>
+                    </ul>
+                </li>
+                <li><strong>Data Collection Preferences</strong>:
+                    <pre><code>You can control:
+- Usage analytics collection
+- Crash report sharing
+- Marketing communications
+- Location history storage
+- Charging pattern analysis</code></pre>
+                </li>
+                <li><strong>Data Export</strong>: Request copy of your data</li>
+                <li><strong>Account Deletion</strong>: Permanently delete your account</li>
+            </ol>
+
+            <h4><strong>Communication Preferences</strong></h4>
+            <ol>
+                <li><strong>Notification Settings</strong>: Settings > Notifications</li>
+                <li><strong>Email Preferences</strong>:
+                    <ul>
+                        <li><strong>Charging Updates</strong>: Session start/stop notifications</li>
+                        <li><strong>Payment Confirmations</strong>: Transaction receipts</li>
+                        <li><strong>Station Updates</strong>: New stations, maintenance alerts</li>
+                        <li><strong>Marketing</strong>: Promotional offers and news</li>
+                        <li><strong>Security</strong>: Login alerts, password changes</li>
+                    </ul>
+                </li>
+                <li><strong>Push Notifications</strong>:
+                    <ul>
+                        <li><strong>Real-time Alerts</strong>: Charging session updates</li>
+                        <li><strong>Location-based</strong>: Nearby station notifications</li>
+                        <li><strong>Reminders</strong>: Low battery, charging complete</li>
+                    </ul>
+                </li>
+                <li><strong>SMS Notifications</strong>:
+                    <ul>
+                        <li><strong>Payment Confirmations</strong>: Transaction alerts</li>
+                        <li><strong>Security Codes</strong>: 2FA verification</li>
+                        <li><strong>Emergency Alerts</strong>: Critical system notifications</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h3>Account Types and Benefits</h3>
+
+            <h4><strong>Standard Account (Free)</strong></h4>
+            <pre><code>Included Features:
+✅ Find and navigate to charging stations
+✅ View real-time availability
+✅ Basic payment processing
+✅ Charging history (last 30 days)
+✅ Customer support
+✅ Mobile app access
+✅ Unlimited charging sessions
+✅ Advanced station details and amenities
+✅ Priority customer support
+✅ Extended charging history (1 year)
+✅ Advanced route planning
+✅ Exclusive access to premium stations
+✅ Discounted charging rates
+✅ Carbon footprint tracking
+✅ Multi-vehicle management
+✅ Fleet analytics and reporting
+✅ Bulk payment options
+✅ Dedicated account manager
+✅ Custom billing and invoicing
+✅ API access for integration
+✅ Priority station access
+✅ Volume discounts
+
+Contact sales for pricing</code></pre>
+
+            <h3>Account Verification</h3>
+
+            <h4><strong>Email Verification</strong></h4>
+            <ul>
+                <li><strong>Required</strong>: Must verify email to use payment features</li>
+                <li><strong>Process</strong>: Click link in verification email</li>
+                <li><strong>Resend</strong>: Available if email not received</li>
+                <li><strong>Update</strong>: Change email requires re-verification</li>
+            </ul>
+
+            <h4><strong>Phone Verification</strong></h4>
+            <ul>
+                <li><strong>Optional</strong>: Recommended for security</li>
+                <li><strong>Process</strong>: Receive SMS code and enter in app</li>
+                <li><strong>Benefits</strong>: Enhanced security, SMS notifications</li>
+                <li><strong>International</strong>: Supports international numbers</li>
+            </ul>
+
+            <h4><strong>Identity Verification (for Station Owners)</strong></h4>
+            <pre><code>Required Documents:
+- Government-issued ID (passport, driver's license)
+- Business registration (for businesses)
+- Proof of address
+- Bank account verification
+
+Verification Process:
+1. Upload clear photos of documents
+2. Wait for review (1-3 business days)
+3. Receive verification status
+4. Access full station owner features</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="finding-charging-stations">🔍 4. Finding Charging Stations</h2>
+
+            <h3>Using the Map Interface</h3>
+
+            <h4><strong>Understanding the Map</strong></h4>
+            <p>The evmeri map is your primary tool for finding charging stations. Here's how to read and use it effectively:</p>
+
+            <p><strong>Map Elements:</strong></p>
+            <ul>
+                <li><strong>🟢 Green Markers</strong>: Available stations with open connectors</li>
+                <li><strong>🟡 Yellow Markers</strong>: Stations with limited availability</li>
+                <li><strong>🔴 Red Markers</strong>: Busy stations (all connectors in use)</li>
+                <li><strong>⚫ Gray Markers</strong>: Offline or maintenance stations</li>
+                <li><strong>📍 Blue Dot</strong>: Your current location</li>
+                <li><strong>🔵 Blue Circle</strong>: Your location accuracy radius</li>
+            </ul>
+
+            <h4><strong>Navigation Controls</strong></h4>
+            <ol>
+                <li><strong>Zoom In/Out</strong>: Pinch to zoom or use +/- buttons</li>
+                <li><strong>Pan</strong>: Drag to move around the map</li>
+                <li><strong>Center on Location</strong>: Tap location button to center on your position</li>
+                <li><strong>Rotate</strong>: Two-finger rotation (if enabled in settings)</li>
+                <li><strong>Tilt</strong>: Two-finger vertical drag for 3D view</li>
+            </ol>
+
+            <h4><strong>Station Information at a Glance</strong></h4>
+            <p>When you tap on a station marker, you'll see:</p>
+            <pre><code>Quick Info Popup:
+- Station Name
+- Distance from your location
+- Available connectors (e.g., "3 of 5 available")
+- Connector types (Type 2, CCS, CHAdeMO)
+- Pricing (per kWh or per minute)
+- Rating (1-5 stars)
+- "Get Directions" button
+- "More Details" button</code></pre>
+
+            <h3>Search and Filters</h3>
+
+            <h4><strong>Basic Search</strong></h4>
+            <ol>
+                <li><strong>Search Bar</strong>: Tap the search bar at the top of the map</li>
+                <li><strong>Search Options</strong>:
+                    <pre><code>You can search by:
+- Station name (e.g., "EVMERI Station 1")
+- Address (e.g., "Bole Road, Addis Ababa")
+- Landmark (e.g., "Bole International Airport")
+- Business name (e.g., "Sheraton Hotel")
+- Postal code or area name</code></pre>
+                </li>
+                <li><strong>Search Results</strong>: Tap on results to view station details</li>
+                <li><strong>Recent Searches</strong>: Access your recent search history</li>
+            </ol>
+
+            <h4><strong>Advanced Filters</strong></h4>
+            <p>Access filters by tapping the filter icon (🔽) next to the search bar:</p>
+
+            <p><strong>Connector Type Filter:</strong></p>
+            <pre><code>Available Connector Types:
+☐ Type 2 (AC charging, common in Europe/Ethiopia)
+☐ CCS (Combined Charging System, fast DC)
+☐ CHAdeMO (Japanese fast charging standard)
+☐ Tesla Supercharger (Tesla vehicles only)
+☐ Type 1 (AC charging, older standard)
+☐ Schuko (Standard household plug, slow)</code></pre>
+
+            <p><strong>Charging Speed Filter:</strong></p>
+            <pre><code>Speed Categories:
+☐ Slow (3-7 kW) - Overnight charging
+☐ Fast (7-22 kW) - 2-4 hours for full charge
+☐ Rapid (22-50 kW) - 30-60 minutes
+☐ Ultra-rapid (50+ kW) - 15-30 minutes</code></pre>
+
+            <p><strong>Availability Filter:</strong></p>
+            <pre><code>Availability Status:
+☐ Available now (green markers only)
+☐ Limited availability (yellow markers)
+☐ Show all stations (including busy ones)
+☐ 24/7 stations only
+☐ Currently open stations</code></pre>
+
+            <p><strong>Amenities Filter:</strong></p>
+            <pre><code>Station Amenities:
+☐ Parking available
+☐ Restrooms
+☐ WiFi
+☐ Restaurant/Café
+☐ Shopping
+☐ ATM
+☐ Covered parking
+☐ Security cameras
+☐ Wheelchair accessible</code></pre>
+
+            <p><strong>Distance and Pricing:</strong></p>
+            <pre><code>Distance Range:
+- Within 1 km
+- Within 5 km
+- Within 10 km
+- Within 25 km
+- Custom range (slider)
+
+Price Range:
+- Under 5 ETB/kWh
+- 5-10 ETB/kWh
+- 10-15 ETB/kWh
+- Above 15 ETB/kWh
+- Custom range (slider)</code></pre>
+
+            <h4><strong>Saved Searches</strong></h4>
+            <ol>
+                <li><strong>Save Search</strong>: After applying filters, tap "Save Search"</li>
+                <li><strong>Name Your Search</strong>: Give it a descriptive name (e.g., "Fast chargers near work")</li>
+                <li><strong>Quick Access</strong>: Access saved searches from the search menu</li>
+                <li><strong>Notifications</strong>: Get alerts when new stations match your saved searches</li>
+            </ol>
+
+            <h3>Station List View</h3>
+
+            <h4><strong>Switching to List View</strong></h4>
+            <ol>
+                <li><strong>Bottom Navigation</strong>: Tap "Stations" in the bottom navigation</li>
+                <li><strong>List Toggle</strong>: Or tap the list icon on the map screen</li>
+                <li><strong>Sort Options</strong>: Choose how to sort the station list</li>
+            </ol>
+
+            <h4><strong>List View Features</strong></h4>
+            <pre><code>Each Station Card Shows:
+- Station photo (if available)
+- Station name and address
+- Distance from your location
+- Real-time availability (e.g., "3 of 5 available")
+- Connector types with icons
+- Price per kWh
+- Star rating and review count
+- Amenities icons
+- "Navigate" and "Details" buttons</code></pre>
+
+            <h4><strong>Sorting Options</strong></h4>
+            <ul>
+                <li><strong>Distance</strong>: Closest stations first (default)</li>
+                <li><strong>Price</strong>: Cheapest charging rates first</li>
+                <li><strong>Rating</strong>: Highest rated stations first</li>
+                <li><strong>Availability</strong>: Most available connectors first</li>
+                <li><strong>Recently Added</strong>: Newest stations first</li>
+                <li><strong>Alphabetical</strong>: A-Z by station name</li>
+            </ul>
+
+            <h4><strong>Quick Actions from List</strong></h4>
+            <ul>
+                <li><strong>Tap Station Card</strong>: View detailed information</li>
+                <li><strong>Tap Navigate</strong>: Start turn-by-turn directions</li>
+                <li><strong>Tap Call</strong>: Call station support (if available)</li>
+                <li><strong>Swipe Right</strong>: Add to favorites</li>
+                <li><strong>Swipe Left</strong>: Hide station (temporarily)</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="navigation-directions">🧭 5. Navigation & Directions</h2>
+
+            <h3>Getting Directions</h3>
+
+            <h4><strong>Starting Navigation</strong></h4>
+            <ol>
+                <li><strong>From Station Details</strong>: Tap "Navigate" or "Get Directions"</li>
+                <li><strong>From Map</strong>: Tap station marker, then "Navigate"</li>
+                <li><strong>From List View</strong>: Tap "Navigate" button on station card</li>
+                <li><strong>Voice Command</strong>: Say "Navigate to [station name]" (if enabled)</li>
+            </ol>
+
+            <h4><strong>Navigation Options</strong></h4>
+            <pre><code>Route Preferences:
+🚗 Fastest Route - Minimize travel time
+🛣️ Shortest Route - Minimize distance
+⚡ EV Optimized - Consider battery range
+🌿 Eco Route - Most energy efficient
+🚫 Avoid Tolls - Skip toll roads
+🚧 Avoid Traffic - Real-time traffic avoidance</code></pre>
+
+            <h4><strong>Before You Start</strong></h4>
+            <p>evmeri provides pre-navigation information:</p>
+            <pre><code>Pre-Navigation Checklist:
+- Current battery level check
+- Estimated arrival battery level
+- Route distance and time
+- Traffic conditions
+- Weather alerts
+- Station availability confirmation
+- Alternative stations along route</code></pre>
+
+            <h3>Turn-by-Turn Navigation</h3>
+
+            <h4><strong>Navigation Interface</strong></h4>
+            <pre><code>Navigation Screen Elements:
+- Large map with route highlighted
+- Next turn instruction at top
+- Distance to next turn
+- Estimated arrival time
+- Current speed
+- Speed limit (where available)
+- Battery level indicator
+- Station availability status</code></pre>
+
+            <h4><strong>Voice Guidance</strong></h4>
+            <p>evmeri provides clear voice instructions:</p>
+            <pre><code>Voice Instruction Examples:
+- "In 500 meters, turn right onto Bole Road"
+- "Continue straight for 2 kilometers"
+- "Take the second exit at the roundabout"
+- "You have arrived at EVMERI Station 1"
+- "Charging station is on your left"
+- "Battery level low, alternative station available"</code></pre>
+
+            <p><strong>Voice Settings:</strong></p>
+            <ul>
+                <li><strong>Language</strong>: English or Amharic</li>
+                <li><strong>Voice Type</strong>: Male or female voice</li>
+                <li><strong>Volume</strong>: Adjustable volume levels</li>
+                <li><strong>Frequency</strong>: How often instructions are repeated</li>
+                <li><strong>Mute</strong>: Turn off voice guidance</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="charging-your-vehicle">⚡ 6. Charging Your Vehicle</h2>
+
+            <h3>Starting a Charging Session</h3>
+
+            <h4><strong>Preparation Steps</strong></h4>
+            <ol>
+                <li><strong>Arrive at Station</strong>: Park in designated EV charging spot</li>
+                <li><strong>Check Connector</strong>: Ensure connector matches your vehicle</li>
+                <li><strong>Open Charging Port</strong>: Unlock and open your vehicle's charging port</li>
+                <li><strong>Inspect Equipment</strong>: Check cable and connector for damage</li>
+            </ol>
+
+            <h4><strong>Payment and Authentication</strong></h4>
+            <ol>
+                <li><strong>Open evmeri App</strong>: Launch the app on your phone</li>
+                <li><strong>Scan QR Code</strong>: Use app to scan QR code on charging station</li>
+                <li><strong>Select Connector</strong>: Choose the connector you want to use</li>
+                <li><strong>Choose Payment Method</strong>: Select from your saved payment methods</li>
+                <li><strong>Set Charging Amount</strong>:
+                    <pre><code>Charging Options:
+- Charge by kWh (e.g., 20 kWh)
+- Charge by time (e.g., 2 hours)
+- Charge by amount (e.g., 100 ETB)
+- Charge to percentage (e.g., 80%)
+- Full charge (to 100%)</code></pre>
+                </li>
+                <li><strong>Confirm Payment</strong>: Review and confirm charging session</li>
+            </ol>
+
+            <h4><strong>Connecting Your Vehicle</strong></h4>
+            <ol>
+                <li><strong>Remove Connector</strong>: Take connector from charging station</li>
+                <li><strong>Align Properly</strong>: Line up connector with your vehicle's port</li>
+                <li><strong>Insert Firmly</strong>: Push connector in until it clicks/locks</li>
+                <li><strong>Verify Connection</strong>: Check that connector is secure</li>
+                <li><strong>Start Charging</strong>: Tap "Start Charging" in the app</li>
+            </ol>
+
+            <h3>During Charging</h3>
+
+            <h4><strong>Monitoring Your Session</strong></h4>
+            <p>The evmeri app provides real-time charging information:</p>
+            <pre><code>Live Charging Data:
+- Current charging power (kW)
+- Energy delivered so far (kWh)
+- Current battery percentage
+- Estimated time to completion
+- Cost accumulated so far
+- Charging curve graph
+- Session duration</code></pre>
+
+            <h4><strong>Charging Status Indicators</strong></h4>
+            <ul>
+                <li><strong>🟢 Charging</strong>: Active charging in progress</li>
+                <li><strong>🟡 Preparing</strong>: Initializing charging session</li>
+                <li><strong>🔵 Paused</strong>: Charging temporarily paused</li>
+                <li><strong>🔴 Error</strong>: Charging stopped due to error</li>
+                <li><strong>✅ Complete</strong>: Charging session finished</li>
+            </ul>
+
+            <h4><strong>Remote Monitoring</strong></h4>
+            <ul>
+                <li><strong>Push Notifications</strong>: Receive updates on your phone</li>
+                <li><strong>Session Alerts</strong>: Notifications for start, pause, complete</li>
+                <li><strong>Error Notifications</strong>: Immediate alerts for any issues</li>
+                <li><strong>Completion Reminder</strong>: Alert when charging is nearly done</li>
+            </ul>
+
+            <h3>Stopping a Charging Session</h3>
+
+            <h4><strong>Normal Session End</strong></h4>
+            <ol>
+                <li><strong>Session Complete</strong>: Charging stops automatically when target reached</li>
+                <li><strong>App Notification</strong>: Receive completion notification</li>
+                <li><strong>Final Payment</strong>: Automatic payment processing</li>
+                <li><strong>Receipt</strong>: Digital receipt sent to email</li>
+            </ol>
+
+            <h4><strong>Manual Session Stop</strong></h4>
+            <ol>
+                <li><strong>Open App</strong>: Access your active charging session</li>
+                <li><strong>Stop Charging</strong>: Tap "Stop Charging" button</li>
+                <li><strong>Confirm Stop</strong>: Confirm you want to end session</li>
+                <li><strong>Wait for Unlock</strong>: Connector will unlock automatically</li>
+                <li><strong>Disconnect Cable</strong>: Remove connector from vehicle</li>
+                <li><strong>Return Connector</strong>: Place connector back in station holder</li>
+            </ol>
+
+            <h4><strong>Emergency Stop</strong></h4>
+            <ul>
+                <li><strong>Emergency Button</strong>: Press red emergency stop on station</li>
+                <li><strong>App Emergency</strong>: Use emergency stop in app</li>
+                <li><strong>Manual Disconnect</strong>: Some vehicles allow manual release</li>
+                <li><strong>Contact Support</strong>: Call support if connector won't release</li>
+            </ul>
+
+            <h3>Charging Etiquette</h3>
+
+            <h4><strong>Best Practices</strong></h4>
+            <ul>
+                <li><strong>Don't Overstay</strong>: Move your vehicle promptly when charging complete</li>
+                <li><strong>Park Properly</strong>: Stay within designated charging bay lines</li>
+                <li><strong>Cable Management</strong>: Keep charging cable off the ground</li>
+                <li><strong>Report Issues</strong>: Report broken or damaged equipment</li>
+                <li><strong>Be Considerate</strong>: Don't block access for other users</li>
+                <li><strong>Clean Up</strong>: Leave the area clean for the next user</li>
+            </ul>
+
+            <h4><strong>Charging Courtesy</strong></h4>
+            <ul>
+                <li><strong>Share Fast Chargers</strong>: Use fast chargers only when needed</li>
+                <li><strong>80% Rule</strong>: Consider stopping at 80% on fast chargers</li>
+                <li><strong>Communication</strong>: Leave contact info if you'll be away</li>
+                <li><strong>Queue Respect</strong>: Honor informal queuing systems</li>
+                <li><strong>Help Others</strong>: Assist new EV owners when possible</li>
+            </ul>
+
+            <h3>Troubleshooting Charging Issues</h3>
+
+            <h4><strong>Common Problems and Solutions</strong></h4>
+
+            <p><strong>Connector Won't Fit:</strong></p>
+            <ul>
+                <li>Check connector type compatibility</li>
+                <li>Ensure charging port is fully open</li>
+                <li>Remove any debris from port</li>
+                <li>Try different connector if available</li>
+            </ul>
+
+            <p><strong>Charging Won't Start:</strong></p>
+            <ul>
+                <li>Verify payment method is valid</li>
+                <li>Check internet connection</li>
+                <li>Ensure connector is fully inserted</li>
+                <li>Try restarting the session</li>
+                <li>Contact station support</li>
+            </ul>
+
+            <p><strong>Slow Charging Speed:</strong></p>
+            <ul>
+                <li>Check if other vehicles are sharing power</li>
+                <li>Verify your vehicle's maximum charging rate</li>
+                <li>Consider battery temperature effects</li>
+                <li>Check if battery is nearly full (charging slows near 100%)</li>
+            </ul>
+
+            <p><strong>Session Interrupted:</strong></p>
+            <ul>
+                <li>Check for error messages in app</li>
+                <li>Verify vehicle is still connected</li>
+                <li>Check for power outages</li>
+                <li>Try restarting the session</li>
+                <li>Contact support if problem persists</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="payment-billing">💳 7. Payment & Billing</h2>
+
+            <h3>Payment Methods</h3>
+
+            <h4><strong>Supported Payment Options</strong></h4>
+            <p>evmeri supports various payment methods popular in Ethiopia:</p>
+
+            <p><strong>Mobile Money:</strong></p>
+            <ul>
+                <li><strong>M-Birr</strong>: Ethiopia's leading mobile money service</li>
+                <li><strong>HelloCash</strong>: Popular mobile payment platform</li>
+                <li><strong>Amole</strong>: Dashen Bank's mobile money service</li>
+                <li><strong>CBE Birr</strong>: Commercial Bank of Ethiopia mobile money</li>
+            </ul>
+
+            <p><strong>Bank Cards:</strong></p>
+            <ul>
+                <li><strong>Visa</strong>: International and local Visa cards</li>
+                <li><strong>Mastercard</strong>: International and local Mastercard</li>
+                <li><strong>Local Bank Cards</strong>: Ethiopian bank debit/credit cards</li>
+            </ul>
+
+            <p><strong>Bank Transfer:</strong></p>
+            <ul>
+                <li><strong>Direct Bank Transfer</strong>: Transfer from your bank account</li>
+                <li><strong>Internet Banking</strong>: Online banking integration</li>
+                <li><strong>RTGS</strong>: Real-time gross settlement</li>
+            </ul>
+
+            <h4><strong>Adding Payment Methods</strong></h4>
+            <ol>
+                <li><strong>Access Payment Settings</strong>: Profile > Payment Methods</li>
+                <li><strong>Add New Method</strong>: Tap "Add Payment Method"</li>
+                <li><strong>Choose Type</strong>: Select mobile money, card, or bank transfer</li>
+                <li><strong>Enter Details</strong>:
+                    <pre><code>For Mobile Money:
+- Phone number
+- Provider selection
+- PIN verification
+
+For Bank Cards:
+- Card number
+- Expiry date
+- CVV code
+- Cardholder name
+
+For Bank Transfer:
+- Account number
+- Bank name
+- Account holder name
+- Branch code</code></pre>
+                </li>
+                <li><strong>Verify Method</strong>: Complete verification process</li>
+                <li><strong>Set as Default</strong>: Choose default payment method</li>
+            </ol>
+
+            <h3>Transaction Process</h3>
+
+            <h4><strong>Pre-Authorization</strong></h4>
+            <p>Before charging begins:</p>
+            <pre><code>Authorization Process:
+1. Payment method is verified
+2. Estimated amount is pre-authorized
+3. Funds are temporarily held
+4. Charging session can begin
+5. Final amount charged after session
+6. Unused funds are released</code></pre>
+
+            <h4><strong>Real-Time Billing</strong></h4>
+            <p>During charging session:</p>
+            <pre><code>Live Cost Tracking:
+- Current cost displayed in app
+- Updates every 30 seconds
+- Estimated final cost shown
+- Ability to set spending limits
+- Alerts when approaching limit</code></pre>
+
+            <h4><strong>Final Settlement</strong></h4>
+            <p>After charging completes:</p>
+            <pre><code>Settlement Process:
+1. Final energy consumption calculated
+2. Actual cost determined
+3. Pre-authorization adjusted
+4. Final payment processed
+5. Receipt generated and sent
+6. Refund issued if overpaid</code></pre>
+
+            <h3>Billing and Receipts</h3>
+
+            <h4><strong>Digital Receipts</strong></h4>
+            <p>Every transaction generates a detailed receipt:</p>
+            <pre><code>Receipt Information:
+- Transaction ID and date/time
+- Station name and location
+- Connector type and number
+- Session start/end times
+- Energy consumed (kWh)
+- Charging duration
+- Cost breakdown
+- Payment method used
+- Tax information
+- Carbon footprint data</code></pre>
+
+            <h4><strong>Receipt Delivery</strong></h4>
+            <pre><code>Receipt Options:
+📧 Email: Sent to registered email address
+📱 In-App: Available in transaction history
+💾 Download: PDF download option
+📄 Print: Print-friendly format
+☁️ Cloud Storage: Auto-sync to cloud services</code></pre>
+
+            <h4><strong>Monthly Statements</strong></h4>
+            <p>For regular users, evmeri provides monthly summaries:</p>
+            <pre><code>Monthly Statement Includes:
+- Total charging sessions
+- Total energy consumed
+- Total amount spent
+- Average cost per session
+- Most used stations
+- Charging patterns analysis
+- Environmental impact summary
+- Recommendations for savings</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="reviews-ratings">⭐ 8. Reviews & Ratings</h2>
+
+            <h3>Understanding the Review System</h3>
+
+            <h4><strong>Review Components</strong></h4>
+            <p>evmeri uses a comprehensive 5-star rating system:</p>
+            <pre><code>Overall Rating Categories:
+⭐ Overall Experience (1-5 stars)
+⚡ Charging Speed (1-5 stars)
+📍 Location Convenience (1-5 stars)
+🏢 Amenities Quality (1-5 stars)
+💰 Value for Money (1-5 stars)
+🛠️ Equipment Condition (1-5 stars)</code></pre>
+
+            <h4><strong>Review Visibility</strong></h4>
+            <pre><code>Who Can See Reviews:
+- All evmeri users (public reviews)
+- Station owners (for their stations)
+- evmeri support team (for quality control)
+- Anonymous aggregated data for analytics</code></pre>
+
+            <h3>Writing Reviews</h3>
+
+            <h4><strong>When to Write Reviews</strong></h4>
+            <pre><code>Best Times to Review:
+- Immediately after charging session
+- Within 24 hours of visit
+- After multiple visits to same station
+- When experiencing exceptional service
+- When encountering problems</code></pre>
+
+            <h4><strong>How to Write a Review</strong></h4>
+            <ol>
+                <li><strong>Access Review Option</strong>:
+                    <ul>
+                        <li>From charging session completion screen</li>
+                        <li>Station details page > "Write Review"</li>
+                        <li>Charging history > Select session > "Review"</li>
+                        <li>Search for station > "Add Review"</li>
+                    </ul>
+                </li>
+                <li><strong>Rate Your Experience</strong>:
+                    <pre><code>Rating Guidelines:
+⭐ 1 Star: Poor - Major problems, wouldn't recommend
+⭐⭐ 2 Stars: Below Average - Several issues
+⭐⭐⭐ 3 Stars: Average - Acceptable but room for improvement
+⭐⭐⭐⭐ 4 Stars: Good - Minor issues, would recommend
+⭐⭐⭐⭐⭐ 5 Stars: Excellent - Outstanding experience</code></pre>
+                </li>
+                <li><strong>Write Your Review</strong>:
+                    <pre><code>Review Writing Tips:
+- Be specific and detailed
+- Mention charging speed experienced
+- Describe station condition
+- Note amenities used
+- Include helpful tips for other users
+- Be honest and fair
+- Avoid personal attacks</code></pre>
+                </li>
+            </ol>
+
+            <h4><strong>Review Categories and Examples</strong></h4>
+
+            <p><strong>Charging Speed Reviews:</strong></p>
+            <blockquote>
+                <p><strong>Good Example:</strong><br>
+                "Fast charging worked perfectly. Got 45 kWh in 35 minutes on the CCS connector. Station delivered the advertised 150 kW speed throughout most of the session."</p>
+
+                <p><strong>What to Include:</strong></p>
+                <ul>
+                    <li>Actual charging speed experienced</li>
+                    <li>Connector type used</li>
+                    <li>Time taken for your charging session</li>
+                    <li>Comparison to advertised speeds</li>
+                    <li>Any speed variations during session</li>
+                </ul>
+            </blockquote>
+
+            <p><strong>Location Convenience:</strong></p>
+            <blockquote>
+                <p><strong>Good Example:</strong><br>
+                "Perfect location next to shopping center. Easy to find with clear signage. Plenty of parking spaces and well-lit area. Safe to charge even at night."</p>
+
+                <p><strong>What to Include:</strong></p>
+                <ul>
+                    <li>Ease of finding the station</li>
+                    <li>Parking availability</li>
+                    <li>Safety and lighting</li>
+                    <li>Nearby amenities</li>
+                    <li>Accessibility features</li>
+                </ul>
+            </blockquote>
+
+            <h3>Review Guidelines</h3>
+
+            <h4><strong>Review Standards</strong></h4>
+            <pre><code>Acceptable Content:
+✅ Honest experiences and opinions
+✅ Specific details about charging session
+✅ Helpful tips for other users
+✅ Constructive criticism
+✅ Praise for good service
+✅ Technical information about charging
+
+Prohibited Content:
+❌ Personal attacks or harassment
+❌ Discriminatory language
+❌ False or misleading information
+❌ Spam or promotional content
+❌ Off-topic discussions
+❌ Private personal information</code></pre>
+
+            <h4><strong>Review Moderation</strong></h4>
+            <pre><code>Moderation Process:
+- Automated screening for prohibited content
+- Community reporting system
+- Manual review of flagged content
+- Response from station owners allowed
+- Appeals process for removed reviews
+- Regular quality audits</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="favorites-history">❤️ 9. Favorites & History</h2>
+
+            <h3>Managing Favorite Stations</h3>
+
+            <h4><strong>Adding Favorites</strong></h4>
+            <ol>
+                <li><strong>From Station Details</strong>: Tap the heart icon on station details page</li>
+                <li><strong>From Map</strong>: Tap station marker, then tap heart icon</li>
+                <li><strong>From List View</strong>: Swipe right on station card or tap heart icon</li>
+                <li><strong>After Charging</strong>: Option to favorite appears after successful session</li>
+            </ol>
+
+            <h4><strong>Organizing Favorites</strong></h4>
+            <pre><code>Favorite Categories:
+🏠 Home Area: Stations near your home
+🏢 Work Area: Stations near your workplace
+🛣️ Travel Routes: Stations along frequent routes
+⚡ Fast Charging: High-speed charging stations
+💰 Budget Friendly: Affordable charging options
+🌟 Premium: High-quality stations with amenities</code></pre>
+
+            <h4><strong>Favorite Station Features</strong></h4>
+            <ul>
+                <li><strong>Quick Access</strong>: Dedicated favorites tab in bottom navigation</li>
+                <li><strong>Notifications</strong>: Alerts when favorite stations have issues</li>
+                <li><strong>Priority Display</strong>: Favorites shown first in search results</li>
+                <li><strong>Offline Access</strong>: Favorite station details available offline</li>
+                <li><strong>Sharing</strong>: Share favorite stations with other users</li>
+            </ul>
+
+            <h3>Charging History</h3>
+
+            <h4><strong>Viewing Charging History</strong></h4>
+            <ol>
+                <li><strong>Access History</strong>: Settings > Charging History</li>
+                <li><strong>Filter Options</strong>:
+                    <pre><code>Filter by:
+- Date range (last week, month, year, custom)
+- Station name or location
+- Payment method used
+- Amount spent range
+- Energy consumed range
+- Session duration
+- Charging speed</code></pre>
+                </li>
+                <li><strong>Sort Options</strong>:
+                    <ul>
+                        <li>Most recent first (default)</li>
+                        <li>Oldest first</li>
+                        <li>Highest cost first</li>
+                        <li>Longest session first</li>
+                        <li>By station name</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h4><strong>Session Details</strong></h4>
+            <p>Each charging session record includes:</p>
+            <pre><code>Session Information:
+- Date and time (start/end)
+- Station name and location
+- Connector type and number
+- Energy consumed (kWh)
+- Session duration
+- Average charging speed
+- Total cost
+- Payment method
+- Receipt download link
+- Photos (if taken during session)
+- Notes (if added)</code></pre>
+
+            <h4><strong>History Analytics</strong></h4>
+            <pre><code>Personal Analytics:
+📊 Monthly spending trends
+⚡ Average charging speed
+🔋 Energy consumption patterns
+📍 Most used stations
+💰 Cost per kWh trends
+🌱 Carbon footprint reduction
+📈 Usage frequency
+🎯 Charging efficiency</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="station-owner-guide">🏢 10. Station Owner Guide</h2>
+
+            <h3>Getting Started as a Station Owner</h3>
+
+            <h4><strong>Registration Process</strong></h4>
+            <ol>
+                <li><strong>Create Account</strong>: Register as "Station Owner" during signup</li>
+                <li><strong>Business Verification</strong>:
+                    <pre><code>Required Documents:
+- Business registration certificate
+- Tax identification number
+- Proof of business address
+- Bank account details
+- Identity verification
+- Property ownership/lease agreement</code></pre>
+                </li>
+                <li><strong>Profile Completion</strong>: Complete business profile with company details</li>
+                <li><strong>Verification Review</strong>: Wait for evmeri team verification (1-3 business days)</li>
+                <li><strong>Account Activation</strong>: Receive confirmation and access to dashboard</li>
+            </ol>
+
+            <h4><strong>Station Setup</strong></h4>
+            <ol>
+                <li><strong>Add Station</strong>: Use web dashboard to add new charging station</li>
+                <li><strong>Station Information</strong>:
+                    <pre><code>Required Details:
+- Station name and description
+- Complete address
+- GPS coordinates (auto-detected)
+- Operating hours
+- Contact information
+- Access instructions
+- Parking details</code></pre>
+                </li>
+                <li><strong>Connector Configuration</strong>:
+                    <pre><code>For Each Connector:
+- Connector type (Type 2, CCS, CHAdeMO, etc.)
+- Maximum power output (kW)
+- Pricing structure
+- Availability status
+- Maintenance schedule</code></pre>
+                </li>
+                <li><strong>Amenities</strong>: Add available amenities (restrooms, WiFi, food, etc.)</li>
+                <li><strong>Photos</strong>: Upload high-quality photos of station and surroundings</li>
+            </ol>
+
+            <h3>Station Management</h3>
+
+            <h4><strong>Dashboard Overview</strong></h4>
+            <p>The station owner dashboard provides:</p>
+            <pre><code>Dashboard Features:
+📊 Real-time usage statistics
+💰 Revenue tracking and analytics
+⚡ Connector status monitoring
+👥 User reviews and ratings
+📈 Performance metrics
+🔧 Maintenance scheduling
+💳 Payment processing
+📱 Mobile app integration</code></pre>
+
+            <h4><strong>Pricing Management</strong></h4>
+            <ol>
+                <li><strong>Pricing Models</strong>:
+                    <pre><code>Available Options:
+- Per kWh pricing (recommended)
+- Per minute pricing
+- Flat session fee
+- Tiered pricing (different rates by time)
+- Dynamic pricing (peak/off-peak)
+- Membership discounts</code></pre>
+                </li>
+                <li><strong>Setting Prices</strong>:
+                    <ul>
+                        <li>Navigate to Station > Pricing</li>
+                        <li>Select pricing model</li>
+                        <li>Set rates for each connector type</li>
+                        <li>Configure time-based pricing if needed</li>
+                        <li>Set minimum and maximum session amounts</li>
+                        <li>Save and activate pricing</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h4><strong>Revenue and Analytics</strong></h4>
+            <pre><code>Revenue Tracking:
+- Daily, weekly, monthly revenue
+- Revenue per connector
+- Average session value
+- Peak usage times
+- Customer retention rates
+- Comparison with other stations
+
+Usage Analytics:
+- Total sessions per day/week/month
+- Average session duration
+- Energy dispensed
+- Utilization rates
+- Customer demographics
+- Popular charging times</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="mobile-app-features">📱 11. Mobile App Features</h2>
+
+            <h3>Core App Features</h3>
+
+            <h4><strong>Map Interface</strong></h4>
+            <ul>
+                <li><strong>Interactive Map</strong>: Real-time charging station locations using OpenStreetMap</li>
+                <li><strong>Station Markers</strong>: Color-coded markers showing availability status</li>
+                <li><strong>Current Location</strong>: GPS tracking with location accuracy indicator</li>
+                <li><strong>Zoom Controls</strong>: Pinch to zoom, double-tap to zoom in</li>
+                <li><strong>Map Layers</strong>: Switch between map, satellite, and terrain views</li>
+                <li><strong>Offline Maps</strong>: Download maps for offline use in poor connectivity areas</li>
+            </ul>
+
+            <h4><strong>Search and Discovery</strong></h4>
+            <pre><code>Search Features:
+🔍 Text Search: Search by station name, address, or landmark
+📍 Location Search: Find stations near specific locations
+🔽 Advanced Filters: Filter by connector type, speed, amenities
+📊 Sort Options: Sort by distance, price, rating, availability
+⭐ Favorites: Quick access to saved stations
+📱 Voice Search: Voice-activated station search</code></pre>
+
+            <h4><strong>Navigation Integration</strong></h4>
+            <ul>
+                <li><strong>Turn-by-Turn Directions</strong>: GPS navigation to selected stations</li>
+                <li><strong>Voice Guidance</strong>: Audio directions in English and Amharic</li>
+                <li><strong>Route Optimization</strong>: EV-optimized routes considering battery range</li>
+                <li><strong>Traffic Integration</strong>: Real-time traffic data for route planning</li>
+                <li><strong>Alternative Routes</strong>: Multiple route options with time estimates</li>
+                <li><strong>Arrival Notifications</strong>: Alerts when approaching destination</li>
+            </ul>
+
+            <h3>Charging Features</h3>
+
+            <h4><strong>QR Code Scanner</strong></h4>
+            <ol>
+                <li><strong>Built-in Scanner</strong>: Integrated QR code reader</li>
+                <li><strong>Quick Access</strong>: Scanner accessible from home screen</li>
+                <li><strong>Auto-Focus</strong>: Automatic focus and code detection</li>
+                <li><strong>Flashlight Support</strong>: Use device flashlight for low-light scanning</li>
+                <li><strong>Manual Entry</strong>: Option to manually enter station codes</li>
+            </ol>
+
+            <h4><strong>Session Management</strong></h4>
+            <pre><code>Session Controls:
+▶️ Start Charging: Initiate charging session
+⏸️ Pause Session: Temporarily pause charging
+⏹️ Stop Charging: End charging session
+📊 Real-time Monitoring: Live charging data
+⏰ Session Timer: Track charging duration
+💰 Cost Tracking: Real-time cost calculation
+🔋 Battery Monitor: Current battery level display</code></pre>
+
+            <h4><strong>Payment Integration</strong></h4>
+            <ul>
+                <li><strong>Multiple Payment Methods</strong>: Mobile money, bank cards, bank transfer</li>
+                <li><strong>Secure Processing</strong>: Encrypted payment transactions</li>
+                <li><strong>Payment History</strong>: Complete transaction records</li>
+                <li><strong>Auto-Payment</strong>: Automatic payment for regular users</li>
+                <li><strong>Receipt Generation</strong>: Digital receipts for all transactions</li>
+                <li><strong>Refund Processing</strong>: Automatic refunds for failed sessions</li>
+            </ul>
+
+            <h3>User Experience Features</h3>
+
+            <h4><strong>Personalization</strong></h4>
+            <ul>
+                <li><strong>Vehicle Profiles</strong>: Multiple vehicle configurations</li>
+                <li><strong>Charging Preferences</strong>: Preferred connector types and speeds</li>
+                <li><strong>Home/Work Locations</strong>: Set frequent locations for quick access</li>
+                <li><strong>Notification Settings</strong>: Customize alert preferences</li>
+                <li><strong>Theme Options</strong>: Light and dark mode support</li>
+                <li><strong>Language Selection</strong>: English and Amharic language support</li>
+            </ul>
+
+            <h4><strong>Social Features</strong></h4>
+            <pre><code>Community Features:
+⭐ Reviews & Ratings: Rate and review charging stations
+📸 Photo Sharing: Share station photos with community
+💬 Comments: Add helpful tips and information
+🤝 Recommendations: Get personalized station suggestions
+📤 Station Sharing: Share station details with friends
+🏆 Achievement System: Earn badges for app usage</code></pre>
+
+            <h3>Advanced Features</h3>
+
+            <h4><strong>Smart Notifications</strong></h4>
+            <ul>
+                <li><strong>Charging Alerts</strong>: Session start, progress, and completion notifications</li>
+                <li><strong>Location-Based</strong>: Nearby station alerts when battery is low</li>
+                <li><strong>Maintenance Alerts</strong>: Notifications about station maintenance</li>
+                <li><strong>Price Alerts</strong>: Notifications about pricing changes</li>
+                <li><strong>New Station Alerts</strong>: Notifications about new stations in your area</li>
+                <li><strong>Emergency Alerts</strong>: Critical system notifications</li>
+            </ul>
+
+            <h4><strong>Offline Capabilities</strong></h4>
+            <pre><code>Offline Features:
+📱 Cached Data: Recently viewed stations available offline
+🗺️ Offline Maps: Downloaded map areas for navigation
+📊 Session History: Access to recent charging history
+⭐ Favorites: Offline access to favorite stations
+📞 Emergency Contacts: Offline access to support numbers</code></pre>
+
+            <h4><strong>Accessibility Features</strong></h4>
+            <ul>
+                <li><strong>Voice Commands</strong>: Voice-activated app navigation</li>
+                <li><strong>Screen Reader Support</strong>: Compatible with accessibility tools</li>
+                <li><strong>Large Text Options</strong>: Adjustable font sizes</li>
+                <li><strong>High Contrast Mode</strong>: Enhanced visibility options</li>
+                <li><strong>One-Handed Mode</strong>: Optimized for single-hand use</li>
+                <li><strong>Gesture Navigation</strong>: Swipe gestures for common actions</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="web-dashboard">🌐 12. Web Dashboard</h2>
+
+            <h3>Dashboard Overview</h3>
+
+            <h4><strong>Accessing the Dashboard</strong></h4>
+            <ol>
+                <li><strong>Web Browser</strong>: Navigate to https://evmeri.com/dashboard</li>
+                <li><strong>Login</strong>: Use your evmeri account credentials</li>
+                <li><strong>Station Owner Verification</strong>: Must be verified as station owner</li>
+                <li><strong>Dashboard Home</strong>: Access main dashboard interface</li>
+            </ol>
+
+            <h4><strong>Dashboard Layout</strong></h4>
+            <pre><code>Dashboard Sections:
+📊 Overview: Key metrics and statistics
+🏢 Stations: Station management and monitoring
+💰 Revenue: Financial analytics and reporting
+👥 Users: Customer analytics and feedback
+⚙️ Settings: Account and system configuration
+📈 Analytics: Detailed performance metrics
+🔧 Maintenance: Equipment status and scheduling
+📞 Support: Help and customer service tools</code></pre>
+
+            <h3>Station Management</h3>
+
+            <h4><strong>Station Overview</strong></h4>
+            <ul>
+                <li><strong>Station List</strong>: All your stations with status indicators</li>
+                <li><strong>Real-time Status</strong>: Live connector availability and usage</li>
+                <li><strong>Performance Metrics</strong>: Usage statistics and efficiency data</li>
+                <li><strong>Alert Center</strong>: Notifications about station issues</li>
+                <li><strong>Quick Actions</strong>: Enable/disable stations, update pricing</li>
+            </ul>
+
+            <h4><strong>Adding New Stations</strong></h4>
+            <ol>
+                <li><strong>Station Details</strong>:
+                    <pre><code>Required Information:
+- Station name and description
+- Complete address
+- GPS coordinates
+- Operating hours
+- Contact information
+- Access instructions</code></pre>
+                </li>
+                <li><strong>Connector Configuration</strong>:
+                    <pre><code>For Each Connector:
+- Connector type (Type 2, CCS, CHAdeMO)
+- Maximum power output (kW)
+- Pricing structure
+- Availability status</code></pre>
+                </li>
+                <li><strong>Amenities</strong>: Select available amenities (parking, restrooms, WiFi, etc.)</li>
+                <li><strong>Photos</strong>: Upload station photos (minimum 3, maximum 10)</li>
+                <li><strong>Verification</strong>: Submit for evmeri team verification</li>
+            </ol>
+
+            <h4><strong>Station Editing</strong></h4>
+            <ul>
+                <li><strong>Basic Information</strong>: Update name, description, hours</li>
+                <li><strong>Pricing Management</strong>: Modify connector pricing and structures</li>
+                <li><strong>Connector Status</strong>: Enable/disable individual connectors</li>
+                <li><strong>Amenity Updates</strong>: Add or remove available amenities</li>
+                <li><strong>Photo Management</strong>: Add, remove, or reorder station photos</li>
+                <li><strong>Maintenance Mode</strong>: Temporarily disable station for maintenance</li>
+            </ul>
+
+            <h3>Financial Management</h3>
+
+            <h4><strong>Revenue Dashboard</strong></h4>
+            <pre><code>Revenue Metrics:
+💰 Total Revenue: Daily, weekly, monthly totals
+📈 Revenue Trends: Growth patterns and forecasts
+⚡ Revenue per kWh: Efficiency metrics
+🏢 Revenue per Station: Individual station performance
+👥 Revenue per Customer: Customer value analysis
+📊 Payment Method Breakdown: Payment preferences</code></pre>
+
+            <h4><strong>Financial Reports</strong></h4>
+            <ul>
+                <li><strong>Daily Reports</strong>: Daily revenue and usage summaries</li>
+                <li><strong>Monthly Statements</strong>: Comprehensive monthly financial reports</li>
+                <li><strong>Tax Reports</strong>: Tax-ready financial documentation</li>
+                <li><strong>Custom Reports</strong>: Generate reports for specific date ranges</li>
+                <li><strong>Export Options</strong>: Download reports in PDF, Excel, CSV formats</li>
+                <li><strong>Automated Reports</strong>: Schedule regular report delivery</li>
+            </ul>
+
+            <h4><strong>Pricing Management</strong></h4>
+            <ol>
+                <li><strong>Pricing Models</strong>:
+                    <pre><code>Available Options:
+- Per kWh pricing (recommended)
+- Per minute pricing
+- Flat session fee
+- Time-based pricing (peak/off-peak)
+- Dynamic pricing
+- Membership discounts</code></pre>
+                </li>
+                <li><strong>Bulk Pricing Updates</strong>: Update pricing across multiple stations</li>
+                <li><strong>Promotional Pricing</strong>: Set temporary discounts and promotions</li>
+                <li><strong>Competitive Analysis</strong>: Compare your pricing with nearby stations</li>
+            </ol>
+
+            <h3>Customer Management</h3>
+
+            <h4><strong>Customer Analytics</strong></h4>
+            <pre><code>Customer Insights:
+👥 Total Customers: Unique users at your stations
+🔄 Return Customers: Customer retention rates
+⭐ Customer Satisfaction: Average ratings and reviews
+📊 Usage Patterns: Peak times and frequency
+🚗 Vehicle Types: Popular EV models
+📍 Geographic Distribution: Customer locations</code></pre>
+
+            <h4><strong>Review Management</strong></h4>
+            <ul>
+                <li><strong>Review Monitoring</strong>: Track all customer reviews and ratings</li>
+                <li><strong>Response Management</strong>: Respond to customer feedback</li>
+                <li><strong>Review Analytics</strong>: Analyze review trends and sentiment</li>
+                <li><strong>Issue Resolution</strong>: Address customer complaints and concerns</li>
+                <li><strong>Improvement Insights</strong>: Identify areas for station improvements</li>
+            </ul>
+
+            <h3>Operations Management</h3>
+
+            <h4><strong>Maintenance Scheduling</strong></h4>
+            <ul>
+                <li><strong>Maintenance Calendar</strong>: Schedule regular maintenance activities</li>
+                <li><strong>Preventive Maintenance</strong>: Set up recurring maintenance tasks</li>
+                <li><strong>Issue Tracking</strong>: Track and resolve equipment issues</li>
+                <li><strong>Vendor Management</strong>: Manage maintenance service providers</li>
+                <li><strong>Maintenance History</strong>: Complete maintenance records</li>
+                <li><strong>Cost Tracking</strong>: Monitor maintenance expenses</li>
+            </ul>
+
+            <h4><strong>Performance Monitoring</strong></h4>
+            <pre><code>Performance Metrics:
+⚡ Utilization Rates: Percentage of time connectors are in use
+🔋 Energy Dispensed: Total kWh delivered
+⏱️ Average Session Duration: Typical charging times
+🚀 Charging Speed: Average power delivery rates
+⭐ Customer Satisfaction: Rating trends
+🔧 Uptime: Equipment availability percentage</code></pre>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="troubleshooting">🔧 13. Troubleshooting</h2>
+
+            <h3>Common App Issues</h3>
+
+            <h4><strong>App Won't Start or Crashes</strong></h4>
+            <p><strong>Symptoms:</strong> App crashes on startup, freezes, or won't open</p>
+            <p><strong>Solutions:</strong></p>
+            <ol>
+                <li><strong>Force Close and Restart</strong>:
+                    <ul>
+                        <li>Android: Recent apps > Swipe up on evmeri app</li>
+                        <li>iOS: Double-tap home button > Swipe up on evmeri app</li>
+                        <li>Reopen the app</li>
+                    </ul>
+                </li>
+                <li><strong>Clear App Cache</strong>:
+                    <ul>
+                        <li>Android: Settings > Apps > evmeri > Storage > Clear Cache</li>
+                        <li>iOS: Delete and reinstall the app</li>
+                    </ul>
+                </li>
+                <li><strong>Update the App</strong>:
+                    <ul>
+                        <li>Check app store for available updates</li>
+                        <li>Install latest version</li>
+                    </ul>
+                </li>
+                <li><strong>Restart Device</strong>: Power off and restart your phone</li>
+                <li><strong>Reinstall App</strong>: Delete and download fresh copy from app store</li>
+            </ol>
+
+            <h4><strong>Map Not Loading or Showing Blank</strong></h4>
+            <p><strong>Symptoms:</strong> Map appears blank, stations not showing, or map won't load</p>
+            <p><strong>Solutions:</strong></p>
+            <ol>
+                <li><strong>Check Internet Connection</strong>:
+                    <ul>
+                        <li>Verify WiFi or mobile data is working</li>
+                        <li>Try switching between WiFi and mobile data</li>
+                        <li>Test internet with other apps</li>
+                    </ul>
+                </li>
+                <li><strong>Enable Location Services</strong>:
+                    <ul>
+                        <li>Android: Settings > Location > App permissions > evmeri > Allow</li>
+                        <li>iOS: Settings > Privacy > Location Services > evmeri > While Using App</li>
+                    </ul>
+                </li>
+                <li><strong>Clear Map Cache</strong>:
+                    <ul>
+                        <li>Go to Settings > Clear Map Cache</li>
+                        <li>Restart the app</li>
+                    </ul>
+                </li>
+                <li><strong>Check GPS Signal</strong>:
+                    <ul>
+                        <li>Go outdoors for better GPS reception</li>
+                        <li>Wait a few minutes for GPS to acquire signal</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h4><strong>Login Issues</strong></h4>
+            <p><strong>Symptoms:</strong> Can't log in, "Invalid credentials" error, or login screen loops</p>
+            <p><strong>Solutions:</strong></p>
+            <ol>
+                <li><strong>Verify Credentials</strong>:
+                    <ul>
+                        <li>Double-check email address spelling</li>
+                        <li>Ensure password is correct (case-sensitive)</li>
+                        <li>Try typing password manually instead of auto-fill</li>
+                    </ul>
+                </li>
+                <li><strong>Check Account Status</strong>:
+                    <ul>
+                        <li>Verify email address is confirmed</li>
+                        <li>Check spam folder for verification email</li>
+                        <li>Ensure account is not suspended</li>
+                    </ul>
+                </li>
+                <li><strong>Reset Password</strong>:
+                    <ul>
+                        <li>Tap "Forgot Password" on login screen</li>
+                        <li>Enter your email address</li>
+                        <li>Check email for reset instructions</li>
+                        <li>Create new password</li>
+                    </ul>
+                </li>
+                <li><strong>Clear App Data</strong>:
+                    <ul>
+                        <li>Log out completely</li>
+                        <li>Clear app cache and data</li>
+                        <li>Restart app and try logging in again</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h3>Charging Issues</h3>
+
+            <h4><strong>QR Code Won't Scan</strong></h4>
+            <p><strong>Symptoms:</strong> QR scanner doesn't recognize code or scanning fails</p>
+            <p><strong>Solutions:</strong></p>
+            <ol>
+                <li><strong>Improve Scanning Conditions</strong>:
+                    <ul>
+                        <li>Clean camera lens</li>
+                        <li>Ensure good lighting</li>
+                        <li>Hold phone steady</li>
+                        <li>Position QR code within scanner frame</li>
+                    </ul>
+                </li>
+                <li><strong>Use Flashlight</strong>:
+                    <ul>
+                        <li>Tap flashlight icon in scanner</li>
+                        <li>Improve visibility of QR code</li>
+                    </ul>
+                </li>
+                <li><strong>Manual Entry</strong>:
+                    <ul>
+                        <li>Tap "Enter Code Manually"</li>
+                        <li>Type station code from QR code</li>
+                    </ul>
+                </li>
+                <li><strong>Check QR Code Condition</strong>:
+                    <ul>
+                        <li>Ensure QR code is not damaged</li>
+                        <li>Clean QR code surface if dirty</li>
+                        <li>Report damaged QR codes to station support</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h4><strong>Payment Failed</strong></h4>
+            <p><strong>Symptoms:</strong> Payment doesn't process, error messages, or charging won't start</p>
+            <p><strong>Solutions:</strong></p>
+            <ol>
+                <li><strong>Verify Payment Method</strong>:
+                    <ul>
+                        <li>Check card/account balance</li>
+                        <li>Verify payment method details are correct</li>
+                        <li>Ensure payment method is not expired</li>
+                        <li>Try alternative payment method</li>
+                    </ul>
+                </li>
+                <li><strong>Check Internet Connection</strong>:
+                    <ul>
+                        <li>Ensure stable internet connection</li>
+                        <li>Try switching networks</li>
+                        <li>Wait and retry payment</li>
+                    </ul>
+                </li>
+                <li><strong>Contact Bank/Provider</strong>:
+                    <ul>
+                        <li>Check if payment was blocked by bank</li>
+                        <li>Verify international transactions are enabled</li>
+                        <li>Contact mobile money provider if using mobile payment</li>
+                    </ul>
+                </li>
+                <li><strong>Retry Payment</strong>:
+                    <ul>
+                        <li>Wait 5-10 minutes</li>
+                        <li>Try payment again</li>
+                        <li>Use different payment method if available</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h4><strong>Charging Session Won't Start</strong></h4>
+            <p><strong>Symptoms:</strong> Payment successful but charging doesn't begin</p>
+            <p><strong>Solutions:</strong></p>
+            <ol>
+                <li><strong>Check Physical Connection</strong>:
+                    <ul>
+                        <li>Ensure connector is fully inserted</li>
+                        <li>Listen for click/lock sound</li>
+                        <li>Check connector compatibility</li>
+                        <li>Try removing and reconnecting</li>
+                    </ul>
+                </li>
+                <li><strong>Verify Vehicle Status</strong>:
+                    <ul>
+                        <li>Ensure vehicle is unlocked</li>
+                        <li>Check vehicle charging settings</li>
+                        <li>Verify charging port is open</li>
+                        <li>Check vehicle display for errors</li>
+                    </ul>
+                </li>
+                <li><strong>Station Status</strong>:
+                    <ul>
+                        <li>Check if connector shows as available in app</li>
+                        <li>Look for error lights on station</li>
+                        <li>Try different connector if available</li>
+                        <li>Report issue to station support</li>
+                    </ul>
+                </li>
+                <li><strong>App Actions</strong>:
+                    <ul>
+                        <li>Try stopping and restarting session</li>
+                        <li>Refresh app and check session status</li>
+                        <li>Contact customer support</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h3>Performance Issues</h3>
+
+            <h4><strong>App Running Slowly</strong></h4>
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Close Background Apps</strong>: Free up device memory</li>
+                <li><strong>Restart Device</strong>: Clear temporary files and refresh system</li>
+                <li><strong>Update App</strong>: Install latest version with performance improvements</li>
+                <li><strong>Clear Cache</strong>: Remove temporary app data</li>
+                <li><strong>Check Storage</strong>: Ensure device has sufficient free space</li>
+                <li><strong>Disable Animations</strong>: Turn off visual effects in app settings</li>
+            </ul>
+
+            <h4><strong>High Battery Drain</strong></h4>
+            <p><strong>Solutions:</strong></p>
+            <ul>
+                <li><strong>Location Settings</strong>: Set location to "While Using App" instead of "Always"</li>
+                <li><strong>Background Refresh</strong>: Disable background app refresh</li>
+                <li><strong>Notifications</strong>: Reduce notification frequency</li>
+                <li><strong>Screen Brightness</strong>: Lower screen brightness when using app</li>
+                <li><strong>Close When Not Needed</strong>: Fully close app when not in use</li>
+            </ul>
+
+            <h3>Getting Additional Help</h3>
+
+            <h4><strong>In-App Support</strong></h4>
+            <ol>
+                <li><strong>Help Center</strong>: Settings > Help & Support</li>
+                <li><strong>Report Issue</strong>: Settings > Report a Problem</li>
+                <li><strong>Live Chat</strong>: Available during business hours</li>
+                <li><strong>FAQ Section</strong>: Common questions and answers</li>
+            </ol>
+
+            <h4><strong>Contact Support</strong></h4>
+            <pre><code>Support Channels:
+📧 Email: support@evmeri.com
+📞 Phone: +251-11-XXX-XXXX (Business hours)
+💬 Live Chat: Available in app and website
+🌐 Website: https://evmeri.com/support
+📱 Social Media: @evmeri on Twitter, Facebook</code></pre>
+
+            <h4><strong>Emergency Support</strong></h4>
+            <ul>
+                <li><strong>24/7 Emergency Line</strong>: +251-11-XXX-XXXX</li>
+                <li><strong>Emergency Button</strong>: Use emergency button in app</li>
+                <li><strong>Station Emergency</strong>: Contact station operator directly</li>
+                <li><strong>Local Authorities</strong>: Contact local emergency services if needed</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="safety-best-practices">🛡️ 14. Safety & Best Practices</h2>
+
+            <h3>Charging Safety Guidelines</h3>
+
+            <h4><strong>Before Charging</strong></h4>
+            <ol>
+                <li><strong>Inspect Equipment</strong>:
+                    <ul>
+                        <li>Check charging cable for damage, cracks, or exposed wires</li>
+                        <li>Ensure connector is clean and dry</li>
+                        <li>Verify charging station is in good condition</li>
+                        <li>Look for any warning signs or notices</li>
+                    </ul>
+                </li>
+                <li><strong>Vehicle Preparation</strong>:
+                    <ul>
+                        <li>Park properly within designated charging bay</li>
+                        <li>Turn off vehicle engine/motor</li>
+                        <li>Engage parking brake</li>
+                        <li>Ensure charging port is accessible</li>
+                    </ul>
+                </li>
+                <li><strong>Environmental Check</strong>:
+                    <ul>
+                        <li>Avoid charging in extreme weather conditions</li>
+                        <li>Ensure area is well-ventilated</li>
+                        <li>Check for standing water or flooding</li>
+                        <li>Verify adequate lighting for safe operation</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h4><strong>During Charging</strong></h4>
+            <pre><code>Safety Practices:
+⚠️ Never leave charging cable on the ground
+⚠️ Don't force connectors if they don't fit easily
+⚠️ Avoid touching electrical contacts
+⚠️ Keep children away from charging equipment
+⚠️ Don't use damaged or wet equipment
+⚠️ Stay alert to unusual sounds or smells
+⚠️ Don't attempt repairs yourself</code></pre>
+
+            <h4><strong>Emergency Procedures</strong></h4>
+            <ol>
+                <li><strong>If You Smell Gas or Burning</strong>:
+                    <ul>
+                        <li>Immediately stop charging session</li>
+                        <li>Move away from the vehicle and station</li>
+                        <li>Call emergency services</li>
+                        <li>Do not use electrical switches</li>
+                        <li>Evacuate the area if necessary</li>
+                    </ul>
+                </li>
+                <li><strong>If Connector Gets Stuck</strong>:
+                    <ul>
+                        <li>Do not force removal</li>
+                        <li>Try stopping session through app</li>
+                        <li>Check vehicle unlock procedures</li>
+                        <li>Contact station support</li>
+                        <li>Call evmeri emergency line if needed</li>
+                    </ul>
+                </li>
+                <li><strong>Electrical Emergency</strong>:
+                    <ul>
+                        <li>Do not touch anyone being electrocuted</li>
+                        <li>Turn off power at main breaker if safe to do so</li>
+                        <li>Call emergency services immediately</li>
+                        <li>Use emergency stop button on station</li>
+                        <li>Clear the area of other people</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h3>Personal Safety</h3>
+
+            <h4><strong>Station Security</strong></h4>
+            <ul>
+                <li><strong>Choose Well-Lit Stations</strong>: Especially for night charging</li>
+                <li><strong>Stay Aware</strong>: Be conscious of your surroundings</li>
+                <li><strong>Lock Your Vehicle</strong>: Secure vehicle while charging</li>
+                <li><strong>Don't Leave Valuables Visible</strong>: Remove or hide valuable items</li>
+                <li><strong>Trust Your Instincts</strong>: Leave if you feel unsafe</li>
+                <li><strong>Inform Others</strong>: Let someone know your charging location</li>
+            </ul>
+
+            <h4><strong>Weather Considerations</strong></h4>
+            <pre><code>Weather Safety:
+☀️ Hot Weather:
+- Avoid charging during peak heat hours
+- Stay hydrated while waiting
+- Use shade when available
+- Monitor vehicle temperature
+
+🌧️ Rainy Weather:
+- Use covered charging stations when possible
+- Keep connectors dry
+- Wear appropriate footwear
+- Be extra cautious on wet surfaces
+
+❄️ Cold Weather:
+- Allow extra time for charging
+- Keep emergency supplies in vehicle
+- Dress warmly for outdoor charging
+- Monitor battery performance
+
+⛈️ Severe Weather:
+- Avoid charging during thunderstorms
+- Seek shelter if weather deteriorates
+- Monitor weather alerts
+- Have backup charging plans</code></pre>
+
+            <h3>Vehicle Maintenance</h3>
+
+            <h4><strong>Charging Port Care</strong></h4>
+            <ul>
+                <li><strong>Keep Clean</strong>: Regularly clean charging port contacts</li>
+                <li><strong>Inspect Regularly</strong>: Check for damage or corrosion</li>
+                <li><strong>Protect from Elements</strong>: Close port cover when not in use</li>
+                <li><strong>Professional Service</strong>: Have port serviced during regular maintenance</li>
+            </ul>
+
+            <h4><strong>Battery Health</strong></h4>
+            <pre><code>Battery Best Practices:
+🔋 Optimal Charging Range: Keep battery between 20-80% for daily use
+🔋 Avoid Deep Discharge: Don't let battery go below 10%
+🔋 Temperature Management: Avoid extreme hot/cold charging
+🔋 Regular Use: Drive vehicle regularly to maintain battery health
+🔋 Software Updates: Keep vehicle software updated
+🔋 Professional Checks: Include battery in regular vehicle service</code></pre>
+
+            <h3>Data and Privacy Safety</h3>
+
+            <h4><strong>Account Security</strong></h4>
+            <ul>
+                <li><strong>Strong Passwords</strong>: Use unique, complex passwords</li>
+                <li><strong>Two-Factor Authentication</strong>: Enable 2FA for added security</li>
+                <li><strong>Regular Updates</strong>: Keep app updated to latest version</li>
+                <li><strong>Secure Networks</strong>: Use trusted WiFi networks</li>
+                <li><strong>Log Out</strong>: Log out on shared devices</li>
+                <li><strong>Monitor Activity</strong>: Review account activity regularly</li>
+            </ul>
+
+            <h4><strong>Payment Security</strong></h4>
+            <pre><code>Payment Safety:
+💳 Secure Payment Methods: Use trusted payment providers
+💳 Monitor Transactions: Review all charging payments
+💳 Report Issues: Immediately report unauthorized charges
+💳 Secure Storage: Don't save payment info on shared devices
+💳 Regular Checks: Review monthly statements
+💳 Fraud Alerts: Enable payment fraud notifications</code></pre>
+
+            <h3>Community Guidelines</h3>
+
+            <h4><strong>Charging Etiquette</strong></h4>
+            <ul>
+                <li><strong>Don't Overstay</strong>: Move vehicle promptly when charging complete</li>
+                <li><strong>Park Properly</strong>: Stay within designated charging spaces</li>
+                <li><strong>Be Considerate</strong>: Don't block access for other users</li>
+                <li><strong>Share Information</strong>: Help other EV owners when possible</li>
+                <li><strong>Report Issues</strong>: Report broken equipment or problems</li>
+                <li><strong>Keep Clean</strong>: Leave charging area clean for next user</li>
+            </ul>
+
+            <h4><strong>Environmental Responsibility</strong></h4>
+            <ul>
+                <li><strong>Reduce Waste</strong>: Minimize packaging and disposable items</li>
+                <li><strong>Proper Disposal</strong>: Dispose of waste in designated areas</li>
+                <li><strong>Energy Efficiency</strong>: Use energy-efficient charging practices</li>
+                <li><strong>Sustainable Transport</strong>: Combine trips to reduce overall energy use</li>
+                <li><strong>Support Green Energy</strong>: Choose stations powered by renewable energy</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="support-contact">📞 15. Support & Contact</h2>
+
+            <h3>Customer Support</h3>
+
+            <h4><strong>Support Channels</strong></h4>
+            <pre><code>Contact Methods:
+📧 Email Support: support@evmeri.com
+📞 Phone Support: +251-11-XXX-XXXX
+💬 Live Chat: Available in app and website
+🌐 Help Center: https://evmeri.com/help
+📱 In-App Support: Settings > Help & Support
+📋 Support Tickets: Track issues through dashboard</code></pre>
+
+            <h4><strong>Support Hours</strong></h4>
+            <pre><code>Business Hours:
+Monday - Friday: 8:00 AM - 6:00 PM (EAT)
+Saturday: 9:00 AM - 4:00 PM (EAT)
+Sunday: 10:00 AM - 2:00 PM (EAT)
+
+Emergency Support: 24/7 for critical issues
+Response Times:
+- Emergency: Within 1 hour
+- Urgent: Within 4 hours
+- Standard: Within 24 hours
+- General: Within 48 hours</code></pre>
+
+            <h4><strong>Before Contacting Support</strong></h4>
+            <ol>
+                <li><strong>Check FAQ</strong>: Review frequently asked questions</li>
+                <li><strong>Try Troubleshooting</strong>: Follow troubleshooting guides</li>
+                <li><strong>Gather Information</strong>:
+                    <pre><code>Information to Provide:
+- Your account email address
+- Device type and operating system
+- App version number
+- Description of the issue
+- Steps you've already tried
+- Screenshots or error messages
+- Station ID (if applicable)
+- Transaction ID (for payment issues)</code></pre>
+                </li>
+            </ol>
+
+            <h3>Emergency Support</h3>
+
+            <h4><strong>24/7 Emergency Line</strong></h4>
+            <ul>
+                <li><strong>Phone</strong>: +251-11-XXX-XXXX (Emergency)</li>
+                <li><strong>When to Call</strong>:
+                    <ul>
+                        <li>Safety emergencies at charging stations</li>
+                        <li>Vehicle stuck at charging station</li>
+                        <li>Electrical hazards or equipment malfunction</li>
+                        <li>Personal safety concerns</li>
+                        <li>Urgent technical issues preventing vehicle operation</li>
+                    </ul>
+                </li>
+                <li><strong>Emergency App Feature</strong>: Use emergency button in app for immediate assistance</li>
+            </ol>
+
+            <h4><strong>Station-Specific Support</strong></h4>
+            <ul>
+                <li><strong>Station Contact Info</strong>: Available on each station's detail page</li>
+                <li><strong>Station Owner Support</strong>: Direct contact with station operators</li>
+                <li><strong>Local Emergency Services</strong>: Contact local authorities for serious emergencies</li>
+            </ul>
+
+            <h3>Feedback and Suggestions</h3>
+
+            <h4><strong>How to Provide Feedback</strong></h4>
+            <ol>
+                <li><strong>In-App Feedback</strong>: Settings > Send Feedback</li>
+                <li><strong>Email</strong>: feedback@evmeri.com</li>
+                <li><strong>App Store Reviews</strong>: Rate and review on Google Play/App Store</li>
+                <li><strong>Social Media</strong>: Connect with us on social platforms</li>
+                <li><strong>User Surveys</strong>: Participate in periodic user surveys</li>
+            </ol>
+
+            <h4><strong>Feature Requests</strong></h4>
+            <ul>
+                <li><strong>Feature Request Form</strong>: Available on website</li>
+                <li><strong>Community Forum</strong>: Discuss ideas with other users</li>
+                <li><strong>Beta Testing</strong>: Join beta program to test new features</li>
+                <li><strong>User Advisory Board</strong>: Apply to join user advisory group</li>
+            </ul>
+
+            <h3>Business and Partnership</h3>
+
+            <h4><strong>Station Owner Support</strong></h4>
+            <pre><code>Business Contacts:
+🏢 Business Development: business@evmeri.com
+🤝 Partnerships: partnerships@evmeri.com
+💼 Sales: sales@evmeri.com
+📊 Account Management: accounts@evmeri.com
+🔧 Technical Integration: integration@evmeri.com</code></pre>
+
+            <h4><strong>Media and Press</strong></h4>
+            <ul>
+                <li><strong>Press Inquiries</strong>: press@evmeri.com</li>
+                <li><strong>Media Kit</strong>: Available at evmeri.com/media</li>
+                <li><strong>Company Information</strong>: Corporate details and leadership</li>
+                <li><strong>Press Releases</strong>: Latest company news and announcements</li>
+            </ul>
+
+            <h3>Legal and Compliance</h3>
+
+            <h4><strong>Legal Contacts</strong></h4>
+            <ul>
+                <li><strong>Legal Department</strong>: legal@evmeri.com</li>
+                <li><strong>Privacy Officer</strong>: privacy@evmeri.com</li>
+                <li><strong>Compliance</strong>: compliance@evmeri.com</li>
+                <li><strong>Data Protection</strong>: dataprotection@evmeri.com</li>
+            </ul>
+
+            <h4><strong>Dispute Resolution</strong></h4>
+            <ol>
+                <li><strong>Internal Resolution</strong>: Contact customer support first</li>
+                <li><strong>Escalation Process</strong>: Request escalation to management</li>
+                <li><strong>Formal Complaints</strong>: Submit written complaint to legal department</li>
+                <li><strong>External Mediation</strong>: Third-party mediation if needed</li>
+                <li><strong>Regulatory Bodies</strong>: Contact relevant regulatory authorities</li>
+            </ol>
+
+            <h3>Community and Social</h3>
+
+            <h4><strong>Social Media</strong></h4>
+            <pre><code>Follow Us:
+📘 Facebook: @evmeri
+🐦 Twitter: @evmeri
+📸 Instagram: @evmeri
+💼 LinkedIn: evmeri
+📺 YouTube: evmeri Channel
+💬 Telegram: @evmeri_updates</code></pre>
+
+            <h4><strong>Community Resources</strong></h4>
+            <ul>
+                <li><strong>User Forum</strong>: community.evmeri.com</li>
+                <li><strong>Knowledge Base</strong>: help.evmeri.com</li>
+                <li><strong>Blog</strong>: blog.evmeri.com</li>
+                <li><strong>Newsletter</strong>: Subscribe for updates and tips</li>
+                <li><strong>Events</strong>: EV meetups and charging station openings</li>
+            </ul>
+        </div>
+
+        <hr>
+
+        <div class="section">
+            <h2 id="terms-privacy">📋 16. Terms & Privacy</h2>
+
+            <h3>Terms of Service</h3>
+
+            <h4><strong>Acceptance of Terms</strong></h4>
+            <p>By using the evmeri application and services, you agree to be bound by these Terms of Service. If you do not agree to these terms, please do not use our services.</p>
+
+            <h4><strong>Service Description</strong></h4>
+            <ul>
+                <li><strong>Platform Service</strong>: evmeri provides a platform connecting EV owners with charging station operators</li>
+                <li><strong>Information Service</strong>: Real-time information about charging station availability and pricing</li>
+                <li><strong>Payment Processing</strong>: Secure payment processing for charging sessions</li>
+                <li><strong>Navigation Service</strong>: GPS navigation to charging stations</li>
+                <li><strong>Community Features</strong>: Reviews, ratings, and user-generated content</li>
+            </ul>
+
+            <h4><strong>User Responsibilities</strong></h4>
+            <pre><code>User Obligations:
+✅ Provide accurate account information
+✅ Maintain account security
+✅ Use services lawfully and responsibly
+✅ Respect other users and station owners
+✅ Follow charging station rules and guidelines
+✅ Pay for services used
+✅ Report issues and violations
+✅ Keep app updated for security</code></pre>
+
+            <h4><strong>Prohibited Activities</strong></h4>
+            <pre><code>Prohibited Actions:
+❌ Fraudulent or unauthorized use
+❌ Sharing account credentials
+❌ Interfering with service operation
+❌ Posting false or misleading information
+❌ Harassment or abusive behavior
+❌ Violation of intellectual property rights
+❌ Attempting to hack or breach security
+❌ Commercial use without authorization</code></pre>
+
+            <h3>Privacy Policy</h3>
+
+            <h4><strong>Information We Collect</strong></h4>
+            <pre><code>Data Collection:
+📱 Account Information: Name, email, phone number
+📍 Location Data: GPS coordinates for station discovery
+💳 Payment Information: Payment method details (encrypted)
+🚗 Vehicle Information: Vehicle type and charging preferences
+📊 Usage Data: App usage patterns and charging history
+📱 Device Information: Device type, OS version, app version
+📧 Communications: Support interactions and feedback</code></pre>
+
+            <h4><strong>How We Use Your Information</strong></h4>
+            <ul>
+                <li><strong>Service Provision</strong>: Provide and improve our services</li>
+                <li><strong>Personalization</strong>: Customize user experience and recommendations</li>
+                <li><strong>Payment Processing</strong>: Process payments and prevent fraud</li>
+                <li><strong>Communication</strong>: Send service updates and support responses</li>
+                <li><strong>Analytics</strong>: Analyze usage patterns to improve services</li>
+                <li><strong>Safety</strong>: Ensure platform safety and security</li>
+                <li><strong>Legal Compliance</strong>: Comply with legal obligations</li>
+            </ul>
+
+            <h4><strong>Information Sharing</strong></h4>
+            <pre><code>We Share Information With:
+🏢 Station Owners: Basic usage data for their stations
+💳 Payment Processors: Payment information for transaction processing
+🔧 Service Providers: Third-party services that help operate our platform
+📊 Analytics Partners: Aggregated, anonymized data for analytics
+⚖️ Legal Authorities: When required by law or legal process
+🤝 Business Partners: With your consent for specific services
+
+We Do NOT:
+❌ Sell personal information to third parties
+❌ Share detailed location history without consent
+❌ Provide personal information for marketing by others
+❌ Share payment details beyond necessary processing</code></pre>
+
+            <h4><strong>Data Security</strong></h4>
+            <ul>
+                <li><strong>Encryption</strong>: All data transmitted using industry-standard encryption</li>
+                <li><strong>Secure Storage</strong>: Data stored in secure, access-controlled environments</li>
+                <li><strong>Access Controls</strong>: Strict access controls for employee data access</li>
+                <li><strong>Regular Audits</strong>: Regular security audits and vulnerability assessments</li>
+                <li><strong>Incident Response</strong>: Comprehensive data breach response procedures</li>
+            </ul>
+
+            <h3>User Rights</h3>
+
+            <h4><strong>Data Rights</strong></h4>
+            <ul>
+                <li><strong>Access</strong>: Request copy of your personal data</li>
+                <li><strong>Correction</strong>: Update or correct inaccurate information</li>
+                <li><strong>Deletion</strong>: Request deletion of your personal data</li>
+                <li><strong>Portability</strong>: Export your data in machine-readable format</li>
+                <li><strong>Restriction</strong>: Limit how we process your data</li>
+                <li><strong>Objection</strong>: Object to certain types of data processing</li>
+            </ul>
+
+            <h4><strong>Account Management</strong></h4>
+            <ol>
+                <li><strong>Account Deletion</strong>:
+                    <ul>
+                        <li>Request account deletion through app settings</li>
+                        <li>Data will be deleted within 30 days</li>
+                        <li>Some data may be retained for legal compliance</li>
+                        <li>Deletion is irreversible</li>
+                    </ul>
+                </li>
+                <li><strong>Data Export</strong>:
+                    <ul>
+                        <li>Request data export through app or email</li>
+                        <li>Receive data in JSON or CSV format</li>
+                        <li>Includes all personal data and usage history</li>
+                        <li>Delivered within 30 days</li>
+                    </ul>
+                </li>
+            </ol>
+
+            <h3>Legal Information</h3>
+
+            <h4><strong>Limitation of Liability</strong></h4>
+            <p>evmeri provides a platform service and is not responsible for:</p>
+            <ul>
+                <li>Charging station availability or functionality</li>
+                <li>Vehicle damage during charging</li>
+                <li>Third-party payment processing issues</li>
+                <li>Accuracy of user-generated content</li>
+                <li>Service interruptions beyond our control</li>
+            </ul>
+
+            <h4><strong>Governing Law</strong></h4>
+            <ul>
+                <li><strong>Jurisdiction</strong>: Laws of Ethiopia govern these terms</li>
+                <li><strong>Dispute Resolution</strong>: Disputes resolved in Ethiopian courts</li>
+                <li><strong>Language</strong>: English version of terms takes precedence</li>
+                <li><strong>Severability</strong>: Invalid provisions don't affect remaining terms</li>
+            </ul>
+
+            <h4><strong>Changes to Terms</strong></h4>
+            <ul>
+                <li><strong>Notification</strong>: Users notified of material changes</li>
+                <li><strong>Effective Date</strong>: Changes effective 30 days after notification</li>
+                <li><strong>Continued Use</strong>: Continued use constitutes acceptance</li>
+                <li><strong>Opt-Out</strong>: Users may delete account if they disagree</li>
+            </ul>
+
+            <h3>Contact Information</h3>
+
+            <h4><strong>Legal and Privacy Contacts</strong></h4>
+            <pre><code>Legal Inquiries:
+📧 Email: legal@evmeri.com
+📞 Phone: +251-11-XXX-XXXX
+📍 Address: Addis Ababa, Ethiopia
+
+Privacy Inquiries:
+📧 Email: privacy@evmeri.com
+📞 Phone: +251-11-XXX-XXXX
+
+Data Protection Officer:
+📧 Email: dpo@evmeri.com</code></pre>
+
+            <h4><strong>Document Information</strong></h4>
+            <ul>
+                <li><strong>Last Updated</strong>: January 15, 2024</li>
+                <li><strong>Version</strong>: 1.0</li>
+                <li><strong>Next Review</strong>: July 15, 2024</li>
+                <li><strong>Document ID</strong>: EVMERI-TERMS-2024-001</li>
+            </ul>
+
+            <p><strong>Note:</strong> This document provides a summary of key terms and policies. For complete legal terms, please visit our website at <a href="https://evmeri.com/terms">evmeri.com/terms</a> and <a href="https://evmeri.com/privacy">evmeri.com/privacy</a>.</p>
+        </div>
+    </div>
+</body>
+</html>
