@@ -1,7 +1,7 @@
 from rest_framework import generics, status, permissions
 from rest_framework.response import Response
 from rest_framework.views import APIView
-from rest_framework.parsers import MultiPartParser, FormParser
+from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
 from rest_framework.decorators import api_view, permission_classes
 from django.contrib.auth import get_user_model
 from django.core.mail import send_mail
@@ -167,7 +167,7 @@ class ChargingStationDetailView(generics.RetrieveUpdateDestroyAPIView):
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     serializer_class = ChargingStationSerializer
-    parser_classes = [MultiPartParser, FormParser]
+    parser_classes = [MultiPartParser, FormParser, JSONParser]
     lookup_field = 'id'
 
     def get_queryset(self):
@@ -188,7 +188,30 @@ class ConnectorCreateView(generics.CreateAPIView):
         try:
             station_owner = StationOwner.objects.get(user=self.request.user)
             station = ChargingStation.objects.get(id=station_id, owner=station_owner)
-            connector = serializer.save(station=station)
+
+            # Check if a connector with the same type and power already exists
+            connector_type = serializer.validated_data.get('connector_type')
+            power_kw = serializer.validated_data.get('power_kw')
+            price_per_kwh = serializer.validated_data.get('price_per_kwh')
+            quantity_to_add = serializer.validated_data.get('quantity', 1)
+
+            existing_connector = ChargingConnector.objects.filter(
+                station=station,
+                connector_type=connector_type,
+                power_kw=power_kw,
+                price_per_kwh=price_per_kwh
+            ).first()
+
+            if existing_connector:
+                # Update existing connector quantity
+                existing_connector.quantity += quantity_to_add
+                existing_connector.available_quantity += quantity_to_add
+                existing_connector.save()
+                connector = existing_connector
+            else:
+                # Create new connector
+                connector = serializer.save(station=station)
+
             # Update station connector counts
             station.update_connector_counts()
         except (StationOwner.DoesNotExist, ChargingStation.DoesNotExist):
@@ -560,4 +583,141 @@ class StationReviewStatsView(APIView):
             return Response({
                 'success': False,
                 'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class StationOwnerReviewsView(generics.ListAPIView):
+    """View for station owners to see all reviews for their stations"""
+
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    serializer_class = StationReviewListSerializer
+
+    def get_queryset(self):
+        try:
+            station_owner = StationOwner.objects.get(user=self.request.user)
+            stations = ChargingStation.objects.filter(owner=station_owner)
+            return StationReview.objects.filter(
+                station__in=stations,
+                is_active=True
+            ).select_related('user', 'station').order_by('-created_at')
+        except StationOwner.DoesNotExist:
+            return StationReview.objects.none()
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+
+        # Add station information to each review
+        reviews_data = []
+        for review in queryset:
+            review_data = self.get_serializer(review).data
+            review_data['station_name'] = review.station.name
+            review_data['station_id'] = str(review.station.id)
+            reviews_data.append(review_data)
+
+        return Response({
+            'results': reviews_data,
+            'count': len(reviews_data)
+        })
+
+
+class MobileChargingHistoryView(APIView):
+    """Simplified charging history view for mobile users"""
+
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+
+    def get(self, request):
+        try:
+            # Try to get OCPP charging sessions first
+            try:
+                from ocpp_integration.models import ChargingSession as OCPPChargingSession
+                ocpp_sessions = OCPPChargingSession.objects.filter(
+                    user=request.user
+                ).select_related(
+                    'ocpp_station__charging_station',
+                    'ocpp_connector__charging_connector'
+                ).order_by('-created_at')[:50]  # Limit to last 50 sessions
+
+                sessions_data = []
+                for session in ocpp_sessions:
+                    session_data = {
+                        'id': str(session.id),
+                        'transaction_id': session.transaction_id,
+                        'station_name': session.ocpp_station.charging_station.name,
+                        'station_address': session.ocpp_station.charging_station.address,
+                        'connector_type': session.ocpp_connector.charging_connector.connector_type,
+                        'start_time': session.start_time.isoformat() if session.start_time else None,
+                        'stop_time': session.stop_time.isoformat() if session.stop_time else None,
+                        'energy_consumed_kwh': str(session.energy_consumed_kwh),
+                        'final_cost': str(session.final_cost) if session.final_cost else None,
+                        'estimated_cost': str(session.estimated_cost),
+                        'status': session.status,
+                        'payment_status': session.payment_status,
+                        'duration_seconds': session.duration_seconds,
+                        'payment_method': session.payment_method,
+                    }
+                    sessions_data.append(session_data)
+
+                return Response({
+                    'success': True,
+                    'results': sessions_data,
+                    'count': len(sessions_data)
+                })
+
+            except ImportError:
+                # OCPP integration not available, try simple charging sessions
+                try:
+                    from payments.models import SimpleChargingSession
+                    simple_sessions = SimpleChargingSession.objects.filter(
+                        user=request.user
+                    ).select_related(
+                        'connector__station'
+                    ).order_by('-created_at')[:50]
+
+                    sessions_data = []
+                    for session in simple_sessions:
+                        duration_seconds = session.duration_seconds
+                        if session.start_time and session.stop_time:
+                            duration_seconds = int((session.stop_time - session.start_time).total_seconds())
+
+                        session_data = {
+                            'id': str(session.id),
+                            'transaction_id': session.transaction_id,
+                            'station_name': session.connector.station.name,
+                            'station_address': session.connector.station.address,
+                            'connector_type': session.connector.connector_type,
+                            'start_time': session.start_time.isoformat() if session.start_time else None,
+                            'stop_time': session.stop_time.isoformat() if session.stop_time else None,
+                            'energy_consumed_kwh': str(session.energy_consumed_kwh),
+                            'final_cost': None,  # Calculate from QR session if needed
+                            'estimated_cost': '0.00',
+                            'status': session.status,
+                            'payment_status': 'completed' if session.status == 'completed' else 'pending',
+                            'duration_seconds': duration_seconds,
+                            'payment_method': 'qr_code',
+                        }
+                        sessions_data.append(session_data)
+
+                    return Response({
+                        'success': True,
+                        'results': sessions_data,
+                        'count': len(sessions_data)
+                    })
+
+                except ImportError:
+                    # No charging session models available, return empty
+                    return Response({
+                        'success': True,
+                        'results': [],
+                        'count': 0,
+                        'message': 'No charging sessions found'
+                    })
+
+        except Exception as e:
+            return Response({
+                'success': False,
+                'error': str(e),
+                'results': [],
+                'count': 0
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

@@ -15,7 +15,9 @@ from .views import (
     StationReviewListCreateView,
     StationReviewDetailView,
     UserReviewsView,
-    StationReviewStatsView
+    StationReviewStatsView,
+    StationOwnerReviewsView,
+    MobileChargingHistoryView
 )
 from .map_views import (
     PublicStationListView,
@@ -75,4 +77,6 @@ urlpatterns = [
     path('reviews/<int:id>/', StationReviewDetailView.as_view(), name='review-detail'),
     path('my-reviews/', UserReviewsView.as_view(), name='user-reviews'),
     path('stations/<uuid:station_id>/review-stats/', StationReviewStatsView.as_view(), name='station-review-stats'),
+    path('stations/reviews/', StationOwnerReviewsView.as_view(), name='station-owner-reviews'),
+    path('mobile/charging-history/', MobileChargingHistoryView.as_view(), name='mobile-charging-history'),
 ]
