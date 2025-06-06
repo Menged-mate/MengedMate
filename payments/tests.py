@@ -51,7 +51,7 @@ class PaymentAPITests(APITestCase):
             email='test@example.com',
             password='testpass123'
         )
-        self.token = Token.objects.create(user=self.user)
+        self.token, created = Token.objects.get_or_create(user=self.user)
         self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
 
     def test_wallet_endpoint(self):
