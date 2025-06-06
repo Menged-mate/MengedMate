@@ -309,21 +309,12 @@ class StartChargingFromQRView(APIView):
                     'message': 'Connector is no longer available'
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-            # Create a simple charging session using OCPP models but without OCPP service
-            from ocpp_integration.models import ChargingSession
+            # For now, just update the QR session status without creating a separate charging session
+            # This avoids the complex OCPP integration and model dependencies
             import uuid
 
-            # Create charging session
-            charging_session = ChargingSession.objects.create(
-                transaction_id=str(uuid.uuid4()),
-                user=request.user,
-                payment_transaction_id=qr_session.payment_transaction.id if qr_session.payment_transaction else None,
-                id_tag=f"QR_{request.user.id}_{qr_session.session_token[:8]}",
-                status=ChargingSession.SessionStatus.STARTED,
-                payment_status=ChargingSession.PaymentStatus.AUTHORIZED,
-                start_time=timezone.now(),
-                max_power_kw=qr_session.connector.power_kw
-            )
+            # Generate a simple session ID for tracking
+            session_id = str(uuid.uuid4())[:8]
 
             # Update QR session status
             qr_session.status = 'charging_started'
@@ -340,11 +331,10 @@ class StartChargingFromQRView(APIView):
                 'message': 'Charging session started successfully',
                 'qr_session': session_serializer.data,
                 'charging_session': {
-                    'id': charging_session.id,
-                    'transaction_id': charging_session.transaction_id,
-                    'status': charging_session.status,
-                    'start_time': charging_session.start_time,
-                    'max_power_kw': charging_session.max_power_kw
+                    'id': session_id,
+                    'status': 'started',
+                    'start_time': timezone.now(),
+                    'max_power_kw': qr_session.connector.power_kw
                 }
             }, status=status.HTTP_200_OK)
 

@@ -186,3 +186,44 @@ class QRPaymentSession(models.Model):
 
     def __str__(self):
         return f"QR Session {self.session_token} - {self.connector}"
+
+
+class SimpleChargingSession(models.Model):
+    """Simple charging session model for QR payments without OCPP complexity"""
+
+    class SessionStatus(models.TextChoices):
+        STARTED = 'started', _('Started')
+        CHARGING = 'charging', _('Charging')
+        COMPLETED = 'completed', _('Completed')
+        STOPPED = 'stopped', _('Stopped')
+        FAILED = 'failed', _('Failed')
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    transaction_id = models.CharField(max_length=64, unique=True)
+
+    user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='simple_charging_sessions')
+    connector = models.ForeignKey('charging_stations.ChargingConnector', on_delete=models.CASCADE, related_name='simple_charging_sessions')
+    qr_session = models.ForeignKey(QRPaymentSession, on_delete=models.CASCADE, related_name='charging_sessions')
+
+    payment_transaction_id = models.CharField(max_length=255, blank=True, null=True)
+    id_tag = models.CharField(max_length=255)
+
+    status = models.CharField(max_length=20, choices=SessionStatus.choices, default=SessionStatus.STARTED)
+
+    start_time = models.DateTimeField(auto_now_add=True)
+    stop_time = models.DateTimeField(blank=True, null=True)
+    duration_seconds = models.PositiveIntegerField(default=0)
+
+    energy_consumed_kwh = models.DecimalField(max_digits=10, decimal_places=3, default=0.000)
+    max_power_kw = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Simple Session {self.transaction_id} - {self.user.email}"
+
+    class Meta:
+        ordering = ['-created_at']
+        verbose_name = "Simple Charging Session"
+        verbose_name_plural = "Simple Charging Sessions"
