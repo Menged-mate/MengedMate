@@ -385,3 +385,39 @@ class TestCompletePaymentView(APIView):
                 'success': False,
                 'message': 'QR payment session not found or not in payment_initiated status'
             }, status=status.HTTP_404_NOT_FOUND)
+
+
+class StopChargingFromQRView(APIView):
+    """Stop charging session from QR payment"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, session_token):
+        try:
+            qr_session = get_object_or_404(
+                QRPaymentSession,
+                session_token=session_token,
+                user=request.user,
+                status='charging_started'
+            )
+
+            # Update QR session status to completed
+            qr_session.status = 'charging_completed'
+            qr_session.save()
+
+            # Make connector available again
+            if qr_session.connector:
+                qr_session.connector.is_available = True
+                qr_session.connector.save()
+
+            session_serializer = QRPaymentSessionSerializer(qr_session)
+            return Response({
+                'success': True,
+                'message': 'Charging session stopped successfully',
+                'qr_session': session_serializer.data
+            }, status=status.HTTP_200_OK)
+
+        except QRPaymentSession.DoesNotExist:
+            return Response({
+                'success': False,
+                'message': 'QR payment session not found or not in charging state'
+            }, status=status.HTTP_404_NOT_FOUND)

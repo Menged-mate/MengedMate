@@ -374,7 +374,10 @@ CSRF_COOKIE_NAME = 'csrftoken'
 CSRF_COOKIE_SAMESITE = None
 
 # Email Configuration
-if DEBUG:
+# Use environment variable to control email backend
+USE_CONSOLE_EMAIL = os.environ.get('USE_CONSOLE_EMAIL', 'False').lower() == 'true'
+
+if USE_CONSOLE_EMAIL:
     EMAIL_BACKEND = 'django.core.mail.backends.console.EmailBackend'
     print("Using console email backend for development")
 else:
@@ -384,6 +387,13 @@ else:
     EMAIL_USE_TLS = True
     EMAIL_HOST_USER = os.environ.get('EMAIL_HOST_USER')
     EMAIL_HOST_PASSWORD = os.environ.get('EMAIL_HOST_PASSWORD')
+
+    # Print email configuration status
+    if EMAIL_HOST_USER and EMAIL_HOST_PASSWORD:
+        print("✅ SMTP email backend configured with Gmail")
+    else:
+        print("⚠️  SMTP email backend enabled but missing EMAIL_HOST_USER or EMAIL_HOST_PASSWORD")
+        print("   Set these environment variables to send real emails")
 
 # Email Settings
 DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'MengedMate <noreply@mengedmate.com>')
