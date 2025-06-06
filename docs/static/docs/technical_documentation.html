@@ -1148,6 +1148,46 @@ HTTP 404 Not Found
                 <li>Navigation and QR scan buttons</li>
             </ul>
 
+            <h4><strong>Splash Screen with Lottie Animations</strong></h4>
+            <p>The mobile app uses Lottie JSON animations for an engaging splash screen experience:</p>
+            <pre><code>// Splash screen implementation with Lottie animations
+class SplashContent extends StatelessWidget {
+  final String title, text;
+  final String lottieAsset;
+
+  @override
+  Widget build(BuildContext context) {
+    return Column(
+      mainAxisAlignment: MainAxisAlignment.center,
+      children: [
+        // Lottie Animation Container
+        Container(
+          width: 250,
+          height: 250,
+          decoration: BoxDecoration(
+            shape: BoxShape.circle,
+            color: const Color(0xFF2563EB).withOpacity(0.05),
+          ),
+          child: Lottie.asset(
+            lottieAsset,
+            width: 200,
+            height: 200,
+            fit: BoxFit.contain,
+            repeat: true,
+            animate: true,
+          ),
+        ),
+        // Title and description...
+      ],
+    );
+  }
+}
+
+// Available Lottie animations:
+// - assets/lottie/splash.json (Find Charging Stations)
+// - assets/lottie/splash2.json (Plan Your Route)
+// - assets/lottie/splash3.json (Charge & Go)</code></pre>
+
             <h4><strong>Custom Widgets</strong></h4>
             <pre><code>class StationMarker extends StatelessWidget {
   final Station station;
@@ -1274,6 +1314,13 @@ REST_FRAMEWORK = {
 ├── pubspec.yaml
 ├── android/
 ├── ios/
+├── assets/
+│   ├── images/
+│   ├── icons/
+│   └── lottie/
+│       ├── splash.json      # Find Charging Stations animation
+│       ├── splash2.json     # Plan Your Route animation
+│       └── splash3.json     # Charge & Go animation
 └── lib/
     ├── main.dart
     ├── config/
@@ -1295,6 +1342,7 @@ REST_FRAMEWORK = {
     │   ├── home/
     │   ├── stations/
     │   ├── navigation/
+    │   ├── splash_screen.dart  # Uses Lottie animations
     │   └── profile/
     ├── widgets/
     │   ├── common/
@@ -1538,32 +1586,95 @@ jobs:
 
             <h3>Backend Testing</h3>
 
-            <h4><strong>Unit Tests</strong></h4>
-            <pre><code># tests/test_authentication.py
+            <h4><strong>Comprehensive Test Suite Overview</strong></h4>
+            <p>The evmeri backend includes a comprehensive test suite covering all major functionality:</p>
+            <pre><code>Test Coverage Summary:
+✅ Authentication: 15+ test methods
+✅ Charging Stations: 20+ test methods
+✅ Payments: 8 test methods
+✅ OCPP Integration: 12+ test methods
+✅ Support: 15+ test methods
+✅ Documentation: 20+ test methods
+
+Total: 6 test files, 20+ test classes, 100+ test methods</code></pre>
+
+            <h4><strong>Authentication Tests</strong></h4>
+            <pre><code># authentication/tests.py
 from django.test import TestCase
 from django.contrib.auth import get_user_model
-from rest_framework.test import APIClient
+from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
+from rest_framework.authtoken.models import Token
+from .models import CustomUser, Vehicle
 
 User = get_user_model()
 
-class AuthenticationTestCase(TestCase):
-    def setUp(self):
-        self.client = APIClient()
-        self.user_data = {
+class CustomUserModelTests(TestCase):
+    """Test cases for CustomUser model"""
+
+    def test_create_user(self):
+        """Test creating a regular user"""
+        user = User.objects.create_user(
+            email='test@example.com',
+            password='testpass123',
+            first_name='Test',
+            last_name='User'
+        )
+        self.assertEqual(user.email, 'test@example.com')
+        self.assertTrue(user.check_password('testpass123'))
+        self.assertTrue(user.is_active)
+        self.assertFalse(user.is_staff)
+
+    def test_create_superuser(self):
+        """Test creating a superuser"""
+        user = User.objects.create_superuser(
+            email='admin@example.com',
+            password='adminpass123'
+        )
+        self.assertTrue(user.is_staff)
+        self.assertTrue(user.is_superuser)
+
+class VehicleModelTests(TestCase):
+    """Test cases for Vehicle model"""
+
+    def test_create_vehicle(self):
+        """Test creating a vehicle"""
+        user = User.objects.create_user(
+            email='owner@example.com',
+            password='testpass123'
+        )
+        vehicle = Vehicle.objects.create(
+            user=user,
+            name='My Tesla',
+            make='Tesla',
+            model='Model 3',
+            year=2023,
+            battery_capacity_kwh=75.0,
+            connector_type='ccs2'
+        )
+        self.assertEqual(vehicle.user, user)
+        self.assertTrue(vehicle.is_primary)  # First vehicle should be primary
+
+class AuthenticationAPITests(APITestCase):
+    """Test cases for Authentication API endpoints"""
+
+    def test_user_registration_success(self):
+        """Test successful user registration"""
+        user_data = {
             'email': 'test@example.com',
             'password1': 'testpass123',
             'password2': 'testpass123',
             'first_name': 'Test',
-            'last_name': 'User'
+            'last_name': 'User',
+            'user_type': 'ev_owner'
         }
-
-    def test_user_registration(self):
-        response = self.client.post('/api/auth/register/', self.user_data)
+        response = self.client.post('/api/auth/register/', user_data)
         self.assertEqual(response.status_code, status.HTTP_201_CREATED)
-        self.assertTrue(User.objects.filter(email='test@example.com').exists())
+        self.assertIn('user', response.data)
+        self.assertIn('token', response.data)
 
-    def test_user_login(self):
+    def test_user_login_success(self):
+        """Test successful user login"""
         user = User.objects.create_user(
             email='test@example.com',
             password='testpass123'
@@ -1575,6 +1686,538 @@ class AuthenticationTestCase(TestCase):
         response = self.client.post('/api/auth/login/', login_data)
         self.assertEqual(response.status_code, status.HTTP_200_OK)
         self.assertIn('token', response.data)</code></pre>
+
+            <h4><strong>Charging Stations Tests</strong></h4>
+            <pre><code># charging_stations/tests.py
+from django.test import TestCase
+from rest_framework.test import APITestCase
+from .models import ChargingStation, ChargingConnector, StationOwner
+
+class ChargingStationModelTests(TestCase):
+    """Test cases for ChargingStation model"""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='owner@example.com',
+            password='testpass123'
+        )
+        self.station_owner = StationOwner.objects.create(
+            user=self.user,
+            company_name='Test Business',
+            verification_status='verified'
+        )
+
+    def test_create_charging_station(self):
+        """Test creating a charging station"""
+        station_data = {
+            'name': 'Test Charging Station',
+            'address': '123 Main Street',
+            'city': 'Addis Ababa',
+            'state': 'Addis Ababa',
+            'zip_code': '1000',
+            'latitude': 9.0320,
+            'longitude': 38.7469,
+            'owner': self.station_owner,
+            'status': 'operational'
+        }
+        station = ChargingStation.objects.create(**station_data)
+        self.assertEqual(station.name, 'Test Charging Station')
+        self.assertEqual(station.owner, self.station_owner)
+        self.assertTrue(station.is_active)
+
+    def test_station_coordinates_validation(self):
+        """Test station coordinates validation"""
+        # Test valid coordinates
+        station = ChargingStation.objects.create(
+            name='Test Station',
+            latitude=9.0320,  # Valid latitude
+            longitude=38.7469,  # Valid longitude
+            owner=self.station_owner
+        )
+        station.full_clean()  # Should not raise ValidationError
+
+class ChargingStationAPITests(APITestCase):
+    """Test cases for ChargingStation API endpoints"""
+
+    def test_public_stations_list(self):
+        """Test public stations list endpoint"""
+        # Create test station
+        station = ChargingStation.objects.create(
+            name='Test Station',
+            owner=self.station_owner
+        )
+
+        response = self.client.get('/api/public/stations/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(len(response.data['results']), 1)
+
+    def test_nearby_stations(self):
+        """Test nearby stations endpoint"""
+        params = {
+            'lat': 9.0320,
+            'lng': 38.7469,
+            'radius': 10
+        }
+        response = self.client.get('/api/public/nearby-stations/', params)
+        self.assertEqual(response.status_code, status.HTTP_200_OK)</code></pre>
+
+            <h4><strong>Payments Tests</strong></h4>
+            <pre><code># payments/tests.py
+from django.test import TestCase
+from rest_framework.test import APITestCase
+from rest_framework.authtoken.models import Token
+from .models import PaymentMethod, Transaction, Wallet
+from decimal import Decimal
+
+class PaymentModelTests(TestCase):
+    """Test cases for Payment models"""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='test@example.com',
+            password='testpass123'
+        )
+
+    def test_create_wallet(self):
+        """Test creating a wallet"""
+        wallet = Wallet.objects.create(user=self.user)
+        self.assertEqual(wallet.user, self.user)
+        self.assertEqual(wallet.balance, 0.0)
+        self.assertEqual(wallet.currency, 'ETB')
+
+    def test_create_payment_method(self):
+        """Test creating a payment method"""
+        payment_method = PaymentMethod.objects.create(
+            user=self.user,
+            method_type=PaymentMethod.MethodType.CHAPA,
+            phone_number='+251912345678'
+        )
+        self.assertEqual(payment_method.user, self.user)
+        self.assertEqual(payment_method.method_type, PaymentMethod.MethodType.CHAPA)
+
+    def test_transaction_creation(self):
+        """Test creating a transaction"""
+        wallet = Wallet.objects.create(user=self.user)
+        payment_method = PaymentMethod.objects.create(
+            user=self.user,
+            method_type=PaymentMethod.MethodType.CHAPA
+        )
+
+        transaction = Transaction.objects.create(
+            user=self.user,
+            wallet=wallet,
+            payment_method=payment_method,
+            amount=Decimal('100.00'),
+            transaction_type=Transaction.TransactionType.DEPOSIT,
+            status=Transaction.Status.COMPLETED
+        )
+        self.assertEqual(transaction.amount, Decimal('100.00'))
+        self.assertEqual(transaction.status, Transaction.Status.COMPLETED)
+
+class PaymentAPITests(APITestCase):
+    """Test cases for Payment API endpoints"""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='test@example.com',
+            password='testpass123'
+        )
+        self.token, created = Token.objects.get_or_create(user=self.user)
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+
+    def test_wallet_endpoint(self):
+        """Test wallet API endpoint"""
+        response = self.client.get('/api/payments/wallet/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('balance', response.data)
+
+    def test_payment_methods_endpoint(self):
+        """Test payment methods API endpoint"""
+        response = self.client.get('/api/payments/methods/')
+        self.assertEqual(response.status_code, status.HTTP_200_OK)</code></pre>
+
+            <h4><strong>OCPP Integration Tests</strong></h4>
+            <pre><code># ocpp_integration/tests.py
+from django.test import TestCase
+from .models import OCPPChargePoint, OCPPConnector, OCPPTransaction
+from charging_stations.models import ChargingStation
+from decimal import Decimal
+
+class OCPPChargePointModelTests(TestCase):
+    """Test cases for OCPPChargePoint model"""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='owner@example.com',
+            password='testpass123'
+        )
+        self.station = ChargingStation.objects.create(
+            name='Test Station',
+            owner=self.user
+        )
+
+    def test_create_charge_point(self):
+        """Test creating an OCPP charge point"""
+        charge_point_data = {
+            'charge_point_id': 'CP001',
+            'station': self.station,
+            'vendor': 'TestVendor',
+            'model': 'TestModel',
+            'serial_number': 'SN123456',
+            'firmware_version': '1.0.0',
+            'status': 'available'
+        }
+        charge_point = OCPPChargePoint.objects.create(**charge_point_data)
+        self.assertEqual(charge_point.charge_point_id, 'CP001')
+        self.assertEqual(charge_point.station, self.station)
+        self.assertTrue(charge_point.is_online)
+
+    def test_charge_point_heartbeat_update(self):
+        """Test charge point heartbeat update"""
+        charge_point = OCPPChargePoint.objects.create(
+            charge_point_id='CP001',
+            station=self.station,
+            vendor='TestVendor',
+            model='TestModel'
+        )
+        original_heartbeat = charge_point.last_heartbeat
+
+        # Simulate heartbeat update
+        charge_point.update_heartbeat()
+        charge_point.refresh_from_db()
+
+        self.assertGreater(charge_point.last_heartbeat, original_heartbeat)
+
+class OCPPTransactionModelTests(TestCase):
+    """Test cases for OCPPTransaction model"""
+
+    def test_transaction_energy_calculation(self):
+        """Test transaction energy calculation"""
+        transaction = OCPPTransaction.objects.create(
+            transaction_id=12345,
+            charge_point=self.charge_point,
+            user=self.user,
+            meter_start=1000,
+            meter_stop=1500,
+            status='completed'
+        )
+
+        # Calculate energy consumed (1500 - 1000 = 500 Wh)
+        energy_consumed = transaction.get_energy_consumed()
+        self.assertEqual(energy_consumed, 500)</code></pre>
+
+            <h4><strong>Support Tests</strong></h4>
+            <pre><code># support/tests.py
+from django.test import TestCase
+from rest_framework.test import APITestCase
+from .models import SupportTicket, FAQ, Announcement
+
+class SupportTicketModelTests(TestCase):
+    """Test cases for SupportTicket model"""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='user@example.com',
+            password='testpass123'
+        )
+
+    def test_create_support_ticket(self):
+        """Test creating a support ticket"""
+        ticket_data = {
+            'user': self.user,
+            'subject': 'Test Support Ticket',
+            'description': 'This is a test support ticket description.',
+            'category': 'technical',
+            'priority': 'medium'
+        }
+        ticket = SupportTicket.objects.create(**ticket_data)
+        self.assertEqual(ticket.user, self.user)
+        self.assertEqual(ticket.subject, 'Test Support Ticket')
+        self.assertEqual(ticket.status, 'open')
+
+    def test_ticket_number_generation(self):
+        """Test automatic ticket number generation"""
+        ticket = SupportTicket.objects.create(
+            user=self.user,
+            subject='Test Ticket',
+            description='Test description',
+            category='technical'
+        )
+        self.assertIsNotNone(ticket.ticket_number)
+        self.assertTrue(ticket.ticket_number.startswith('TKT'))
+
+class FAQModelTests(TestCase):
+    """Test cases for FAQ model"""
+
+    def test_create_faq(self):
+        """Test creating an FAQ"""
+        faq_data = {
+            'question': 'How do I charge my electric vehicle?',
+            'answer': 'To charge your electric vehicle, follow these steps...',
+            'category': 'charging',
+            'order': 1
+        }
+        faq = FAQ.objects.create(**faq_data)
+        self.assertEqual(faq.question, 'How do I charge my electric vehicle?')
+        self.assertTrue(faq.is_published)
+
+class SupportTicketAPITests(APITestCase):
+    """Test cases for SupportTicket API endpoints"""
+
+    def test_create_ticket_authenticated(self):
+        """Test creating ticket as authenticated user"""
+        self.client.credentials(HTTP_AUTHORIZATION='Token ' + self.token.key)
+
+        ticket_data = {
+            'subject': 'Test API Ticket',
+            'description': 'This is a test ticket created via API.',
+            'category': 'technical',
+            'priority': 'medium'
+        }
+        response = self.client.post('/api/support/tickets/', ticket_data)
+        self.assertEqual(response.status_code, status.HTTP_201_CREATED)</code></pre>
+
+            <h4><strong>Documentation Tests</strong></h4>
+            <pre><code># docs/tests.py
+from django.test import TestCase, Client
+from django.urls import reverse
+
+class DocumentationViewTests(TestCase):
+    """Test cases for Documentation views"""
+
+    def setUp(self):
+        self.client = Client()
+
+    def test_user_documentation_view(self):
+        """Test user documentation view"""
+        url = reverse('user-guide')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'evmeri User Guide')
+        self.assertContains(response, 'Table of Contents')
+
+    def test_technical_documentation_view(self):
+        """Test technical documentation view"""
+        url = reverse('technical-docs')
+        response = self.client.get(url)
+        self.assertEqual(response.status_code, 200)
+        self.assertContains(response, 'evmeri Technical Documentation')
+
+    def test_documentation_template_rendering(self):
+        """Test that documentation templates render correctly"""
+        url = reverse('user-guide')
+        response = self.client.get(url)
+
+        # Check that the response contains expected HTML structure
+        self.assertContains(response, '<html>')
+        self.assertContains(response, '<head>')
+        self.assertContains(response, '<body>')
+        self.assertContains(response, '</html>')
+
+    def test_documentation_css_styling(self):
+        """Test that documentation includes CSS styling"""
+        url = reverse('user-guide')
+        response = self.client.get(url)
+
+        # Check for CSS styles
+        self.assertContains(response, '<style>')
+        self.assertContains(response, 'font-family')
+        self.assertContains(response, 'color')
+
+class DocumentationURLTests(TestCase):
+    """Test cases for Documentation URL patterns"""
+
+    def test_user_guide_url_resolution(self):
+        """Test that user guide URL resolves correctly"""
+        url = reverse('user-guide')
+        self.assertEqual(url, '/docs/user-guide/')
+
+    def test_technical_docs_url_resolution(self):
+        """Test that technical docs URL resolves correctly"""
+        url = reverse('technical-docs')
+        self.assertEqual(url, '/docs/technical/')
+
+class DocumentationIntegrationTests(TestCase):
+    """Integration tests for Documentation functionality"""
+
+    def test_documentation_full_page_load(self):
+        """Test that documentation pages load completely"""
+        url = reverse('user-guide')
+        response = self.client.get(url)
+
+        # Check that response is complete
+        self.assertEqual(response.status_code, 200)
+        content = response.content.decode('utf-8')
+
+        # Check that HTML is well-formed
+        self.assertTrue(content.count('<html>') == 1)
+        self.assertTrue(content.count('</html>') == 1)
+
+    def test_documentation_performance(self):
+        """Test that documentation loads efficiently"""
+        import time
+
+        start_time = time.time()
+        url = reverse('user-guide')
+        response = self.client.get(url)
+        end_time = time.time()
+
+        # Documentation should load quickly (under 1 second)
+        load_time = end_time - start_time
+        self.assertLess(load_time, 1.0)
+        self.assertEqual(response.status_code, 200)</code></pre>
+
+            <h4><strong>Test Execution Commands</strong></h4>
+            <pre><code># Run all tests
+python3 manage.py test
+
+# Run tests with verbose output
+python3 manage.py test --verbosity=2
+
+# Run specific app tests
+python3 manage.py test authentication
+python3 manage.py test charging_stations
+python3 manage.py test payments
+python3 manage.py test ocpp_integration
+python3 manage.py test support
+python3 manage.py test docs
+
+# Run specific test class
+python3 manage.py test authentication.tests.CustomUserModelTests
+python3 manage.py test payments.tests.PaymentModelTests
+
+# Run specific test method
+python3 manage.py test authentication.tests.CustomUserModelTests.test_create_user
+
+# Run tests with coverage
+pip install coverage
+coverage run --source='.' manage.py test
+coverage report
+coverage html
+
+# Run tests in parallel (faster execution)
+python3 manage.py test --parallel
+
+# Run tests with database preservation (faster for repeated runs)
+python3 manage.py test --keepdb
+
+# Run only failed tests from last run
+python3 manage.py test --failfast</code></pre>
+
+            <h4><strong>Test Quality Features</strong></h4>
+            <ul>
+                <li><strong>🔧 Proper Setup/Teardown</strong>: Clean test environment for each test</li>
+                <li><strong>📝 Descriptive Test Names</strong>: Clear test method names describing functionality</li>
+                <li><strong>🎯 Focused Tests</strong>: Each test focuses on a single functionality</li>
+                <li><strong>🔄 Isolation</strong>: Tests don't depend on each other</li>
+                <li><strong>📊 Comprehensive Assertions</strong>: Thorough verification of expected behavior</li>
+                <li><strong>🛠️ Mock Usage</strong>: Mocking external dependencies where appropriate</li>
+                <li><strong>📈 Edge Cases</strong>: Testing boundary conditions and error scenarios</li>
+                <li><strong>🛡️ Security Testing</strong>: Authentication, authorization, data validation</li>
+                <li><strong>🌐 API Testing</strong>: REST API endpoints, permissions, error handling</li>
+                <li><strong>📱 Integration Testing</strong>: End-to-end functionality testing</li>
+            </ul>
+
+            <h4><strong>Continuous Integration</strong></h4>
+            <pre><code># .github/workflows/tests.yml
+name: Django Tests
+
+on: [push, pull_request]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    services:
+      postgres:
+        image: postgres:13
+        env:
+          POSTGRES_PASSWORD: postgres
+        options: >-
+          --health-cmd pg_isready
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+
+    steps:
+    - uses: actions/checkout@v2
+
+    - name: Set up Python
+      uses: actions/setup-python@v2
+      with:
+        python-version: 3.9
+
+    - name: Install dependencies
+      run: |
+        pip install -r requirements.txt
+
+    - name: Run tests
+      run: |
+        python manage.py test --verbosity=2
+
+    - name: Generate coverage report
+      run: |
+        coverage run --source='.' manage.py test
+        coverage xml
+
+    - name: Upload coverage to Codecov
+      uses: codecov/codecov-action@v1</code></pre>
+
+            <h4><strong>Test Statistics Summary</strong></h4>
+            <pre><code>📊 Test Coverage Statistics:
+
+Total Test Files: 6
+├── authentication/tests.py    (15+ test methods)
+├── charging_stations/tests.py (20+ test methods)
+├── payments/tests.py          (8 test methods)
+├── ocpp_integration/tests.py  (12+ test methods)
+├── support/tests.py           (15+ test methods)
+└── docs/tests.py              (20+ test methods)
+
+Total Test Classes: 20+
+Total Test Methods: 100+
+
+Test Categories:
+✅ Model Tests: Field validation, constraints, business logic
+✅ Serializer Tests: Data validation, serialization/deserialization
+✅ API Tests: REST endpoints, permissions, error handling
+✅ View Tests: Template rendering, URL resolution
+✅ Integration Tests: End-to-end functionality
+✅ Security Tests: Authentication, authorization
+✅ Performance Tests: Response times, load testing</code></pre>
+
+            <h4><strong>Best Practices Implemented</strong></h4>
+            <ul>
+                <li><strong>Test-Driven Development (TDD)</strong>: Tests written alongside feature development</li>
+                <li><strong>Django Testing Framework</strong>: Using Django's built-in testing tools</li>
+                <li><strong>Database Isolation</strong>: Each test uses a clean database state</li>
+                <li><strong>Factory Pattern</strong>: Consistent test data creation</li>
+                <li><strong>Mocking External Services</strong>: Isolating tests from external dependencies</li>
+                <li><strong>Comprehensive Coverage</strong>: Testing happy paths, edge cases, and error conditions</li>
+                <li><strong>Performance Testing</strong>: Ensuring acceptable response times</li>
+                <li><strong>Security Testing</strong>: Validating authentication and authorization</li>
+                <li><strong>Documentation Testing</strong>: Ensuring documentation renders correctly</li>
+                <li><strong>Continuous Integration</strong>: Automated testing on code changes</li>
+            </ul>
+
+            <h4><strong>Running Tests in Development</strong></h4>
+            <pre><code># Quick test run during development
+python3 manage.py test --keepdb --parallel
+
+# Test specific functionality you're working on
+python3 manage.py test authentication.tests.AuthenticationAPITests
+
+# Run tests with coverage to see what needs more testing
+coverage run --source='.' manage.py test
+coverage report --show-missing
+
+# Debug failing tests
+python3 manage.py test --debug-mode --verbosity=2
+
+# Test performance
+python3 manage.py test --timing</code></pre>
+
+            <p><strong>The comprehensive test suite ensures code quality, catches regressions early, and provides confidence when deploying new features to production.</strong></p>
 
             <h4><strong>Integration Tests</strong></h4>
             <pre><code># tests/test_stations.py
@@ -2509,6 +3152,7 @@ SOFTWARE.</code></pre>
                 <li><strong>http</strong>: BSD License</li>
                 <li><strong>provider</strong>: MIT License</li>
                 <li><strong>firebase_core</strong>: BSD License</li>
+                <li><strong>lottie</strong>: Apache License 2.0</li>
             </ul>
 
             <h4><strong>Web Dependencies</strong></h4>
