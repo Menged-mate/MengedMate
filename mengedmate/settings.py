@@ -60,6 +60,7 @@ INSTALLED_APPS = [
     "payments",
     "ocpp_integration",
     "support",
+    "docs",
 ]
 
 JAZZMIN_SETTINGS = {

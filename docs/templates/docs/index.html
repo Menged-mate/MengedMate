@@ -1,0 +1,261 @@
+{% extends 'docs/base.html' %}
+
+{% block title %}evmeri Technical Documentation - Home{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="hero">
+        <h1>⚡ evmeri Technical Documentation</h1>
+        <p>Comprehensive technical documentation for the evmeri EV Charging Station Management Platform</p>
+    </div>
+
+    <div class="grid">
+        <div class="feature-card">
+            <div class="icon">🏗️</div>
+            <h3>System Architecture</h3>
+            <p>Understand the overall system design, components, and how they interact with each other.</p>
+            <a href="{% url 'docs:architecture' %}" class="btn">View Architecture</a>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon">🔧</div>
+            <h3>Technology Stack</h3>
+            <p>Detailed information about all technologies, frameworks, and tools used in the platform.</p>
+            <a href="#tech-stack" class="btn">View Tech Stack</a>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon">📡</div>
+            <h3>API Documentation</h3>
+            <p>Complete API reference with endpoints, parameters, examples, and authentication details.</p>
+            <a href="{% url 'docs:api' %}" class="btn">View API Docs</a>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon">🗄️</div>
+            <h3>Database Design</h3>
+            <p>Database schema, relationships, and data models used throughout the application.</p>
+            <a href="{% url 'docs:database' %}" class="btn">View Database</a>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon">🚀</div>
+            <h3>Deployment Guide</h3>
+            <p>Step-by-step instructions for deploying the application in different environments.</p>
+            <a href="{% url 'docs:deployment' %}" class="btn">View Deployment</a>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon">🔒</div>
+            <h3>Security & Auth</h3>
+            <p>Security measures, authentication flows, and authorization mechanisms.</p>
+            <a href="{% url 'docs:security' %}" class="btn">View Security</a>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon">🔗</div>
+            <h3>Integrations</h3>
+            <p>Third-party services, payment gateways, and external API integrations.</p>
+            <a href="{% url 'docs:integrations' %}" class="btn">View Integrations</a>
+        </div>
+
+        <div class="feature-card">
+            <div class="icon">🛠️</div>
+            <h3>Troubleshooting</h3>
+            <p>Common issues, debugging tips, and solutions for development and production.</p>
+            <a href="{% url 'docs:troubleshooting' %}" class="btn">View Troubleshooting</a>
+        </div>
+    </div>
+
+    <div class="card" id="tech-stack">
+        <h2>🔧 Technology Stack Overview</h2>
+        <div class="grid">
+            {% for component in tech_components %}
+            <div class="feature-card">
+                <h4>{{ component.name }}</h4>
+                <span class="badge badge-primary">{{ component.get_component_type_display }}</span>
+                {% if component.version %}
+                <span class="badge badge-success">v{{ component.version }}</span>
+                {% endif %}
+                <p>{{ component.description|truncatewords:20 }}</p>
+                {% if component.documentation_url %}
+                <a href="{{ component.documentation_url }}" target="_blank" class="btn btn-secondary">Documentation</a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>📋 Quick Start Guide</h2>
+        <div class="alert alert-info">
+            <strong>Prerequisites:</strong> Make sure you have Python 3.8+, Node.js 16+, and Flutter 3.0+ installed.
+        </div>
+        
+        <h3>Backend Setup</h3>
+        <pre><code># Clone the repository
+git clone https://github.com/your-org/evmeri.git
+cd evmeri
+
+# Create virtual environment
+python -m venv venv
+source venv/bin/activate  # On Windows: venv\Scripts\activate
+
+# Install dependencies
+pip install -r requirements.txt
+
+# Run migrations
+python manage.py migrate
+
+# Create superuser
+python manage.py createsuperuser
+
+# Start development server
+python manage.py runserver</code></pre>
+
+        <h3>Frontend Setup</h3>
+        <pre><code># Navigate to web frontend
+cd web_frontend
+
+# Install dependencies
+npm install
+
+# Start development server
+npm start</code></pre>
+
+        <h3>Mobile App Setup</h3>
+        <pre><code># Navigate to mobile frontend
+cd mobile_frontend
+
+# Get Flutter dependencies
+flutter pub get
+
+# Run on device/emulator
+flutter run</code></pre>
+    </div>
+
+    <div class="card">
+        <h2>🎯 Key Features</h2>
+        <div class="grid">
+            <div>
+                <h4>🔍 Station Discovery</h4>
+                <ul>
+                    <li>Real-time station availability</li>
+                    <li>Location-based search</li>
+                    <li>Advanced filtering options</li>
+                    <li>Interactive maps</li>
+                </ul>
+            </div>
+            <div>
+                <h4>💳 Payment Processing</h4>
+                <ul>
+                    <li>QR code payments</li>
+                    <li>Chapa payment integration</li>
+                    <li>Wallet management</li>
+                    <li>Transaction history</li>
+                </ul>
+            </div>
+            <div>
+                <h4>⚡ Charging Management</h4>
+                <ul>
+                    <li>OCPP protocol support</li>
+                    <li>Real-time monitoring</li>
+                    <li>Session management</li>
+                    <li>Energy consumption tracking</li>
+                </ul>
+            </div>
+            <div>
+                <h4>👥 User Management</h4>
+                <ul>
+                    <li>Multi-role authentication</li>
+                    <li>Station owner verification</li>
+                    <li>Profile management</li>
+                    <li>Notification system</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>📊 System Statistics</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Component</th>
+                    <th>Technology</th>
+                    <th>Version</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Backend API</td>
+                    <td>Django REST Framework</td>
+                    <td>4.2+</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                </tr>
+                <tr>
+                    <td>Web Frontend</td>
+                    <td>React.js</td>
+                    <td>18.x</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                </tr>
+                <tr>
+                    <td>Mobile App</td>
+                    <td>Flutter</td>
+                    <td>3.x</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                </tr>
+                <tr>
+                    <td>Database</td>
+                    <td>PostgreSQL</td>
+                    <td>13+</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                </tr>
+                <tr>
+                    <td>Payment Gateway</td>
+                    <td>Chapa</td>
+                    <td>v1</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                </tr>
+                <tr>
+                    <td>OCPP Integration</td>
+                    <td>Custom Implementation</td>
+                    <td>1.6</td>
+                    <td><span class="badge badge-warning">Beta</span></td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>🔗 Important Links</h2>
+        <div class="grid">
+            <div>
+                <h4>Production</h4>
+                <ul>
+                    <li><a href="https://mengedmate.onrender.com" target="_blank">Backend API</a></li>
+                    <li><a href="https://mengedmate.vercel.app" target="_blank">Web Frontend</a></li>
+                    <li><a href="https://mengedmate.onrender.com/admin" target="_blank">Admin Dashboard</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Development</h4>
+                <ul>
+                    <li><a href="http://localhost:8000" target="_blank">Local Backend</a></li>
+                    <li><a href="http://localhost:3000" target="_blank">Local Frontend</a></li>
+                    <li><a href="http://localhost:8000/admin" target="_blank">Local Admin</a></li>
+                </ul>
+            </div>
+            <div>
+                <h4>Resources</h4>
+                <ul>
+                    <li><a href="https://github.com/your-org/evmeri" target="_blank">GitHub Repository</a></li>
+                    <li><a href="https://chapa.co/docs" target="_blank">Chapa API Docs</a></li>
+                    <li><a href="https://openchargealliance.org" target="_blank">OCPP Documentation</a></li>
+                </ul>
+            </div>
+        </div>
+    </div>
+</div>
+{% endblock %}

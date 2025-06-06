@@ -120,6 +120,9 @@ urlpatterns = [
     path("api/register-test/", register_view, name="register-test"),
     path("api/health/", health_check, name="api-health"),
 
+    # Documentation
+    path("docs/", include("docs.urls")),
+
     # Django allauth URLs
     path("accounts/", include("allauth.urls")),
     path("api/dj-rest-auth/", include("dj_rest_auth.urls")),

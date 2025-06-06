@@ -1,0 +1,272 @@
+{% extends 'docs/base.html' %}
+
+{% block title %}System Architecture - evmeri{% endblock %}
+
+{% block content %}
+<div class="container">
+    <div class="hero">
+        <h1>🏗️ System Architecture</h1>
+        <p>Comprehensive overview of the evmeri platform architecture</p>
+    </div>
+
+    <div class="card">
+        <h2>📊 Architecture Diagram</h2>
+        <div style="text-align: center; padding: 2rem; background: #f8f9fa; border-radius: 10px; margin: 2rem 0;">
+            <div style="font-size: 1.2rem; color: #666;">
+                📱 Mobile App (Flutter) ↔️ 🌐 Web Frontend (React) 
+                <br>↕️<br>
+                🔗 API Gateway (Django REST)
+                <br>↕️<br>
+                🗄️ Database (PostgreSQL) | 💳 Chapa Payment | ⚡ OCPP Service
+            </div>
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🔧 Technology Components</h2>
+        <div class="grid">
+            {% for component in tech_components %}
+            <div class="feature-card">
+                <h4>{{ component.name }}</h4>
+                <span class="badge badge-{% if component.component_type == 'backend' %}primary{% elif component.component_type == 'frontend' %}success{% elif component.component_type == 'database' %}warning{% elif component.component_type == 'payment' %}danger{% else %}secondary{% endif %}">
+                    {{ component.get_component_type_display }}
+                </span>
+                {% if component.version %}
+                <span class="badge badge-secondary">v{{ component.version }}</span>
+                {% endif %}
+                <p>{{ component.description }}</p>
+                <p><strong>Purpose:</strong> {{ component.purpose }}</p>
+                {% if component.documentation_url %}
+                <a href="{{ component.documentation_url }}" target="_blank" class="btn btn-secondary">Documentation</a>
+                {% endif %}
+            </div>
+            {% endfor %}
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🔄 Data Flow</h2>
+        
+        <h3>1. User Registration & Authentication</h3>
+        <pre><code>Mobile App/Web → API Gateway → Authentication Service → Database
+                                    ↓
+                              JWT Token Generated
+                                    ↓
+                              Response to Client</code></pre>
+
+        <h3>2. Station Discovery</h3>
+        <pre><code>Mobile App → API Gateway → Charging Stations Service → Database
+                                         ↓
+                                   Location-based Query
+                                         ↓
+                                   Nearby Stations Response</code></pre>
+
+        <h3>3. QR Payment Flow</h3>
+        <pre><code>QR Scan → Mobile App → API Gateway → Payments Service → Chapa Gateway
+                                              ↓
+                                        Payment Session Created
+                                              ↓
+                                        Payment Confirmation
+                                              ↓
+                                        Charging Authorization</code></pre>
+
+        <h3>4. Charging Session Management</h3>
+        <pre><code>Start Charging → API Gateway → OCPP Service → Charging Station
+                                         ↓
+                                   Session Monitoring
+                                         ↓
+                                   Real-time Updates → Mobile App</code></pre>
+    </div>
+
+    <div class="card">
+        <h2>🏢 Service Architecture</h2>
+        
+        <h3>Backend Services</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Service</th>
+                    <th>Responsibility</th>
+                    <th>Technology</th>
+                    <th>Status</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Authentication Service</td>
+                    <td>User management, login, registration, JWT tokens</td>
+                    <td>Django + DRF + Allauth</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                </tr>
+                <tr>
+                    <td>Charging Stations Service</td>
+                    <td>Station CRUD, location search, availability</td>
+                    <td>Django + PostGIS</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                </tr>
+                <tr>
+                    <td>Payments Service</td>
+                    <td>Payment processing, wallet management, QR payments</td>
+                    <td>Django + Chapa API</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                </tr>
+                <tr>
+                    <td>OCPP Integration Service</td>
+                    <td>Communication with charging stations</td>
+                    <td>Django + WebSockets</td>
+                    <td><span class="badge badge-warning">Beta</span></td>
+                </tr>
+                <tr>
+                    <td>Support Service</td>
+                    <td>Customer support, FAQ, issue reporting</td>
+                    <td>Django + Email</td>
+                    <td><span class="badge badge-success">Active</span></td>
+                </tr>
+            </tbody>
+        </table>
+
+        <h3>Frontend Applications</h3>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>Application</th>
+                    <th>Target Users</th>
+                    <th>Technology</th>
+                    <th>Deployment</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>Mobile App</td>
+                    <td>EV Drivers</td>
+                    <td>Flutter (Dart)</td>
+                    <td>App Stores</td>
+                </tr>
+                <tr>
+                    <td>Web Dashboard</td>
+                    <td>Station Owners</td>
+                    <td>React.js (JavaScript)</td>
+                    <td>Vercel</td>
+                </tr>
+                <tr>
+                    <td>Admin Panel</td>
+                    <td>System Administrators</td>
+                    <td>Django Admin + Jazzmin</td>
+                    <td>Render</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+
+    <div class="card">
+        <h2>🔐 Security Architecture</h2>
+        
+        <h3>Authentication & Authorization</h3>
+        <ul>
+            <li><strong>JWT Tokens:</strong> Stateless authentication for API access</li>
+            <li><strong>Role-based Access:</strong> Different permissions for drivers, station owners, admins</li>
+            <li><strong>OAuth Integration:</strong> Google, Facebook, Apple sign-in support</li>
+            <li><strong>Email Verification:</strong> Mandatory email verification for new accounts</li>
+        </ul>
+
+        <h3>Data Security</h3>
+        <ul>
+            <li><strong>HTTPS Everywhere:</strong> All communications encrypted in transit</li>
+            <li><strong>Database Encryption:</strong> Sensitive data encrypted at rest</li>
+            <li><strong>Input Validation:</strong> Comprehensive validation and sanitization</li>
+            <li><strong>Rate Limiting:</strong> API rate limiting to prevent abuse</li>
+        </ul>
+
+        <h3>Payment Security</h3>
+        <ul>
+            <li><strong>PCI Compliance:</strong> Following payment industry standards</li>
+            <li><strong>Tokenization:</strong> Payment details tokenized through Chapa</li>
+            <li><strong>Webhook Verification:</strong> Cryptographic verification of payment callbacks</li>
+            <li><strong>Fraud Detection:</strong> Monitoring for suspicious payment patterns</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>📈 Scalability & Performance</h2>
+        
+        <h3>Current Architecture</h3>
+        <ul>
+            <li><strong>Horizontal Scaling:</strong> Stateless API design allows multiple instances</li>
+            <li><strong>Database Optimization:</strong> Indexed queries and connection pooling</li>
+            <li><strong>CDN Integration:</strong> Static assets served via CDN</li>
+            <li><strong>Caching Strategy:</strong> Redis for session and query caching</li>
+        </ul>
+
+        <h3>Future Enhancements</h3>
+        <ul>
+            <li><strong>Microservices:</strong> Split into independent services</li>
+            <li><strong>Message Queues:</strong> Async processing with Celery/Redis</li>
+            <li><strong>Load Balancing:</strong> Multiple API instances behind load balancer</li>
+            <li><strong>Database Sharding:</strong> Horizontal database partitioning</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>🌐 Deployment Architecture</h2>
+        
+        <h3>Production Environment</h3>
+        <div class="grid">
+            <div>
+                <h4>Backend (Render)</h4>
+                <ul>
+                    <li>Django application server</li>
+                    <li>PostgreSQL database</li>
+                    <li>Redis cache</li>
+                    <li>Static file serving</li>
+                </ul>
+            </div>
+            <div>
+                <h4>Frontend (Vercel)</h4>
+                <ul>
+                    <li>React.js application</li>
+                    <li>Global CDN distribution</li>
+                    <li>Automatic deployments</li>
+                    <li>SSL certificates</li>
+                </ul>
+            </div>
+            <div>
+                <h4>Mobile (App Stores)</h4>
+                <ul>
+                    <li>Flutter compiled apps</li>
+                    <li>Google Play Store</li>
+                    <li>Apple App Store</li>
+                    <li>Over-the-air updates</li>
+                </ul>
+            </div>
+        </div>
+
+        <h3>Development Environment</h3>
+        <ul>
+            <li><strong>Local Development:</strong> Docker containers for consistency</li>
+            <li><strong>Staging Environment:</strong> Mirror of production for testing</li>
+            <li><strong>CI/CD Pipeline:</strong> Automated testing and deployment</li>
+            <li><strong>Version Control:</strong> Git with feature branch workflow</li>
+        </ul>
+    </div>
+
+    <div class="card">
+        <h2>🔍 Monitoring & Observability</h2>
+        
+        <h3>Application Monitoring</h3>
+        <ul>
+            <li><strong>Health Checks:</strong> Automated endpoint monitoring</li>
+            <li><strong>Error Tracking:</strong> Centralized error logging and alerting</li>
+            <li><strong>Performance Metrics:</strong> Response time and throughput monitoring</li>
+            <li><strong>User Analytics:</strong> Usage patterns and feature adoption</li>
+        </ul>
+
+        <h3>Infrastructure Monitoring</h3>
+        <ul>
+            <li><strong>Server Metrics:</strong> CPU, memory, disk usage</li>
+            <li><strong>Database Performance:</strong> Query performance and connection pools</li>
+            <li><strong>Network Monitoring:</strong> Latency and bandwidth usage</li>
+            <li><strong>Security Monitoring:</strong> Intrusion detection and audit logs</li>
+        </ul>
+    </div>
+</div>
+{% endblock %}

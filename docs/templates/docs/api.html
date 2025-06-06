@@ -1,0 +1,259 @@
+{% extends 'docs/base.html' %}
+
+{% block title %}API Documentation - evmeri{% endblock %}
+
+{% block content %}
+<div class="sidebar">
+    <h3>API Categories</h3>
+    <ul>
+        {% for category, endpoints in categories.items %}
+        <li><a href="#{{ category|slugify }}">{{ category }}</a></li>
+        {% endfor %}
+    </ul>
+</div>
+
+<div class="content">
+    <div class="hero">
+        <h1>📡 API Documentation</h1>
+        <p>Complete reference for the evmeri REST API</p>
+    </div>
+
+    <div class="card">
+        <h2>🚀 Getting Started</h2>
+        <div class="alert alert-info">
+            <strong>Base URL:</strong> <code>https://mengedmate.onrender.com/api/</code><br>
+            <strong>Authentication:</strong> Token-based authentication required for most endpoints
+        </div>
+
+        <h3>Authentication</h3>
+        <p>Most API endpoints require authentication. Include your token in the Authorization header:</p>
+        <pre><code>Authorization: Token your_token_here</code></pre>
+
+        <h3>Response Format</h3>
+        <p>All API responses are in JSON format with the following structure:</p>
+        <pre><code>{
+    "success": true,
+    "message": "Operation completed successfully",
+    "data": {
+        // Response data here
+    }
+}</code></pre>
+
+        <h3>Error Handling</h3>
+        <p>Error responses include appropriate HTTP status codes and error messages:</p>
+        <pre><code>{
+    "success": false,
+    "message": "Error description",
+    "errors": {
+        "field": ["Error details"]
+    }
+}</code></pre>
+    </div>
+
+    {% for category, endpoints in categories.items %}
+    <div class="card" id="{{ category|slugify }}">
+        <h2>{{ category }}</h2>
+        
+        {% for endpoint in endpoints %}
+        <div class="card" style="margin: 1rem 0; border-left: 4px solid #667eea;">
+            <div style="display: flex; align-items: center; gap: 1rem; margin-bottom: 1rem;">
+                <span class="badge badge-{% if endpoint.method == 'GET' %}success{% elif endpoint.method == 'POST' %}primary{% elif endpoint.method == 'PUT' or endpoint.method == 'PATCH' %}warning{% elif endpoint.method == 'DELETE' %}danger{% endif %}">
+                    {{ endpoint.method }}
+                </span>
+                <code style="font-size: 1.1rem;">{{ endpoint.endpoint }}</code>
+                {% if endpoint.authentication_required %}
+                <span class="badge badge-warning">🔒 Auth Required</span>
+                {% endif %}
+            </div>
+            
+            <h4>{{ endpoint.name }}</h4>
+            <p>{{ endpoint.description }}</p>
+            
+            {% if endpoint.parameters %}
+            <h5>Parameters</h5>
+            <table class="table">
+                <thead>
+                    <tr>
+                        <th>Parameter</th>
+                        <th>Type</th>
+                        <th>Required</th>
+                        <th>Description</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    {% for param_name, param_info in endpoint.parameters.items %}
+                    <tr>
+                        <td><code>{{ param_name }}</code></td>
+                        <td>{{ param_info.type|default:"string" }}</td>
+                        <td>
+                            {% if param_info.required %}
+                            <span class="badge badge-danger">Required</span>
+                            {% else %}
+                            <span class="badge badge-secondary">Optional</span>
+                            {% endif %}
+                        </td>
+                        <td>{{ param_info.description }}</td>
+                    </tr>
+                    {% endfor %}
+                </tbody>
+            </table>
+            {% endif %}
+            
+            {% if endpoint.request_example %}
+            <h5>Request Example</h5>
+            <pre><code>{{ endpoint.request_example }}</code></pre>
+            {% endif %}
+            
+            {% if endpoint.response_example %}
+            <h5>Response Example</h5>
+            <pre><code>{{ endpoint.response_example }}</code></pre>
+            {% endif %}
+        </div>
+        {% endfor %}
+    </div>
+    {% endfor %}
+
+    <div class="card">
+        <h2>📝 Common Examples</h2>
+        
+        <h3>User Registration</h3>
+        <pre><code>POST /api/auth/register/
+Content-Type: application/json
+
+{
+    "email": "user@example.com",
+    "password1": "securepassword123",
+    "password2": "securepassword123"
+}</code></pre>
+
+        <h3>User Login</h3>
+        <pre><code>POST /api/auth/login/
+Content-Type: application/json
+
+{
+    "email": "user@example.com",
+    "password": "securepassword123"
+}</code></pre>
+
+        <h3>Get Nearby Stations</h3>
+        <pre><code>GET /api/public/nearby-stations/?lat=9.0192&lng=38.7525&radius=10
+Authorization: Token your_token_here</code></pre>
+
+        <h3>Initiate QR Payment</h3>
+        <pre><code>POST /api/payments/qr-initiate/abc123token/
+Authorization: Token your_token_here
+Content-Type: application/json
+
+{
+    "payment_type": "amount",
+    "amount": 100.00,
+    "phone_number": "+251900123456"
+}</code></pre>
+
+        <h3>Start Charging Session</h3>
+        <pre><code>POST /api/payments/qr-sessions/session_token/start-charging/
+Authorization: Token your_token_here</code></pre>
+    </div>
+
+    <div class="card">
+        <h2>🔧 Testing the API</h2>
+        
+        <h3>Using cURL</h3>
+        <pre><code># Get API health status
+curl -X GET https://mengedmate.onrender.com/api/health/
+
+# Register a new user
+curl -X POST https://mengedmate.onrender.com/api/auth/register/ \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password1":"testpass123","password2":"testpass123"}'
+
+# Login
+curl -X POST https://mengedmate.onrender.com/api/auth/login/ \
+  -H "Content-Type: application/json" \
+  -d '{"email":"test@example.com","password":"testpass123"}'</code></pre>
+
+        <h3>Using Postman</h3>
+        <ol>
+            <li>Import the API collection (if available)</li>
+            <li>Set the base URL to <code>https://mengedmate.onrender.com/api/</code></li>
+            <li>Add your authentication token to the Authorization header</li>
+            <li>Test endpoints with appropriate request bodies</li>
+        </ol>
+
+        <h3>Using JavaScript/Fetch</h3>
+        <pre><code>// Login example
+const response = await fetch('https://mengedmate.onrender.com/api/auth/login/', {
+    method: 'POST',
+    headers: {
+        'Content-Type': 'application/json',
+    },
+    body: JSON.stringify({
+        email: 'user@example.com',
+        password: 'password123'
+    })
+});
+
+const data = await response.json();
+console.log(data);</code></pre>
+    </div>
+
+    <div class="card">
+        <h2>📊 Rate Limiting</h2>
+        <p>The API implements rate limiting to ensure fair usage:</p>
+        <ul>
+            <li><strong>Anonymous users:</strong> 100 requests per hour</li>
+            <li><strong>Authenticated users:</strong> 1000 requests per hour</li>
+            <li><strong>Premium users:</strong> 5000 requests per hour</li>
+        </ul>
+        
+        <div class="alert alert-warning">
+            <strong>Rate Limit Headers:</strong> Check the <code>X-RateLimit-Remaining</code> and <code>X-RateLimit-Reset</code> headers in responses.
+        </div>
+    </div>
+
+    <div class="card">
+        <h2>🐛 Error Codes</h2>
+        <table class="table">
+            <thead>
+                <tr>
+                    <th>HTTP Status</th>
+                    <th>Error Code</th>
+                    <th>Description</th>
+                </tr>
+            </thead>
+            <tbody>
+                <tr>
+                    <td>400</td>
+                    <td>Bad Request</td>
+                    <td>Invalid request data or parameters</td>
+                </tr>
+                <tr>
+                    <td>401</td>
+                    <td>Unauthorized</td>
+                    <td>Authentication required or invalid token</td>
+                </tr>
+                <tr>
+                    <td>403</td>
+                    <td>Forbidden</td>
+                    <td>Insufficient permissions</td>
+                </tr>
+                <tr>
+                    <td>404</td>
+                    <td>Not Found</td>
+                    <td>Resource not found</td>
+                </tr>
+                <tr>
+                    <td>429</td>
+                    <td>Too Many Requests</td>
+                    <td>Rate limit exceeded</td>
+                </tr>
+                <tr>
+                    <td>500</td>
+                    <td>Internal Server Error</td>
+                    <td>Server error - contact support</td>
+                </tr>
+            </tbody>
+        </table>
+    </div>
+</div>
+{% endblock %}
