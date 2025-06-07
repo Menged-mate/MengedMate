@@ -28,10 +28,8 @@ echo "Applying migrations..."
 python manage.py migrate --run-syncdb
 
 # Create superuser
-echo "Creating superuser if needed..."
-export DJANGO_SUPERUSER_EMAIL="admin@evmeri.com"
-export DJANGO_SUPERUSER_PASSWORD="admin123"
-python manage.py createsuperuser --noinput || echo "Superuser already exists or creation skipped"
+echo "Creating admin superuser..."
+python manage.py create_admin_user --email admin@evmeri.com --password admin123
 
 # Create Ethiopian charging stations
 echo "Setting up Ethiopian charging stations..."
