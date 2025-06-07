@@ -42,16 +42,28 @@ class AIRecommendationsView(APIView):
         
         data = serializer.validated_data
         user = request.user
-        
+
+        # Clean and prepare data
+        latitude = float(data['latitude'])
+        longitude = float(data['longitude'])
+        radius_km = float(data.get('radius_km') or 10.0)
+        limit = data.get('limit') or 20
+
         # Get AI recommendations
         ai_service = AIRecommendationService()
-        recommendations = ai_service.get_personalized_recommendations(
-            user=user,
-            user_lat=float(data['latitude']),
-            user_lng=float(data['longitude']),
-            radius_km=float(data.get('radius_km', 10.0)),
-            limit=data.get('limit', 20)
-        )
+        try:
+            recommendations = ai_service.get_personalized_recommendations(
+                user=user,
+                user_lat=latitude,
+                user_lng=longitude,
+                radius_km=radius_km,
+                limit=limit
+            )
+        except Exception as e:
+            return Response(
+                {'error': f'AI service error: {str(e)}'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
         
         # Enhance recommendations with additional data
         enhanced_recommendations = []

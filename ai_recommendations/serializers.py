@@ -137,10 +137,11 @@ class NearbyStationSearchSerializer(serializers.Serializer):
     latitude = serializers.DecimalField(max_digits=9, decimal_places=6)
     longitude = serializers.DecimalField(max_digits=9, decimal_places=6)
     radius_km = serializers.DecimalField(
-        max_digits=5, decimal_places=2, 
-        default=10.0, 
-        min_value=1.0, 
-        max_value=100.0
+        max_digits=5, decimal_places=2,
+        default=10.0,
+        min_value=1.0,
+        max_value=100.0,
+        required=False
     )
     connector_type = serializers.ChoiceField(
         choices=[
@@ -153,7 +154,8 @@ class NearbyStationSearchSerializer(serializers.Serializer):
             ('gbt', 'GB/T')
         ],
         required=False,
-        allow_blank=True
+        allow_blank=True,
+        allow_null=True
     )
     charging_speed = serializers.ChoiceField(
         choices=[
@@ -163,19 +165,22 @@ class NearbyStationSearchSerializer(serializers.Serializer):
             ('ultra_rapid', 'Ultra Rapid (50+ kW)'),
             ('any', 'Any Speed')
         ],
-        default='any'
+        default='any',
+        required=False
     )
     amenities = serializers.ListField(
         child=serializers.IntegerField(),
         required=False,
-        allow_empty=True
+        allow_empty=True,
+        allow_null=True
     )
     min_rating = serializers.DecimalField(
         max_digits=3, decimal_places=2,
         min_value=0.0, max_value=5.0,
-        required=False
+        required=False,
+        allow_null=True
     )
-    availability_only = serializers.BooleanField(default=False)
+    availability_only = serializers.BooleanField(default=False, required=False)
     sort_by = serializers.ChoiceField(
         choices=[
             ('distance', 'Distance'),
@@ -183,9 +188,10 @@ class NearbyStationSearchSerializer(serializers.Serializer):
             ('recommendation', 'AI Recommendation'),
             ('availability', 'Availability')
         ],
-        default='recommendation'
+        default='recommendation',
+        required=False
     )
-    limit = serializers.IntegerField(default=20, min_value=1, max_value=50)
+    limit = serializers.IntegerField(default=20, min_value=1, max_value=50, required=False)
 
 
 class RecommendationResponseSerializer(serializers.Serializer):

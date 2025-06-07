@@ -96,7 +96,7 @@ class AIRecommendationService:
         """Get stations within radius"""
         # Simple distance calculation (can be improved with PostGIS)
         stations = ChargingStation.objects.filter(
-            status='active',
+            status='operational',
             latitude__isnull=False,
             longitude__isnull=False
         ).select_related().prefetch_related('connectors', 'amenities', 'reviews')
@@ -190,7 +190,7 @@ class AIRecommendationService:
         
         compatible_connectors = station.connectors.filter(
             connector_type=preferences['connector_type'],
-            status='active'
+            status='available'
         )
         
         if compatible_connectors.exists():
