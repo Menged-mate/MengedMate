@@ -56,16 +56,34 @@ class UserSearchPreferencesSerializer(serializers.ModelSerializer):
 
 class VehicleSerializer(serializers.ModelSerializer):
     efficiency_rating = serializers.CharField(source='get_efficiency_rating', read_only=True)
-    
+    connector_types = serializers.SerializerMethodField()
+    range_km = serializers.IntegerField(source='estimated_range_km')
+
     class Meta:
         model = Vehicle
         fields = [
             'id', 'name', 'make', 'model', 'year', 'battery_capacity_kwh',
-            'connector_types', 'efficiency_kwh_per_100km', 'range_km',
+            'connector_type', 'connector_types', 'efficiency_kwh_per_100km', 'range_km',
             'is_primary', 'efficiency_rating', 'total_charging_sessions',
             'total_energy_charged_kwh', 'last_used_at'
         ]
-        read_only_fields = ['total_charging_sessions', 'total_energy_charged_kwh', 'last_used_at']
+        read_only_fields = ['total_charging_sessions', 'total_energy_charged_kwh', 'last_used_at', 'connector_types']
+
+    def get_connector_types(self, obj):
+        """Return connector_type as a list for compatibility with mobile app"""
+        if obj.connector_type:
+            return [obj.connector_type]
+        return []
+
+    def to_internal_value(self, data):
+        """Handle connector_types list from mobile app"""
+        if 'connector_types' in data and isinstance(data['connector_types'], list):
+            # Take the first connector type from the list
+            data = data.copy()
+            if data['connector_types']:
+                data['connector_type'] = data['connector_types'][0]
+            data.pop('connector_types', None)
+        return super().to_internal_value(data)
 
 
 class StationRecommendationSerializer(serializers.ModelSerializer):

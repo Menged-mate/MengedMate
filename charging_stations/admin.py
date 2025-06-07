@@ -197,7 +197,7 @@ class StationOwnerAdmin(admin.ModelAdmin):
                     email.attach_alternative(html_content, "text/html")
                     email.send()
                 except Exception as e:
-                    pass  # Continue even if email fails
+                    pass  
 
         self.message_user(request, f'{updated} station owner(s) successfully verified.')
     approve_verification.short_description = "✅ Approve selected station owners"
@@ -230,7 +230,7 @@ class StationOwnerAdmin(admin.ModelAdmin):
                     email.attach_alternative(html_content, "text/html")
                     email.send()
                 except Exception as e:
-                    pass  # Continue even if email fails
+                    pass 
 
         self.message_user(request, f'{updated} station owner(s) marked as requiring additional information.')
     reject_verification.short_description = "❌ Request additional information"
