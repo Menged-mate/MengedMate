@@ -81,11 +81,16 @@ class InitiatePaymentView(APIView):
         if serializer.is_valid():
             payment_service = PaymentService()
 
+            # Detect if request is from mobile app
+            user_agent = request.META.get('HTTP_USER_AGENT', '').lower()
+            is_mobile_app = 'evmeri' in user_agent or 'flutter' in user_agent or 'dart' in user_agent
+
             result = payment_service.initiate_chapa_payment(
                 user=request.user,
                 amount=serializer.validated_data['amount'],
                 phone_number=serializer.validated_data['phone_number'],
-                description=serializer.validated_data.get('description', 'MengedMate Payment')
+                description=serializer.validated_data.get('description', 'evmeri Payment'),
+                use_mobile_return=is_mobile_app
             )
 
             if result['success']:
@@ -217,11 +222,16 @@ class QRPaymentInitiateView(APIView):
                         'message': 'Invalid payment amount calculated'
                     }, status=status.HTTP_400_BAD_REQUEST)
 
+                # Detect if request is from mobile app
+                user_agent = request.META.get('HTTP_USER_AGENT', '').lower()
+                is_mobile_app = 'evmeri' in user_agent or 'flutter' in user_agent or 'dart' in user_agent
+
                 result = payment_service.initiate_chapa_payment(
                     user=request.user,
                     amount=payment_amount,
                     phone_number=qr_session.phone_number,
-                    description=f"Charging at {connector.station.name} - {connector.get_connector_type_display()}"
+                    description=f"Charging at {connector.station.name} - {connector.get_connector_type_display()}",
+                    use_mobile_return=is_mobile_app
                 )
 
                 if result['success']:
@@ -400,6 +410,22 @@ class StopChargingFromQRView(APIView):
                 status='charging_started'
             )
 
+            # Update SimpleChargingSession if it exists
+            if qr_session.simple_charging_session:
+                charging_session = qr_session.simple_charging_session
+                charging_session.status = 'completed'
+                charging_session.stop_time = timezone.now()
+
+                # Calculate duration
+                if charging_session.start_time:
+                    duration = timezone.now() - charging_session.start_time
+                    charging_session.duration_seconds = int(duration.total_seconds())
+
+                # Set some demo energy values
+                charging_session.energy_delivered_kwh = 5.0  # Demo value
+                charging_session.energy_consumed_kwh = 5.0   # Demo value
+                charging_session.save()
+
             # Update QR session status to completed
             qr_session.status = 'charging_completed'
             qr_session.save()
@@ -421,3 +447,75 @@ class StopChargingFromQRView(APIView):
                 'success': False,
                 'message': 'QR payment session not found or not in charging state'
             }, status=status.HTTP_404_NOT_FOUND)
+
+
+class TestCreateChargingSessionView(APIView):
+    """Test endpoint to manually create a charging session for testing"""
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request, session_token):
+        try:
+            qr_session = get_object_or_404(
+                QRPaymentSession,
+                session_token=session_token,
+                user=request.user,
+                status='payment_completed'
+            )
+
+            # Create a test charging session if it doesn't exist
+            if not qr_session.simple_charging_session:
+                from .services import PaymentService
+                payment_service = PaymentService()
+                payment_service._auto_start_charging_if_enabled(qr_session)
+                qr_session.refresh_from_db()
+
+            session_serializer = QRPaymentSessionSerializer(qr_session)
+            return Response({
+                'success': True,
+                'message': 'Charging session created for testing',
+                'qr_session': session_serializer.data,
+                'charging_session_created': qr_session.simple_charging_session is not None
+            }, status=status.HTTP_200_OK)
+
+        except QRPaymentSession.DoesNotExist:
+            return Response({
+                'success': False,
+                'message': 'QR payment session not found or payment not completed'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class ChargingHistoryView(generics.ListAPIView):
+    """Get user's charging history"""
+    permission_classes = [IsAuthenticated]
+
+    def get_queryset(self):
+        # Return completed charging sessions for the user
+        return QRPaymentSession.objects.select_related(
+            'connector', 'connector__station', 'simple_charging_session'
+        ).filter(
+            user=self.request.user,
+            status__in=['charging_completed', 'charging_started', 'payment_completed']
+        ).order_by('-created_at')
+
+    def list(self, request, *args, **kwargs):
+        from .serializers import QRPaymentSessionWithChargingSerializer
+
+        queryset = self.get_queryset()
+        serializer = QRPaymentSessionWithChargingSerializer(queryset, many=True)
+
+        # Add summary statistics
+        total_sessions = queryset.count()
+        total_amount_spent = sum(
+            float(session.payment_amount) for session in queryset
+            if session.payment_amount
+        )
+
+        return Response({
+            'success': True,
+            'charging_history': serializer.data,
+            'summary': {
+                'total_sessions': total_sessions,
+                'total_amount_spent': total_amount_spent,
+                'currency': 'ETB'
+            }
+        }, status=status.HTTP_200_OK)

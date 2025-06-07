@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from .models import PaymentMethod, Transaction, Wallet, WalletTransaction, PaymentSession, QRPaymentSession
+from .models import PaymentMethod, Transaction, Wallet, WalletTransaction, PaymentSession, QRPaymentSession, SimpleChargingSession
 from charging_stations.models import ChargingConnector
 
 
@@ -235,6 +235,48 @@ class QRPaymentSessionSerializer(serializers.ModelSerializer):
             'id', 'session_token', 'payment_type', 'payment_type_display',
             'amount', 'kwh_requested', 'calculated_amount', 'payment_amount',
             'phone_number', 'status', 'status_display', 'connector_info',
+            'expires_at', 'created_at', 'updated_at'
+        ]
+
+    def get_payment_amount(self, obj):
+        return obj.get_payment_amount()
+
+
+class SimpleChargingSessionSerializer(serializers.ModelSerializer):
+    duration_minutes = serializers.SerializerMethodField()
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+
+    class Meta:
+        model = SimpleChargingSession
+        fields = [
+            'id', 'transaction_id', 'status', 'status_display',
+            'start_time', 'stop_time', 'duration_seconds', 'duration_minutes',
+            'estimated_duration_minutes', 'energy_delivered_kwh', 'energy_consumed_kwh',
+            'max_power_kw', 'cost_per_kwh', 'created_at', 'updated_at'
+        ]
+
+    def get_duration_minutes(self, obj):
+        if obj.duration_seconds:
+            return round(obj.duration_seconds / 60, 1)
+        return 0
+
+
+class QRPaymentSessionWithChargingSerializer(serializers.ModelSerializer):
+    """Extended serializer that includes charging session data for history"""
+    connector_info = QRConnectorInfoSerializer(source='connector', read_only=True)
+    payment_type_display = serializers.CharField(source='get_payment_type_display', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    payment_amount = serializers.SerializerMethodField()
+    connector_station_name = serializers.CharField(read_only=True)
+    charging_session_info = SimpleChargingSessionSerializer(source='simple_charging_session', read_only=True)
+
+    class Meta:
+        model = QRPaymentSession
+        fields = [
+            'id', 'session_token', 'payment_type', 'payment_type_display',
+            'amount', 'kwh_requested', 'calculated_amount', 'payment_amount',
+            'phone_number', 'status', 'status_display', 'connector_info',
+            'connector_station_name', 'charging_session_info',
             'expires_at', 'created_at', 'updated_at'
         ]
 

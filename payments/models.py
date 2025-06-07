@@ -159,6 +159,7 @@ class QRPaymentSession(models.Model):
     # Payment tracking
     payment_transaction = models.ForeignKey(Transaction, on_delete=models.SET_NULL, null=True, blank=True)
     charging_session = models.OneToOneField('ocpp_integration.ChargingSession', on_delete=models.SET_NULL, null=True, blank=True)
+    simple_charging_session = models.OneToOneField('SimpleChargingSession', on_delete=models.SET_NULL, null=True, blank=True, related_name='qr_session_link')
 
     # Session metadata
     session_token = models.CharField(max_length=100, unique=True)
@@ -184,6 +185,21 @@ class QRPaymentSession(models.Model):
         """Get the amount to be charged"""
         return self.calculated_amount or self.amount or 0
 
+    @property
+    def payment_amount(self):
+        """Property for easy access to payment amount"""
+        return self.get_payment_amount()
+
+    @property
+    def payment_type_display(self):
+        """Get display name for payment type"""
+        return self.get_payment_type_display()
+
+    @property
+    def connector_station_name(self):
+        """Get station name from connector"""
+        return self.connector.station.name if self.connector and self.connector.station else 'Unknown Station'
+
     def __str__(self):
         return f"QR Session {self.session_token} - {self.connector}"
 
@@ -203,19 +219,22 @@ class SimpleChargingSession(models.Model):
 
     user = models.ForeignKey(settings.AUTH_USER_MODEL, on_delete=models.CASCADE, related_name='simple_charging_sessions')
     connector = models.ForeignKey('charging_stations.ChargingConnector', on_delete=models.CASCADE, related_name='simple_charging_sessions')
-    qr_session = models.ForeignKey(QRPaymentSession, on_delete=models.CASCADE, related_name='charging_sessions')
+    qr_session = models.ForeignKey(QRPaymentSession, on_delete=models.CASCADE, related_name='simple_charging_sessions')
 
     payment_transaction_id = models.CharField(max_length=255, blank=True, null=True)
-    id_tag = models.CharField(max_length=255)
+    id_tag = models.CharField(max_length=255, blank=True, null=True, default='mobile_app')
 
     status = models.CharField(max_length=20, choices=SessionStatus.choices, default=SessionStatus.STARTED)
 
     start_time = models.DateTimeField(auto_now_add=True)
     stop_time = models.DateTimeField(blank=True, null=True)
     duration_seconds = models.PositiveIntegerField(default=0)
+    estimated_duration_minutes = models.PositiveIntegerField(default=60)
 
+    energy_delivered_kwh = models.DecimalField(max_digits=10, decimal_places=3, default=0.000)
     energy_consumed_kwh = models.DecimalField(max_digits=10, decimal_places=3, default=0.000)
     max_power_kw = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
+    cost_per_kwh = models.DecimalField(max_digits=8, decimal_places=2, default=0.00)
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

@@ -28,7 +28,7 @@ class ChapaService:
             'Content-Type': 'application/json'
         }
 
-    def initiate_payment(self, phone_number, amount, account_reference, transaction_desc, email, first_name, last_name):
+    def initiate_payment(self, phone_number, amount, account_reference, transaction_desc, email, first_name, last_name, use_mobile_return=False):
         url = f"{self.base_url}/v1/transaction/initialize"
 
         headers = self.get_headers()
@@ -46,6 +46,9 @@ class ChapaService:
             # Use a fallback email for testing
             email = f"user_{account_reference}@gmail.com"
 
+        # Choose return URL based on request source
+        return_url = self.return_url if use_mobile_return else self.config.get('WEB_RETURN_URL', self.return_url)
+
         payload = {
             'amount': str(amount),
             'currency': 'ETB',
@@ -55,7 +58,7 @@ class ChapaService:
             'phone_number': phone_number,
             'tx_ref': account_reference,
             'callback_url': self.callback_url,
-            'return_url': self.return_url,
+            'return_url': return_url,
             'description': transaction_desc,
             'meta': {
                 'hide_receipt': 'true'
@@ -112,7 +115,7 @@ class PaymentService:
 
         return session
 
-    def initiate_chapa_payment(self, user, amount, phone_number, description="MengedMate Payment"):
+    def initiate_chapa_payment(self, user, amount, phone_number, description="evmeri Payment", use_mobile_return=False):
         session = self.create_payment_session(user, amount, phone_number, description)
 
         result = self.chapa.initiate_payment(
@@ -122,7 +125,8 @@ class PaymentService:
             transaction_desc=description,
             email=user.email,
             first_name=user.first_name or 'User',
-            last_name=user.last_name or 'Name'
+            last_name=user.last_name or 'Name',
+            use_mobile_return=use_mobile_return
         )
 
         if result['success']:
@@ -230,13 +234,43 @@ class PaymentService:
             return {'success': False, 'message': str(e)}
 
     def _auto_start_charging_if_enabled(self, qr_session):
-        """Auto-start charging if enabled in settings"""
+        """Auto-start charging after successful payment"""
         try:
-            # For now, we'll require manual start, but this can be configured
-            # to auto-start charging after successful payment
-            pass
+            from .models import SimpleChargingSession
+            import uuid
+
+            # Auto-start charging session
+            if qr_session.connector and qr_session.connector.is_available:
+                # Create charging session
+                charging_session = SimpleChargingSession.objects.create(
+                    transaction_id=str(uuid.uuid4()),
+                    user=qr_session.user,
+                    connector=qr_session.connector,
+                    qr_session=qr_session,
+                    payment_transaction_id=str(qr_session.payment_transaction.id) if qr_session.payment_transaction else None,
+                    status='started',
+                    estimated_duration_minutes=60,  # Default 1 hour
+                    energy_delivered_kwh=0.0,
+                    cost_per_kwh=qr_session.connector.price_per_kwh or 5.50,  # Default price if None
+                    max_power_kw=qr_session.connector.power_kw or 50.0,  # Default power if None
+                    id_tag='mobile_app'
+                )
+
+                # Update QR session status and link to charging session
+                qr_session.status = 'charging_started'
+                qr_session.simple_charging_session = charging_session
+                qr_session.save()
+
+                # Make connector unavailable
+                qr_session.connector.is_available = False
+                qr_session.connector.save()
+
+                logger.info(f"Auto-started charging session {charging_session.transaction_id} for QR session {qr_session.session_token}")
+
         except Exception as e:
             logger.error(f"Auto-start charging failed: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
 
     def credit_wallet(self, user, amount, transaction):
         wallet, created = Wallet.objects.get_or_create(user=user)
