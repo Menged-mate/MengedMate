@@ -4,6 +4,7 @@ from rest_framework.permissions import IsAuthenticated, AllowAny
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
+from django.http import HttpResponse
 from django.utils import timezone
 from .models import PaymentMethod, Transaction, Wallet, WalletTransaction, PaymentSession, QRPaymentSession
 from .serializers import (
@@ -519,3 +520,123 @@ class ChargingHistoryView(generics.ListAPIView):
                 'currency': 'ETB'
             }
         }, status=status.HTTP_200_OK)
+
+
+class MobileReturnView(APIView):
+    """Handle mobile app return from Chapa payment"""
+    permission_classes = [AllowAny]
+
+    def get(self, request):
+        # Get payment parameters from Chapa
+        tx_ref = request.GET.get('tx_ref')
+        status_param = request.GET.get('status')
+        trx_ref = request.GET.get('trx_ref')
+
+        # Build deep link URL with parameters
+        deep_link_params = []
+        if tx_ref:
+            deep_link_params.append(f'tx_ref={tx_ref}')
+        if status_param:
+            deep_link_params.append(f'status={status_param}')
+        if trx_ref:
+            deep_link_params.append(f'trx_ref={trx_ref}')
+
+        params_string = '&'.join(deep_link_params)
+        deep_link_url = f'evmeri://payment/success?{params_string}'
+
+        # Create HTML page that redirects to mobile app
+        html_content = f'''
+        <!DOCTYPE html>
+        <html>
+        <head>
+            <title>Payment Complete - Redirecting to evmeri</title>
+            <meta name="viewport" content="width=device-width, initial-scale=1.0">
+            <style>
+                body {{
+                    font-family: Arial, sans-serif;
+                    text-align: center;
+                    padding: 50px;
+                    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+                    color: white;
+                    margin: 0;
+                }}
+                .container {{
+                    background: white;
+                    color: #333;
+                    padding: 30px;
+                    border-radius: 10px;
+                    max-width: 400px;
+                    margin: 0 auto;
+                    box-shadow: 0 4px 20px rgba(0,0,0,0.1);
+                }}
+                .logo {{
+                    font-size: 2em;
+                    font-weight: bold;
+                    color: #667eea;
+                    margin-bottom: 20px;
+                }}
+                .status {{
+                    font-size: 1.2em;
+                    margin: 20px 0;
+                }}
+                .success {{ color: #28a745; }}
+                .failed {{ color: #dc3545; }}
+                .btn {{
+                    background: #667eea;
+                    color: white;
+                    padding: 12px 24px;
+                    border: none;
+                    border-radius: 5px;
+                    text-decoration: none;
+                    display: inline-block;
+                    margin: 10px;
+                    cursor: pointer;
+                }}
+                .spinner {{
+                    border: 4px solid #f3f3f3;
+                    border-top: 4px solid #667eea;
+                    border-radius: 50%;
+                    width: 40px;
+                    height: 40px;
+                    animation: spin 1s linear infinite;
+                    margin: 20px auto;
+                }}
+                @keyframes spin {{
+                    0% {{ transform: rotate(0deg); }}
+                    100% {{ transform: rotate(360deg); }}
+                }}
+            </style>
+        </head>
+        <body>
+            <div class="container">
+                <div class="logo">⚡ evmeri</div>
+                <div class="status {'success' if status_param == 'success' else 'failed'}">
+                    {'Payment Successful!' if status_param == 'success' else 'Payment Status: ' + (status_param or 'Unknown')}
+                </div>
+                <div class="spinner"></div>
+                <p>Redirecting to evmeri app...</p>
+                <a href="{deep_link_url}" class="btn">Open evmeri App</a>
+                <p style="font-size: 0.9em; color: #666; margin-top: 20px;">
+                    If the app doesn't open automatically, tap the button above.
+                </p>
+            </div>
+
+            <script>
+                // Attempt automatic redirect
+                setTimeout(function() {{
+                    window.location.href = '{deep_link_url}';
+                }}, 2000);
+
+                // Fallback for manual redirect
+                document.addEventListener('DOMContentLoaded', function() {{
+                    document.querySelector('.btn').addEventListener('click', function(e) {{
+                        e.preventDefault();
+                        window.location.href = '{deep_link_url}';
+                    }});
+                }});
+            </script>
+        </body>
+        </html>
+        '''
+
+        return HttpResponse(html_content, content_type='text/html')

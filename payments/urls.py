@@ -13,6 +13,7 @@ urlpatterns = [
 
     path('initiate/', views.InitiatePaymentView.as_view(), name='initiate-payment'),
     path('callback/', views.payment_callback, name='payment-callback'),
+    path('mobile-return/', views.MobileReturnView.as_view(), name='mobile-return'),
     path('status/', views.TransactionStatusView.as_view(), name='transaction-status'),
 
     path('sessions/', views.PaymentSessionListView.as_view(), name='payment-sessions'),

@@ -43,8 +43,9 @@ class ChapaService:
         invalid_domains = ['example.com', 'test.com', 'localhost', 'invalid.com']
         email_domain = email.split('@')[-1].lower() if '@' in email else ''
         if email_domain in invalid_domains:
-            # Use a fallback email for testing
-            email = f"user_{account_reference}@gmail.com"
+            # Use a fallback email for testing (keep it short for Chapa's 50 char limit)
+            short_ref = account_reference[:8] if len(account_reference) > 8 else account_reference
+            email = f"user{short_ref}@gmail.com"
 
         # Choose return URL based on request source
         return_url = self.return_url if use_mobile_return else self.config.get('WEB_RETURN_URL', self.return_url)
@@ -66,7 +67,10 @@ class ChapaService:
         }
 
         try:
+            logger.info(f"Chapa payload: {payload}")
             response = requests.post(url, json=payload, headers=headers)
+            logger.info(f"Chapa response status: {response.status_code}")
+            logger.info(f"Chapa response: {response.text}")
             response.raise_for_status()
             return {'success': True, 'data': response.json()}
         except requests.exceptions.RequestException as e:
@@ -78,8 +82,10 @@ class ChapaService:
                 try:
                     error_data = e.response.json()
                     error_message = error_data.get('message', str(e))
+                    logger.error(f"Chapa error response: {error_data}")
                 except:
                     error_message = e.response.text or str(e)
+                    logger.error(f"Chapa error text: {e.response.text}")
 
             return {'success': False, 'message': error_message}
 

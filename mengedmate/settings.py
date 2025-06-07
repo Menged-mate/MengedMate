@@ -504,7 +504,7 @@ CHAPA_SETTINGS = {
     'SECRET_KEY': os.environ.get('CHAPA_SECRET_KEY', 'CHASECK_TEST-BjSm5vKqLLOfYqar7ilo0E1vyz6sagAe'),
     'PUBLIC_KEY': os.environ.get('CHAPA_PUBLIC_KEY', 'CHAPUBK_TEST-5FVf5w5JfADqLQsB4xk3b6jXQEdeb7EF'),
     'CALLBACK_URL': os.environ.get('CHAPA_CALLBACK_URL', f'{API_BASE_URL}/payments/callback/'),
-    'RETURN_URL': os.environ.get('CHAPA_RETURN_URL', 'evmeri://payment/success'),
+    'RETURN_URL': os.environ.get('CHAPA_RETURN_URL', f'{API_BASE_URL}/payments/mobile-return/'),
     'WEB_RETURN_URL': os.environ.get('CHAPA_WEB_RETURN_URL', f'{FRONTEND_URL}/payment/success'),
     'SANDBOX_URL': 'https://api.chapa.co',
     'PRODUCTION_URL': 'https://api.chapa.co',
