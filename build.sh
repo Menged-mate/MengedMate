@@ -31,4 +31,9 @@ python manage.py migrate --run-syncdb
 echo "Creating superuser if needed..."
 python manage.py create_superuser
 
+# Create Ethiopian charging stations
+echo "Setting up Ethiopian charging stations..."
+python manage.py populate_ethiopian_stations
+
 echo "Django setup completed successfully!"
+echo "✅ Ethiopian charging stations are ready!"

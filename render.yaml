@@ -9,6 +9,7 @@ services:
       - command: python manage.py migrate
       - command: python manage.py create_superuser
       - command: python manage.py collectstatic --noinput
+      - command: python manage.py populate_ethiopian_stations
     envVars:
       - key: SECRET_KEY
         value: "<your-django-secret-key>"

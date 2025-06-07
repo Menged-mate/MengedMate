@@ -629,90 +629,99 @@ class MobileChargingHistoryView(APIView):
 
     def get(self, request):
         try:
-            # Try to get OCPP charging sessions first
+            all_sessions = []
+
+            # Get QR Payment Sessions (most common for mobile app)
             try:
-                from ocpp_integration.models import ChargingSession as OCPPChargingSession
-                ocpp_sessions = OCPPChargingSession.objects.filter(
-                    user=request.user
+                from payments.models import QRPaymentSession
+
+                # Get QR sessions with completed payments and charging
+                qr_sessions = QRPaymentSession.objects.filter(
+                    user=request.user,
+                    status__in=['charging_completed', 'charging_started', 'payment_completed']
                 ).select_related(
-                    'ocpp_station__charging_station',
-                    'ocpp_connector__charging_connector'
-                ).order_by('-created_at')[:50]  # Limit to last 50 sessions
+                    'connector__station',
+                    'payment_transaction',
+                    'simple_charging_session'
+                ).order_by('-created_at')[:20]  # Reduced limit for debugging
 
-                sessions_data = []
-                for session in ocpp_sessions:
-                    session_data = {
-                        'id': str(session.id),
-                        'transaction_id': session.transaction_id,
-                        'station_name': session.ocpp_station.charging_station.name,
-                        'station_address': session.ocpp_station.charging_station.address,
-                        'connector_type': session.ocpp_connector.charging_connector.connector_type,
-                        'start_time': session.start_time.isoformat() if session.start_time else None,
-                        'stop_time': session.stop_time.isoformat() if session.stop_time else None,
-                        'energy_consumed_kwh': str(session.energy_consumed_kwh),
-                        'final_cost': str(session.final_cost) if session.final_cost else None,
-                        'estimated_cost': str(session.estimated_cost),
-                        'status': session.status,
-                        'payment_status': session.payment_status,
-                        'duration_seconds': session.duration_seconds,
-                        'payment_method': session.payment_method,
-                    }
-                    sessions_data.append(session_data)
+                for qr_session in qr_sessions:
+                    try:
+                        # Calculate duration and cost
+                        duration_seconds = 0
+                        energy_kwh = 0.0
+                        final_cost = 0.0
+                        start_time = None
+                        stop_time = None
 
-                return Response({
-                    'success': True,
-                    'results': sessions_data,
-                    'count': len(sessions_data)
-                })
+                        # Get data from simple charging session if available
+                        if hasattr(qr_session, 'simple_charging_session') and qr_session.simple_charging_session:
+                            charging_session = qr_session.simple_charging_session
+                            duration_seconds = charging_session.duration_seconds or 0
+                            energy_kwh = float(charging_session.energy_delivered_kwh or 0)
+                            start_time = charging_session.start_time
+                            stop_time = charging_session.stop_time
 
-            except ImportError:
-                # OCPP integration not available, try simple charging sessions
-                try:
-                    from payments.models import SimpleChargingSession
-                    simple_sessions = SimpleChargingSession.objects.filter(
-                        user=request.user
-                    ).select_related(
-                        'connector__station'
-                    ).order_by('-created_at')[:50]
+                            # Calculate duration if not stored
+                            if start_time and stop_time and not duration_seconds:
+                                duration_seconds = int((stop_time - start_time).total_seconds())
 
-                    sessions_data = []
-                    for session in simple_sessions:
-                        duration_seconds = session.duration_seconds
-                        if session.start_time and session.stop_time:
-                            duration_seconds = int((session.stop_time - session.start_time).total_seconds())
+                        # Calculate cost based on energy and connector price
+                        if energy_kwh > 0 and qr_session.connector and qr_session.connector.price_per_kwh:
+                            final_cost = energy_kwh * float(qr_session.connector.price_per_kwh)
+                        elif qr_session.payment_transaction:
+                            final_cost = float(qr_session.payment_transaction.amount)
+
+                        # Format duration for display
+                        duration_minutes = duration_seconds // 60 if duration_seconds else 0
+
+                        # Safe access to connector and station data
+                        station_name = qr_session.connector.station.name if qr_session.connector and qr_session.connector.station else 'Unknown Station'
+                        station_address = qr_session.connector.station.address if qr_session.connector and qr_session.connector.station else 'Unknown Location'
+                        station_city = qr_session.connector.station.city if qr_session.connector and qr_session.connector.station else 'Unknown City'
+                        connector_type = qr_session.connector.get_connector_type_display() if qr_session.connector else 'Unknown'
+                        connector_power = f"{qr_session.connector.power_kw} kW" if qr_session.connector else 'Unknown'
 
                         session_data = {
-                            'id': str(session.id),
-                            'transaction_id': session.transaction_id,
-                            'station_name': session.connector.station.name,
-                            'station_address': session.connector.station.address,
-                            'connector_type': session.connector.connector_type,
-                            'start_time': session.start_time.isoformat() if session.start_time else None,
-                            'stop_time': session.stop_time.isoformat() if session.stop_time else None,
-                            'energy_consumed_kwh': str(session.energy_consumed_kwh),
-                            'final_cost': None,  # Calculate from QR session if needed
-                            'estimated_cost': '0.00',
-                            'status': session.status,
-                            'payment_status': 'completed' if session.status == 'completed' else 'pending',
+                            'id': str(qr_session.id),
+                            'transaction_id': qr_session.session_token,
+                            'station_name': station_name,
+                            'station_address': station_address,
+                            'station_city': station_city,
+                            'connector_type': connector_type,
+                            'connector_power': connector_power,
+                            'start_time': start_time.isoformat() if start_time else qr_session.created_at.isoformat(),
+                            'stop_time': stop_time.isoformat() if stop_time else None,
+                            'energy_consumed_kwh': f"{energy_kwh:.3f}",
+                            'final_cost': f"{final_cost:.2f}",
+                            'currency': 'ETB',
+                            'status': 'CHARGING_COMPLETED' if qr_session.status == 'charging_completed' else 'COMPLETED',
+                            'payment_status': 'completed' if qr_session.payment_transaction else 'pending',
+                            'duration_minutes': duration_minutes,
                             'duration_seconds': duration_seconds,
-                            'payment_method': 'qr_code',
+                            'payment_method': 'QR Code',
+                            'payment_amount': str(qr_session.payment_transaction.amount) if qr_session.payment_transaction else '0.00',
+                            'created_at': qr_session.created_at.isoformat(),
                         }
-                        sessions_data.append(session_data)
+                        all_sessions.append(session_data)
+                    except Exception as session_error:
+                        # Skip problematic sessions but continue processing
+                        continue
 
-                    return Response({
-                        'success': True,
-                        'results': sessions_data,
-                        'count': len(sessions_data)
-                    })
+            except ImportError:
+                pass
+            except Exception as qr_error:
+                # Log QR session error but continue
+                pass
 
-                except ImportError:
-                    # No charging session models available, return empty
-                    return Response({
-                        'success': True,
-                        'results': [],
-                        'count': 0,
-                        'message': 'No charging sessions found'
-                    })
+            # Sort all sessions by creation date (newest first)
+            all_sessions.sort(key=lambda x: x['created_at'], reverse=True)
+
+            return Response({
+                'success': True,
+                'results': all_sessions,
+                'count': len(all_sessions)
+            })
 
         except Exception as e:
             return Response({

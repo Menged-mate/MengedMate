@@ -3,6 +3,7 @@ from django.contrib.auth import get_user_model
 from charging_stations.models import StationOwner, ChargingStation, ChargingConnector
 from decimal import Decimal
 import random
+import os
 
 User = get_user_model()
 
@@ -17,8 +18,13 @@ class Command(BaseCommand):
         )
 
     def handle(self, *args, **options):
-        self.stdout.write(self.style.SUCCESS('Starting to populate Ethiopian charging stations...'))
-        
+        self.stdout.write(self.style.SUCCESS('🇪🇹 Starting to populate Ethiopian charging stations...'))
+
+        # Check if we're in production (Render)
+        is_production = os.environ.get('RENDER_EXTERNAL_URL') is not None
+        if is_production:
+            self.stdout.write('🌐 Running in production environment (Render)')
+
         # Create or get admin user for station ownership
         admin_user, created = User.objects.get_or_create(
             email='admin@evmeri.com',
@@ -285,6 +291,11 @@ class Command(BaseCommand):
         
         self.stdout.write(
             self.style.SUCCESS(
-                f'Successfully created {created_stations} stations and {created_connectors} connectors in Ethiopia!'
+                f'✅ Successfully created {created_stations} stations and {created_connectors} connectors in Ethiopia!'
             )
         )
+
+        if is_production:
+            self.stdout.write('🌐 Ethiopian stations are now available on Render!')
+            self.stdout.write('📱 Mobile app can now access real charging stations in Ethiopia')
+            self.stdout.write('💳 QR payment system ready for Ethiopian locations')
