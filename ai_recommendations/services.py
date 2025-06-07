@@ -79,8 +79,8 @@ class AIRecommendationService:
         """Get user preferences with defaults"""
         try:
             prefs = user.search_preferences
-        except UserSearchPreferences.DoesNotExist:
-            prefs = UserSearchPreferences.objects.create(user=user)
+        except (UserSearchPreferences.DoesNotExist, AttributeError):
+            prefs = UserSearchPreferences.objects.get_or_create(user=user)[0]
         
         return {
             'battery_capacity': user.ev_battery_capacity_kwh or Decimal('50.0'),

@@ -204,7 +204,8 @@ class Vehicle(models.Model):
             self.is_primary = True
 
         if not self.usable_battery_kwh and self.battery_capacity_kwh:
-            self.usable_battery_kwh = self.battery_capacity_kwh * 0.92
+            from decimal import Decimal
+            self.usable_battery_kwh = self.battery_capacity_kwh * Decimal('0.92')
 
         super().save(*args, **kwargs)
 
