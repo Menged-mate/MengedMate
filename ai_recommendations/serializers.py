@@ -134,8 +134,8 @@ class ReviewSentimentAnalysisSerializer(serializers.ModelSerializer):
 
 
 class NearbyStationSearchSerializer(serializers.Serializer):
-    latitude = serializers.DecimalField(max_digits=9, decimal_places=6)
-    longitude = serializers.DecimalField(max_digits=9, decimal_places=6)
+    latitude = serializers.DecimalField(max_digits=12, decimal_places=8)
+    longitude = serializers.DecimalField(max_digits=12, decimal_places=8)
     radius_km = serializers.DecimalField(
         max_digits=5, decimal_places=2,
         default=10.0,
