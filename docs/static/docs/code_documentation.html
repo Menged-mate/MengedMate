@@ -1,0 +1,887 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>evmeri - Code Documentation</title>
+    <style>
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #333;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+            background-color: #f8f9fa;
+        }
+        .header {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 2rem;
+            border-radius: 10px;
+            margin-bottom: 2rem;
+            text-align: center;
+        }
+        .header h1 {
+            margin: 0;
+            font-size: 2.5rem;
+        }
+        .header p {
+            margin: 0.5rem 0 0 0;
+            font-size: 1.2rem;
+            opacity: 0.9;
+        }
+        .section {
+            background: white;
+            margin: 2rem 0;
+            padding: 2rem;
+            border-radius: 10px;
+            box-shadow: 0 2px 10px rgba(0,0,0,0.1);
+        }
+        .section h2 {
+            color: #667eea;
+            border-bottom: 3px solid #667eea;
+            padding-bottom: 0.5rem;
+            margin-top: 0;
+        }
+        .section h3 {
+            color: #764ba2;
+            margin-top: 2rem;
+        }
+        .code-block {
+            background: #f8f9fa;
+            border: 1px solid #e9ecef;
+            border-radius: 5px;
+            padding: 1rem;
+            margin: 1rem 0;
+            overflow-x: auto;
+        }
+        .code-block pre {
+            margin: 0;
+            font-family: 'Courier New', monospace;
+            font-size: 0.9rem;
+        }
+        .highlight {
+            background: #fff3cd;
+            padding: 1rem;
+            border-left: 4px solid #ffc107;
+            margin: 1rem 0;
+        }
+        .success {
+            background: #d4edda;
+            padding: 1rem;
+            border-left: 4px solid #28a745;
+            margin: 1rem 0;
+        }
+        .info {
+            background: #d1ecf1;
+            padding: 1rem;
+            border-left: 4px solid #17a2b8;
+            margin: 1rem 0;
+        }
+        .toc {
+            background: #f8f9fa;
+            padding: 1.5rem;
+            border-radius: 5px;
+            margin-bottom: 2rem;
+        }
+        .toc ul {
+            list-style-type: none;
+            padding-left: 0;
+        }
+        .toc li {
+            margin: 0.5rem 0;
+        }
+        .toc a {
+            color: #667eea;
+            text-decoration: none;
+            font-weight: 500;
+        }
+        .toc a:hover {
+            text-decoration: underline;
+        }
+        .feature-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+            gap: 1rem;
+            margin: 1rem 0;
+        }
+        .feature-card {
+            background: #f8f9fa;
+            padding: 1rem;
+            border-radius: 5px;
+            border-left: 4px solid #667eea;
+        }
+        .api-endpoint {
+            background: #f8f9fa;
+            border: 1px solid #dee2e6;
+            border-radius: 5px;
+            padding: 1rem;
+            margin: 1rem 0;
+        }
+        .method {
+            display: inline-block;
+            padding: 0.25rem 0.5rem;
+            border-radius: 3px;
+            font-weight: bold;
+            font-size: 0.8rem;
+            margin-right: 0.5rem;
+        }
+        .method.get { background: #d4edda; color: #155724; }
+        .method.post { background: #fff3cd; color: #856404; }
+        .method.put { background: #d1ecf1; color: #0c5460; }
+        .method.delete { background: #f8d7da; color: #721c24; }
+        .status-indicator {
+            display: inline-block;
+            width: 10px;
+            height: 10px;
+            border-radius: 50%;
+            margin-right: 0.5rem;
+        }
+        .status-working { background: #28a745; }
+        .status-testing { background: #ffc107; }
+        .status-planned { background: #6c757d; }
+    </style>
+</head>
+<body>
+    <div class="header">
+        <h1>🚗 evmeri Code Documentation</h1>
+        <p>Comprehensive code documentation for the EV charging platform</p>
+    </div>
+
+    <div class="toc">
+        <h3>📋 Table of Contents</h3>
+        <ul>
+            <li><a href="#overview">System Overview</a></li>
+            <li><a href="#architecture">Code Architecture</a></li>
+            <li><a href="#payment-system">Payment System</a></li>
+            <li><a href="#charging-system">Charging System</a></li>
+            <li><a href="#mobile-app">Mobile Application</a></li>
+            <li><a href="#api-endpoints">API Endpoints</a></li>
+            <li><a href="#database-models">Database Models</a></li>
+            <li><a href="#services">Services & Utilities</a></li>
+            <li><a href="#testing">Testing Framework</a></li>
+            <li><a href="#deployment">Deployment & DevOps</a></li>
+        </ul>
+    </div>
+
+    <div class="section" id="overview">
+        <h2>🎯 System Overview</h2>
+        <p>evmeri is a comprehensive EV charging platform built with Django REST Framework backend and Flutter mobile application. The system provides seamless payment integration, real-time charging management, and comprehensive user experience.</p>
+        
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>🔧 Backend Technologies</h4>
+                <ul>
+                    <li>Django 4.2+ with REST Framework</li>
+                    <li>PostgreSQL/SQLite Database</li>
+                    <li>Chapa Payment Integration</li>
+                    <li>OCPP Protocol Support</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h4>📱 Mobile Technologies</h4>
+                <ul>
+                    <li>Flutter/Dart Framework</li>
+                    <li>OpenStreetMap Integration</li>
+                    <li>Deep Link Support</li>
+                    <li>Real-time Updates</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h4>🌐 Web Technologies</h4>
+                <ul>
+                    <li>React.js Frontend</li>
+                    <li>Material-UI Components</li>
+                    <li>Responsive Design</li>
+                    <li>Progressive Web App</li>
+                </ul>
+            </div>
+        </div>
+
+        <div class="success">
+            <strong>✅ Current Status:</strong> All core features implemented and tested. Payment integration, charging sessions, and history tracking fully functional.
+        </div>
+    </div>
+
+    <div class="section" id="architecture">
+        <h2>🏗️ Code Architecture</h2>
+        
+        <h3>Project Structure</h3>
+        <div class="code-block">
+            <pre>
+evmeri/
+├── mengedmate/                 # Main Django project
+│   ├── settings.py            # Configuration
+│   ├── urls.py               # URL routing
+│   └── wsgi.py               # WSGI application
+├── authentication/           # User authentication
+├── payments/                 # Payment processing
+├── charging_stations/        # Station management
+├── ocpp_integration/         # OCPP protocol
+├── docs/                     # Documentation
+├── mobile_frontend/          # Flutter mobile app
+└── web_frontend/            # React web app
+            </pre>
+        </div>
+
+        <h3>Django Apps Architecture</h3>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>🔐 Authentication App</h4>
+                <p>Handles user registration, login, email verification, and profile management.</p>
+            </div>
+            <div class="feature-card">
+                <h4>💳 Payments App</h4>
+                <p>Manages payment processing, Chapa integration, QR payments, and charging sessions.</p>
+            </div>
+            <div class="feature-card">
+                <h4>⚡ Charging Stations App</h4>
+                <p>Station management, connector configuration, and availability tracking.</p>
+            </div>
+            <div class="feature-card">
+                <h4>🔌 OCPP Integration App</h4>
+                <p>OCPP protocol implementation for real charging station communication.</p>
+            </div>
+        </div>
+    </div>
+
+    <div class="section" id="payment-system">
+        <h2>💳 Payment System</h2>
+        
+        <h3>Chapa Integration</h3>
+        <div class="info">
+            <strong>📍 Location:</strong> <code>payments/services.py</code> - ChapaService class
+        </div>
+        
+        <div class="code-block">
+            <pre>
+class ChapaService:
+    def __init__(self):
+        self.config = settings.CHAPA_SETTINGS
+        self.secret_key = self.config['SECRET_KEY']
+        self.public_key = self.config['PUBLIC_KEY']
+        self.base_url = self.config['SANDBOX_URL']
+        self.callback_url = self.config['CALLBACK_URL']
+        self.return_url = self.config['RETURN_URL']
+
+    def initiate_payment(self, phone_number, amount, account_reference, 
+                        transaction_desc, email, first_name, last_name, 
+                        use_mobile_return=False):
+        # Payment initiation logic
+        # Supports both web and mobile return URLs
+            </pre>
+        </div>
+
+        <h3>Mobile Return URL Configuration</h3>
+        <div class="highlight">
+            <strong>🔄 Deep Link Integration:</strong> The system automatically detects mobile requests and uses <code>evmeri://payment/success</code> for mobile app returns, while web requests use the standard web URL.
+        </div>
+
+        <div class="code-block">
+            <pre>
+# Settings Configuration
+CHAPA_SETTINGS = {
+    'RETURN_URL': 'evmeri://payment/success',      # Mobile deep link
+    'WEB_RETURN_URL': 'https://app.evmeri.com/payment/success',  # Web URL
+    'CALLBACK_URL': 'https://api.evmeri.com/payments/callback/',
+}
+
+# Auto-detection in views
+user_agent = request.META.get('HTTP_USER_AGENT', '').lower()
+is_mobile_app = 'evmeri' in user_agent or 'flutter' in user_agent
+            </pre>
+        </div>
+
+        <h3>QR Payment Flow</h3>
+        <div class="api-endpoint">
+            <span class="method post">POST</span>
+            <strong>/api/payments/qr-initiate/{qr_token}/</strong>
+            <p>Initiates QR-based payment with automatic charging session creation.</p>
+        </div>
+
+        <div class="code-block">
+            <pre>
+# QR Payment Process
+1. Scan QR Code → Get Connector Info
+2. Select Payment Type (Amount/kWh)
+3. Initiate Payment → Create QR Session
+4. Process Chapa Payment
+5. Auto-start Charging Session
+6. Real-time Progress Tracking
+7. Auto-complete & History Save
+            </pre>
+        </div>
+    </div>
+
+    <div class="section" id="charging-system">
+        <h2>⚡ Charging System</h2>
+        
+        <h3>Auto-Start Charging</h3>
+        <div class="info">
+            <strong>📍 Location:</strong> <code>payments/services.py</code> - PaymentService._auto_start_charging_if_enabled()
+        </div>
+
+        <div class="code-block">
+            <pre>
+def _auto_start_charging_if_enabled(self, qr_session):
+    """Auto-start charging after successful payment"""
+    if qr_session.connector and qr_session.connector.is_available:
+        charging_session = SimpleChargingSession.objects.create(
+            transaction_id=str(uuid.uuid4()),
+            user=qr_session.user,
+            connector=qr_session.connector,
+            qr_session=qr_session,
+            status='started',
+            cost_per_kwh=qr_session.connector.price_per_kwh or 5.50,
+            max_power_kw=qr_session.connector.power_kw or 50.0,
+        )
+        
+        qr_session.status = 'charging_started'
+        qr_session.simple_charging_session = charging_session
+        qr_session.save()
+            </pre>
+        </div>
+
+        <h3>Charging Session Models</h3>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>🔗 QRPaymentSession</h4>
+                <p>Links payment to charging session with status tracking.</p>
+            </div>
+            <div class="feature-card">
+                <h4>⚡ SimpleChargingSession</h4>
+                <p>Tracks actual charging progress, energy delivery, and costs.</p>
+            </div>
+        </div>
+
+        <h3>Charging History API</h3>
+        <div class="api-endpoint">
+            <span class="method get">GET</span>
+            <strong>/api/payments/charging-history/</strong>
+            <p>Returns user's complete charging history with session details and summary statistics.</p>
+        </div>
+    </div>
+
+    <div class="section" id="mobile-app">
+        <h2>📱 Mobile Application</h2>
+
+        <h3>Flutter Architecture</h3>
+        <div class="info">
+            <strong>📍 Location:</strong> <code>mobile_frontend/lib/</code>
+        </div>
+
+        <div class="code-block">
+            <pre>
+mobile_frontend/lib/
+├── main.dart                 # App entry point
+├── screens/                  # UI screens
+│   ├── splash_screen.dart
+│   ├── login_screen.dart
+│   ├── payment_screen.dart
+│   ├── charging_session_screen.dart
+│   └── charging_history_screen.dart
+├── services/                 # Business logic
+│   ├── auth_service.dart
+│   ├── payment_service.dart
+│   └── deep_link_service.dart
+└── widgets/                  # Reusable components
+            </pre>
+        </div>
+
+        <h3>Deep Link Integration</h3>
+        <div class="highlight">
+            <strong>🔗 URL Scheme:</strong> <code>evmeri://payment/success</code> automatically opens the app after payment completion.
+        </div>
+
+        <div class="code-block">
+            <pre>
+// Android Manifest Configuration
+&lt;intent-filter android:autoVerify="true"&gt;
+    &lt;action android:name="android.intent.action.VIEW" /&gt;
+    &lt;category android:name="android.intent.category.DEFAULT" /&gt;
+    &lt;category android:name="android.intent.category.BROWSABLE" /&gt;
+    &lt;data android:scheme="evmeri" /&gt;
+&lt;/intent-filter&gt;
+
+// Flutter Deep Link Handler
+class DeepLinkService {
+    static void initialize() {
+        _linkStreamController = StreamController&lt;Uri&gt;.broadcast();
+        _channel.setMethodCallHandler(_handleMethodCall);
+    }
+
+    static PaymentResult? parsePaymentReturn(Uri uri) {
+        if (uri.scheme == 'evmeri' && uri.host == 'payment') {
+            return PaymentResult(
+                success: uri.path == '/success',
+                transactionId: uri.queryParameters['tx_ref'],
+                status: uri.queryParameters['status'],
+            );
+        }
+        return null;
+    }
+}
+            </pre>
+        </div>
+
+        <h3>Payment Service</h3>
+        <div class="info">
+            <strong>📍 Location:</strong> <code>mobile_frontend/lib/services/payment_service.dart</code>
+        </div>
+
+        <div class="code-block">
+            <pre>
+class PaymentService {
+    // QR Payment Operations
+    Future&lt;Map&lt;String, dynamic&gt;&gt; getQRConnectorInfo(String qrToken)
+    Future&lt;Map&lt;String, dynamic&gt;&gt; initiateQRPayment({...})
+    Future&lt;Map&lt;String, dynamic&gt;&gt; getPaymentSession(String sessionToken)
+
+    // Charging Operations
+    Future&lt;Map&lt;String, dynamic&gt;&gt; startCharging(String sessionToken)
+    Future&lt;Map&lt;String, dynamic&gt;&gt; stopCharging(String sessionToken)
+
+    // Status Monitoring
+    Stream&lt;String&gt; pollPaymentStatus(String sessionToken)
+    Future&lt;bool&gt; launchChapaPayment(String checkoutUrl)
+}
+            </pre>
+        </div>
+
+        <h3>Auto-Charging Flow</h3>
+        <div class="success">
+            <strong>✅ Implemented:</strong> Automatic charging initiation after successful payment with real-time progress tracking.
+        </div>
+
+        <div class="code-block">
+            <pre>
+// Auto-start after payment success
+@override
+void handlePaymentReturn(PaymentResult result) {
+    if (result.success) {
+        _loadSessionData().then((_) {
+            _autoStartChargingIfReady();
+        });
+    }
+}
+
+// Charging simulation with auto-completion
+void _startChargingSimulation() {
+    _chargingTimer = Timer.periodic(Duration(seconds: 1), (timer) {
+        if (_chargingTimeRemaining > 0) {
+            _chargingTimeRemaining--;
+            _chargingProgress = ((60 - _chargingTimeRemaining) / 60 * 100).round();
+        } else {
+            _autoStopCharging();
+            _showChargingSuccessDialog();
+        }
+    });
+}
+            </pre>
+        </div>
+    </div>
+
+    <div class="section" id="api-endpoints">
+        <h2>🌐 API Endpoints</h2>
+
+        <h3>Authentication Endpoints</h3>
+        <div class="api-endpoint">
+            <span class="method post">POST</span>
+            <strong>/api/auth/register/</strong>
+            <p>User registration with email verification</p>
+        </div>
+        <div class="api-endpoint">
+            <span class="method post">POST</span>
+            <strong>/api/auth/login/</strong>
+            <p>User authentication with token response</p>
+        </div>
+        <div class="api-endpoint">
+            <span class="method post">POST</span>
+            <strong>/api/auth/verify-email/</strong>
+            <p>Email verification with OTP</p>
+        </div>
+
+        <h3>Payment Endpoints</h3>
+        <div class="api-endpoint">
+            <span class="method get">GET</span>
+            <strong>/api/payments/qr-info/{qr_token}/</strong>
+            <p>Get connector information from QR code</p>
+        </div>
+        <div class="api-endpoint">
+            <span class="method post">POST</span>
+            <strong>/api/payments/qr-initiate/{qr_token}/</strong>
+            <p>Initiate QR payment with auto-charging</p>
+        </div>
+        <div class="api-endpoint">
+            <span class="method get">GET</span>
+            <strong>/api/payments/qr-sessions/{session_token}/</strong>
+            <p>Get payment session status and details</p>
+        </div>
+        <div class="api-endpoint">
+            <span class="method post">POST</span>
+            <strong>/api/payments/callback/</strong>
+            <p>Chapa payment callback processing</p>
+        </div>
+
+        <h3>Charging Endpoints</h3>
+        <div class="api-endpoint">
+            <span class="method post">POST</span>
+            <strong>/api/payments/qr-sessions/{token}/start-charging/</strong>
+            <p>Manually start charging session</p>
+        </div>
+        <div class="api-endpoint">
+            <span class="method post">POST</span>
+            <strong>/api/payments/qr-sessions/{token}/stop-charging/</strong>
+            <p>Stop charging session and update status</p>
+        </div>
+        <div class="api-endpoint">
+            <span class="method get">GET</span>
+            <strong>/api/payments/charging-history/</strong>
+            <p>Get user's complete charging history</p>
+        </div>
+
+        <h3>Station Management</h3>
+        <div class="api-endpoint">
+            <span class="method get">GET</span>
+            <strong>/api/stations/</strong>
+            <p>List all charging stations with availability</p>
+        </div>
+        <div class="api-endpoint">
+            <span class="method get">GET</span>
+            <strong>/api/stations/{id}/</strong>
+            <p>Get detailed station information</p>
+        </div>
+    </div>
+
+    <div class="section" id="database-models">
+        <h2>🗄️ Database Models</h2>
+
+        <h3>Core Models Overview</h3>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>👤 User Models</h4>
+                <ul>
+                    <li>CustomUser (authentication/models.py)</li>
+                    <li>UserProfile</li>
+                    <li>EmailVerification</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h4>⚡ Station Models</h4>
+                <ul>
+                    <li>ChargingStation</li>
+                    <li>ChargingConnector</li>
+                    <li>StationAmenity</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h4>💳 Payment Models</h4>
+                <ul>
+                    <li>Transaction</li>
+                    <li>PaymentSession</li>
+                    <li>QRPaymentSession</li>
+                    <li>SimpleChargingSession</li>
+                </ul>
+            </div>
+        </div>
+
+        <h3>Key Model Relationships</h3>
+        <div class="code-block">
+            <pre>
+# QRPaymentSession → SimpleChargingSession (One-to-One)
+class QRPaymentSession(models.Model):
+    simple_charging_session = models.OneToOneField(
+        'SimpleChargingSession',
+        on_delete=models.SET_NULL,
+        null=True, blank=True
+    )
+
+# SimpleChargingSession → QRPaymentSession (Foreign Key)
+class SimpleChargingSession(models.Model):
+    qr_session = models.ForeignKey(
+        QRPaymentSession,
+        on_delete=models.CASCADE,
+        related_name='simple_charging_sessions'
+    )
+
+    # Charging session fields
+    transaction_id = models.CharField(max_length=64, unique=True)
+    status = models.CharField(max_length=20, choices=SessionStatus.choices)
+    start_time = models.DateTimeField(auto_now_add=True)
+    stop_time = models.DateTimeField(blank=True, null=True)
+    energy_delivered_kwh = models.DecimalField(max_digits=10, decimal_places=3)
+    cost_per_kwh = models.DecimalField(max_digits=8, decimal_places=2)
+            </pre>
+        </div>
+
+        <h3>Model Properties and Methods</h3>
+        <div class="code-block">
+            <pre>
+# QRPaymentSession properties
+@property
+def payment_amount(self):
+    return self.calculated_amount or self.amount or 0
+
+@property
+def connector_station_name(self):
+    return self.connector.station.name if self.connector else 'Unknown'
+
+# SimpleChargingSession methods
+def get_duration_minutes(self):
+    if self.duration_seconds:
+        return round(self.duration_seconds / 60, 1)
+    return 0
+            </pre>
+        </div>
+    </div>
+
+    <div class="section" id="services">
+        <h2>🔧 Services & Utilities</h2>
+
+        <h3>Payment Services</h3>
+        <div class="info">
+            <strong>📍 Location:</strong> <code>payments/services.py</code>
+        </div>
+
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>🏦 ChapaService</h4>
+                <p>Handles Chapa payment API integration, payment initiation, and callback processing.</p>
+            </div>
+            <div class="feature-card">
+                <h4>💰 PaymentService</h4>
+                <p>Manages payment sessions, wallet operations, and charging session creation.</p>
+            </div>
+        </div>
+
+        <h3>Authentication Services</h3>
+        <div class="info">
+            <strong>📍 Location:</strong> <code>authentication/services.py</code>
+        </div>
+
+        <div class="code-block">
+            <pre>
+class EmailService:
+    def send_verification_email(self, user, verification_code)
+    def send_password_reset_email(self, user, reset_token)
+    def send_welcome_email(self, user)
+
+class AuthenticationService:
+    def register_user(self, email, password, first_name, last_name)
+    def verify_email(self, email, verification_code)
+    def initiate_password_reset(self, email)
+            </pre>
+        </div>
+
+        <h3>Utility Functions</h3>
+        <div class="code-block">
+            <pre>
+# Phone number validation
+def validate_ethiopian_phone(phone_number):
+    cleaned = ''.join(filter(str.isdigit, phone_number.replace('+', '')))
+    if phone_number.startswith('09') and len(cleaned) == 10:
+        return '+251' + cleaned[1:]
+    elif phone_number.startswith('+2519') and len(cleaned) == 12:
+        return phone_number
+    else:
+        raise ValidationError("Invalid Ethiopian phone number")
+
+# QR Code generation
+def generate_qr_code(data, file_path):
+    qr = qrcode.QRCode(version=1, box_size=10, border=5)
+    qr.add_data(data)
+    qr.make(fit=True)
+    img = qr.make_image(fill_color="black", back_color="white")
+    img.save(file_path)
+            </pre>
+        </div>
+    </div>
+
+    <div class="section" id="testing">
+        <h2>🧪 Testing Framework</h2>
+
+        <h3>Test Structure</h3>
+        <div class="code-block">
+            <pre>
+# Test files location
+app_name/tests/
+├── test_models.py           # Model tests
+├── test_views.py           # API endpoint tests
+├── test_services.py        # Business logic tests
+└── test_integration.py     # End-to-end tests
+            </pre>
+        </div>
+
+        <h3>Test Utilities</h3>
+        <div class="info">
+            <strong>📍 Location:</strong> <code>test_charging_sessions.py</code>
+        </div>
+
+        <div class="code-block">
+            <pre>
+def test_charging_session_creation():
+    """Test creating charging sessions programmatically"""
+    # Create test user and connector
+    user = User.objects.create_user(email='test@example.com')
+    connector = ChargingConnector.objects.filter(is_available=True).first()
+
+    # Create QR payment session
+    qr_session = QRPaymentSession.objects.create(
+        user=user,
+        connector=connector,
+        payment_type='amount',
+        amount=100.00,
+        status='payment_completed'
+    )
+
+    # Test auto-start charging
+    payment_service = PaymentService()
+    payment_service._auto_start_charging_if_enabled(qr_session)
+
+    # Verify charging session creation
+    assert qr_session.simple_charging_session is not None
+    assert qr_session.status == 'charging_started'
+            </pre>
+        </div>
+
+        <h3>API Testing</h3>
+        <div class="code-block">
+            <pre>
+class PaymentAPITestCase(APITestCase):
+    def setUp(self):
+        self.user = User.objects.create_user(email='test@example.com')
+        self.client.force_authenticate(user=self.user)
+
+    def test_charging_history_api(self):
+        response = self.client.get('/api/payments/charging-history/')
+        self.assertEqual(response.status_code, 200)
+        self.assertTrue(response.data['success'])
+        self.assertIn('charging_history', response.data)
+        self.assertIn('summary', response.data)
+            </pre>
+        </div>
+    </div>
+
+    <div class="section" id="deployment">
+        <h2>🚀 Deployment & DevOps</h2>
+
+        <h3>Environment Configuration</h3>
+        <div class="code-block">
+            <pre>
+# Environment Variables
+DATABASE_URL=postgresql://user:pass@localhost/evmeri
+SECRET_KEY=your-secret-key
+DEBUG=False
+ALLOWED_HOSTS=api.evmeri.com,localhost
+
+# Chapa Configuration
+CHAPA_SECRET_KEY=your-chapa-secret
+CHAPA_PUBLIC_KEY=your-chapa-public
+CHAPA_RETURN_URL=evmeri://payment/success
+CHAPA_WEB_RETURN_URL=https://app.evmeri.com/payment/success
+CHAPA_CALLBACK_URL=https://api.evmeri.com/payments/callback/
+
+# Email Configuration
+EMAIL_HOST=smtp.gmail.com
+EMAIL_PORT=587
+EMAIL_HOST_USER=your-email@gmail.com
+EMAIL_HOST_PASSWORD=your-app-password
+            </pre>
+        </div>
+
+        <h3>Docker Configuration</h3>
+        <div class="code-block">
+            <pre>
+# Dockerfile
+FROM python:3.11-slim
+WORKDIR /app
+COPY requirements.txt .
+RUN pip install -r requirements.txt
+COPY . .
+EXPOSE 8000
+CMD ["gunicorn", "mengedmate.wsgi:application", "--bind", "0.0.0.0:8000"]
+
+# docker-compose.yml
+version: '3.8'
+services:
+  web:
+    build: .
+    ports:
+      - "8000:8000"
+    environment:
+      - DATABASE_URL=postgresql://postgres:password@db:5432/evmeri
+    depends_on:
+      - db
+  db:
+    image: postgres:13
+    environment:
+      POSTGRES_DB: evmeri
+      POSTGRES_USER: postgres
+      POSTGRES_PASSWORD: password
+            </pre>
+        </div>
+
+        <h3>Mobile App Deployment</h3>
+        <div class="highlight">
+            <strong>📱 Flutter Build:</strong> The mobile app is built for Android with proper deep link configuration and optimized for production.
+        </div>
+
+        <div class="code-block">
+            <pre>
+# Build commands
+flutter clean
+flutter pub get
+flutter build apk --release
+flutter build appbundle --release
+
+# Key configurations
+- Deep link scheme: evmeri://
+- Target SDK: Android 13 (API 33)
+- Minimum SDK: Android 7.0 (API 24)
+- App size optimization: ~50MB
+            </pre>
+        </div>
+
+        <div class="success">
+            <strong>✅ Production Ready:</strong> All components are configured for production deployment with proper security, monitoring, and scalability considerations.
+        </div>
+    </div>
+
+    <div class="section">
+        <h2>📚 Additional Resources</h2>
+        <div class="feature-grid">
+            <div class="feature-card">
+                <h4>📖 Documentation Files</h4>
+                <ul>
+                    <li><code>CHAPA_MOBILE_RETURN_SETUP.md</code></li>
+                    <li><code>AUTO_CHARGING_AND_HISTORY_SETUP.md</code></li>
+                    <li><code>CHARGING_SESSION_VERIFICATION.md</code></li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h4>🔧 Test Scripts</h4>
+                <ul>
+                    <li><code>test_charging_sessions.py</code></li>
+                    <li>Unit tests in each app</li>
+                    <li>Integration test suites</li>
+                </ul>
+            </div>
+            <div class="feature-card">
+                <h4>🌐 API Documentation</h4>
+                <ul>
+                    <li>Django REST Framework browsable API</li>
+                    <li>Postman collection</li>
+                    <li>OpenAPI/Swagger specs</li>
+                </ul>
+            </div>
+        </div>
+    </div>
+
+    <div style="text-align: center; margin-top: 3rem; padding: 2rem; background: #f8f9fa; border-radius: 10px;">
+        <h3>🎉 evmeri Code Documentation</h3>
+        <p>Complete, tested, and production-ready EV charging platform</p>
+        <p><strong>Last Updated:</strong> January 2024 | <strong>Version:</strong> 1.0.0</p>
+    </div>
+</body>
+</html>

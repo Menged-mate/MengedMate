@@ -14,5 +14,6 @@ urlpatterns = [
     path('troubleshooting/', views.TroubleshootingView.as_view(), name='troubleshooting'),
     path('user-guide/', views.UserDocumentationView.as_view(), name='user_documentation'),
     path('technical/', views.TechnicalDocumentationView.as_view(), name='technical_documentation'),
+    path('code/', views.CodeDocumentationView.as_view(), name='code_documentation'),
     path('api/endpoint/<int:endpoint_id>/', views.api_endpoint_detail, name='api_endpoint_detail'),
 ]

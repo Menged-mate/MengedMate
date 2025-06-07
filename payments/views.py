@@ -174,7 +174,7 @@ class QRConnectorInfoView(APIView):
             serializer = QRConnectorInfoSerializer(connector)
             return Response({
                 'success': True,
-                'connector': serializer.data
+                'connector_info': serializer.data
             }, status=status.HTTP_200_OK)
 
         except ChargingConnector.DoesNotExist:

@@ -181,3 +181,34 @@ class TechnicalDocumentationView(TemplateView):
             context['documentation_type'] = 'technical'
 
         return context
+
+
+class CodeDocumentationView(TemplateView):
+    """Code documentation page displaying static HTML file"""
+    template_name = 'docs/static_documentation.html'
+
+    def get_context_data(self, **kwargs):
+        context = super().get_context_data(**kwargs)
+
+        # Read the static HTML file
+        try:
+            base_dir = settings.BASE_DIR
+            static_doc_path = os.path.join(base_dir, 'docs', 'static', 'docs', 'code_documentation.html')
+
+            with open(static_doc_path, 'r', encoding='utf-8') as file:
+                html_content = file.read()
+
+            context['documentation_content'] = html_content
+            context['documentation_title'] = 'Code Documentation'
+            context['documentation_type'] = 'code'
+
+        except FileNotFoundError:
+            context['documentation_content'] = '<p>Code documentation file not found.</p>'
+            context['documentation_title'] = 'Code Documentation - File Not Found'
+            context['documentation_type'] = 'code'
+        except Exception as e:
+            context['documentation_content'] = f'<p>Error loading documentation: {str(e)}</p>'
+            context['documentation_title'] = 'Code Documentation - Error'
+            context['documentation_type'] = 'code'
+
+        return context
