@@ -57,7 +57,7 @@ class UserSearchPreferencesSerializer(serializers.ModelSerializer):
 class VehicleSerializer(serializers.ModelSerializer):
     efficiency_rating = serializers.CharField(source='get_efficiency_rating', read_only=True)
     connector_types = serializers.SerializerMethodField()
-    range_km = serializers.IntegerField(source='estimated_range_km')
+    range_km = serializers.IntegerField(source='estimated_range_km', required=False, allow_null=True)
 
     class Meta:
         model = Vehicle
@@ -68,6 +68,16 @@ class VehicleSerializer(serializers.ModelSerializer):
             'total_energy_charged_kwh', 'last_used_at'
         ]
         read_only_fields = ['total_charging_sessions', 'total_energy_charged_kwh', 'last_used_at', 'connector_types']
+        extra_kwargs = {
+            'name': {'required': True},
+            'make': {'required': True},
+            'model': {'required': True},
+            'year': {'required': True},
+            'battery_capacity_kwh': {'required': True},
+            'connector_type': {'required': True},
+            'efficiency_kwh_per_100km': {'required': False, 'allow_null': True},
+            'is_primary': {'required': False, 'default': False}
+        }
 
     def get_connector_types(self, obj):
         """Return connector_type as a list for compatibility with mobile app"""

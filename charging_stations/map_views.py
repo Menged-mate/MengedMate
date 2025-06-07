@@ -12,8 +12,7 @@ from .serializers import (
     StationDetailSerializer,
     FavoriteStationSerializer
 )
-from authentication.authentication import AnonymousAuthentication, TokenAuthentication
-from rest_framework.authentication import SessionAuthentication
+from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 import math
 
 User = get_user_model()
@@ -21,7 +20,7 @@ User = get_user_model()
 class PublicStationListView(generics.ListAPIView):
     serializer_class = MapStationSerializer
     permission_classes = [permissions.AllowAny]
-    authentication_classes = [AnonymousAuthentication, TokenAuthentication, SessionAuthentication]
+    authentication_classes = []
     
     @method_decorator(cache_page(60 * 5))
     def list(self, request, *args, **kwargs):
@@ -71,10 +70,9 @@ class PublicStationListView(generics.ListAPIView):
         return queryset
 
 class NearbyStationsView(generics.ListAPIView):
-  
     serializer_class = MapStationSerializer
     permission_classes = [permissions.AllowAny]
-    authentication_classes = [AnonymousAuthentication, TokenAuthentication, SessionAuthentication]
+    authentication_classes = []
     
     def get_queryset(self):
         lat = self.request.query_params.get('lat')
@@ -123,7 +121,7 @@ class NearbyStationsView(generics.ListAPIView):
 class StationSearchView(generics.ListAPIView):
     serializer_class = MapStationSerializer
     permission_classes = [permissions.AllowAny]
-    authentication_classes = [AnonymousAuthentication, TokenAuthentication, SessionAuthentication]
+    authentication_classes = []
     
     def get_queryset(self):
         query = self.request.query_params.get('q', '')
@@ -139,10 +137,9 @@ class StationSearchView(generics.ListAPIView):
         ).filter(is_active=True, is_public=True)
 
 class PublicStationDetailView(generics.RetrieveAPIView):
-   
     serializer_class = StationDetailSerializer
     permission_classes = [permissions.AllowAny]
-    authentication_classes = [AnonymousAuthentication, TokenAuthentication, SessionAuthentication]
+    authentication_classes = []
     lookup_field = 'id'
     queryset = ChargingStation.objects.filter(is_active=True, is_public=True)
 
