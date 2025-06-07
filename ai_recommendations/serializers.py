@@ -143,16 +143,7 @@ class NearbyStationSearchSerializer(serializers.Serializer):
         max_value=100.0,
         required=False
     )
-    connector_type = serializers.ChoiceField(
-        choices=[
-            ('type1', 'Type 1'),
-            ('type2', 'Type 2'),
-            ('ccs1', 'CCS1'),
-            ('ccs2', 'CCS2'),
-            ('chademo', 'CHAdeMO'),
-            ('tesla', 'Tesla Supercharger'),
-            ('gbt', 'GB/T')
-        ],
+    connector_type = serializers.CharField(
         required=False,
         allow_blank=True,
         allow_null=True

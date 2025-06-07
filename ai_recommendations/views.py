@@ -36,8 +36,12 @@ class AIRecommendationsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def post(self, request):
+        # Debug: Log the incoming request data
+        print(f"🤖 AI Recommendations request data: {request.data}")
+
         serializer = NearbyStationSearchSerializer(data=request.data)
         if not serializer.is_valid():
+            print(f"❌ AI Recommendations validation errors: {serializer.errors}")
             return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
         
         data = serializer.validated_data
