@@ -265,6 +265,12 @@ class Command(BaseCommand):
             # Create the station
             station = ChargingStation.objects.create(**station_data)
             created_stations += 1
+
+            # Randomly set some stations as unavailable for testing
+            if random.random() < 0.3:  # 30% chance of being unavailable
+                station.status = random.choice(['under_maintenance', 'closed'])
+                station.available_connectors = 0
+                station.save()
             
             # Add random connectors to each station
             num_connector_types = random.randint(2, 4)

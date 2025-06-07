@@ -173,6 +173,8 @@ class MapStationSerializer(serializers.ModelSerializer):
     owner_name = serializers.CharField(source='owner.company_name', read_only=True)
     is_verified_owner = serializers.SerializerMethodField()
     connector_types = serializers.SerializerMethodField()
+    marker_color = serializers.SerializerMethodField()
+    availability_status = serializers.SerializerMethodField()
 
     class Meta:
         model = ChargingStation
@@ -180,7 +182,8 @@ class MapStationSerializer(serializers.ModelSerializer):
             'id', 'name', 'latitude', 'longitude', 'rating',
             'status', 'price_range', 'available_connectors',
             'total_connectors', 'marker_icon', 'owner_name',
-            'is_verified_owner', 'connector_types'
+            'is_verified_owner', 'connector_types', 'marker_color',
+            'availability_status', 'city', 'country'
         ]
 
     def get_is_verified_owner(self, obj):
@@ -188,6 +191,30 @@ class MapStationSerializer(serializers.ModelSerializer):
 
     def get_connector_types(self, obj):
         return list(obj.connectors.values_list('connector_type', flat=True).distinct())
+
+    def get_marker_color(self, obj):
+        """Return marker color based on availability status"""
+        if obj.status in ['closed', 'under_maintenance']:
+            return 'red'
+        elif obj.available_connectors == 0:
+            return 'red'
+        elif obj.available_connectors < obj.total_connectors:
+            return 'yellow'
+        else:
+            return 'green'
+
+    def get_availability_status(self, obj):
+        """Return human-readable availability status"""
+        if obj.status == 'closed':
+            return 'Closed'
+        elif obj.status == 'under_maintenance':
+            return 'Under Maintenance'
+        elif obj.available_connectors == 0:
+            return 'All Connectors Busy'
+        elif obj.available_connectors < obj.total_connectors:
+            return f'{obj.available_connectors}/{obj.total_connectors} Available'
+        else:
+            return 'Available'
 
 class StationDetailSerializer(serializers.ModelSerializer):
 

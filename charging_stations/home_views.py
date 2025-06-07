@@ -26,10 +26,10 @@ class AppConfigView(APIView):
             'version': '1.0.0',
             'map': {
                 'default_center': {
-                    'lat': 38.9072,
-                    'lng': -77.0369
+                    'lat': 9.0320,
+                    'lng': 38.7469
                 },
-                'default_zoom': 13,
+                'default_zoom': 7,
                 'max_zoom': 18,
                 'min_zoom': 3
             },

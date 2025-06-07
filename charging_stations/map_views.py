@@ -62,6 +62,8 @@ class PublicStationListView(generics.ListAPIView):
             except ValueError:
                 pass
         
+        # Only filter by availability if explicitly requested
+        # This ensures unavailable stations still show (as red markers)
         available_only = self.request.query_params.get('available_only') == 'true'
         if available_only:
             queryset = queryset.filter(available_connectors__gt=0)
