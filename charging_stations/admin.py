@@ -242,20 +242,26 @@ class StationOwnerAdmin(admin.ModelAdmin):
 
 @admin.register(ChargingStation)
 class ChargingStationAdmin(admin.ModelAdmin):
-    list_display = ('name', 'owner_company', 'location_display', 'status_badge', 'connector_count')
-    list_filter = ('is_active', 'city', 'state', 'owner')
+    list_display = ('name', 'owner_company', 'location_display', 'operational_status_badge', 'active_status_badge', 'connector_availability', 'connector_count')
+    list_filter = ('status', 'is_active', 'city', 'state', 'country', 'owner')
     search_fields = ('name', 'address', 'city', 'owner__company_name')
     inlines = [ChargingConnectorInline, StationImageInline]
-    readonly_fields = ('created_at', 'updated_at', 'map_preview')
+    readonly_fields = ('created_at', 'updated_at', 'available_connectors', 'total_connectors', 'map_preview')
     fieldsets = (
         (None, {
             'fields': ('name', 'owner', 'description')
         }),
         ('Location', {
-            'fields': ('address', 'city', 'state', 'zip_code', 'latitude', 'longitude', 'map_preview')
+            'fields': ('address', 'city', 'state', 'zip_code', 'country', 'latitude', 'longitude', 'map_preview')
         }),
-        ('Status', {
-            'fields': ('is_active', 'opening_hours')
+        ('Operational Status', {
+            'fields': ('status', 'is_active', 'is_public', 'opening_hours'),
+            'description': 'Control station availability and operational status'
+        }),
+        ('Connector Information', {
+            'fields': ('available_connectors', 'total_connectors'),
+            'classes': ('collapse',),
+            'description': 'Connector counts are automatically updated'
         }),
         ('Amenities', {
             'fields': ('has_restroom', 'has_wifi', 'has_restaurant', 'has_shopping')
@@ -268,6 +274,8 @@ class ChargingStationAdmin(admin.ModelAdmin):
     list_per_page = 20
     save_on_top = True
 
+    actions = ['mark_operational', 'mark_under_maintenance', 'mark_closed', 'activate_stations', 'deactivate_stations']
+
     def owner_company(self, obj):
         if obj.owner and obj.owner.verification_status == 'verified':
             return format_html('{} <span style="color: green;">✓</span>', obj.owner.company_name)
@@ -275,20 +283,65 @@ class ChargingStationAdmin(admin.ModelAdmin):
     owner_company.short_description = 'Owner'
 
     def location_display(self, obj):
-        return f"{obj.city}, {obj.state}"
+        location = f"{obj.city}"
+        if obj.state:
+            location += f", {obj.state}"
+        if obj.country:
+            location += f" ({obj.country})"
+        return location
     location_display.short_description = 'Location'
 
-    def status_badge(self, obj):
+    def operational_status_badge(self, obj):
+        status_colors = {
+            'operational': '#28a745',
+            'under_maintenance': '#ffc107',
+            'closed': '#dc3545',
+            'coming_soon': '#17a2b8'
+        }
+        status_icons = {
+            'operational': '✅',
+            'under_maintenance': '🔧',
+            'closed': '🚫',
+            'coming_soon': '🚧'
+        }
+        color = status_colors.get(obj.status, '#6c757d')
+        icon = status_icons.get(obj.status, '❓')
+        return format_html(
+            '<span style="background-color: {}; color: white; padding: 3px 8px; border-radius: 3px;">{} {}</span>',
+            color, icon, obj.get_status_display()
+        )
+    operational_status_badge.short_description = 'Operational Status'
+
+    def active_status_badge(self, obj):
         if obj.is_active:
-            return format_html('<span style="background-color: #28a745; color: white; padding: 3px 8px; border-radius: 3px;">Active</span>')
+            return format_html('<span style="background-color: #28a745; color: white; padding: 3px 8px; border-radius: 3px;">🟢 Active</span>')
         else:
-            return format_html('<span style="background-color: #dc3545; color: white; padding: 3px 8px; border-radius: 3px;">Inactive</span>')
-    status_badge.short_description = 'Status'
+            return format_html('<span style="background-color: #dc3545; color: white; padding: 3px 8px; border-radius: 3px;">🔴 Inactive</span>')
+    active_status_badge.short_description = 'Active Status'
+
+    def connector_availability(self, obj):
+        available = obj.available_connectors
+        total = obj.total_connectors
+        if available == 0:
+            color = '#dc3545'  # Red
+            icon = '🔴'
+        elif available < total:
+            color = '#ffc107'  # Yellow
+            icon = '🟡'
+        else:
+            color = '#28a745'  # Green
+            icon = '🟢'
+
+        return format_html(
+            '<span style="color: {}; font-weight: bold;">{} {}/{}</span>',
+            color, icon, available, total
+        )
+    connector_availability.short_description = 'Connector Availability'
 
     def connector_count(self, obj):
         count = obj.connectors.count()
         return count
-    connector_count.short_description = 'Connectors'
+    connector_count.short_description = 'Total Connectors'
 
     def map_preview(self, obj):
         if obj.latitude and obj.longitude:
@@ -301,22 +354,118 @@ class ChargingStationAdmin(admin.ModelAdmin):
         return "Location coordinates not set"
     map_preview.short_description = 'Map Location'
 
+    # Admin Actions for Station Status Management
+    def mark_operational(self, request, queryset):
+        updated = queryset.update(status='operational')
+        # Update available connectors for operational stations
+        for station in queryset:
+            station.update_connector_counts()
+        self.message_user(request, f'{updated} station(s) marked as operational.')
+    mark_operational.short_description = "✅ Mark as operational"
+
+    def mark_under_maintenance(self, request, queryset):
+        updated = queryset.update(status='under_maintenance', available_connectors=0)
+        self.message_user(request, f'{updated} station(s) marked as under maintenance.')
+    mark_under_maintenance.short_description = "🔧 Mark as under maintenance"
+
+    def mark_closed(self, request, queryset):
+        updated = queryset.update(status='closed', available_connectors=0)
+        self.message_user(request, f'{updated} station(s) marked as closed.')
+    mark_closed.short_description = "🚫 Mark as closed"
+
+    def activate_stations(self, request, queryset):
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f'{updated} station(s) activated.')
+    activate_stations.short_description = "🟢 Activate stations"
+
+    def deactivate_stations(self, request, queryset):
+        updated = queryset.update(is_active=False)
+        self.message_user(request, f'{updated} station(s) deactivated.')
+    deactivate_stations.short_description = "🔴 Deactivate stations"
+
 @admin.register(ChargingConnector)
 class ChargingConnectorAdmin(admin.ModelAdmin):
-    list_display = ('connector_type', 'station_name', 'power_kw', 'availability_status')
-    list_filter = ('connector_type', 'is_available', 'station__name')
-    search_fields = ('station__name', 'connector_type')
+    list_display = ('connector_type_display', 'station_name', 'power_kw', 'quantity_display', 'availability_status', 'status_badge')
+    list_filter = ('connector_type', 'status', 'is_available', 'station__city', 'station__country')
+    search_fields = ('station__name', 'connector_type', 'station__city')
+    readonly_fields = ('created_at', 'updated_at')
+    fieldsets = (
+        (None, {
+            'fields': ('station', 'connector_type', 'power_kw')
+        }),
+        ('Availability', {
+            'fields': ('quantity', 'available_quantity', 'is_available', 'status')
+        }),
+        ('Pricing', {
+            'fields': ('price_per_kwh',)
+        }),
+        ('Additional Information', {
+            'fields': ('description',),
+            'classes': ('collapse',),
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
+
+    actions = ['mark_available', 'mark_unavailable', 'mark_out_of_order', 'mark_maintenance']
+
+    def connector_type_display(self, obj):
+        return obj.get_connector_type_display()
+    connector_type_display.short_description = 'Connector Type'
 
     def station_name(self, obj):
         return obj.station.name
     station_name.short_description = 'Station'
 
+    def quantity_display(self, obj):
+        return f"{obj.available_quantity}/{obj.quantity}"
+    quantity_display.short_description = 'Available/Total'
+
     def availability_status(self, obj):
-        if obj.is_available:
-            return format_html('<span style="color: green;">Available</span>')
+        if obj.is_available and obj.available_quantity > 0:
+            return format_html('<span style="color: green; font-weight: bold;">🟢 Available</span>')
+        elif obj.available_quantity == 0:
+            return format_html('<span style="color: red; font-weight: bold;">🔴 All Busy</span>')
         else:
-            return format_html('<span style="color: red;">Unavailable</span>')
+            return format_html('<span style="color: red; font-weight: bold;">🔴 Unavailable</span>')
     availability_status.short_description = 'Availability'
+
+    def status_badge(self, obj):
+        status_colors = {
+            'available': '#28a745',
+            'occupied': '#ffc107',
+            'out_of_order': '#dc3545',
+            'maintenance': '#6c757d'
+        }
+        color = status_colors.get(obj.status, '#6c757d')
+        return format_html(
+            '<span style="background-color: {}; color: white; padding: 2px 6px; border-radius: 3px; font-size: 11px;">{}</span>',
+            color, obj.get_status_display()
+        )
+    status_badge.short_description = 'Status'
+
+    # Admin Actions
+    def mark_available(self, request, queryset):
+        updated = queryset.update(is_available=True, status='available')
+        self.message_user(request, f'{updated} connector(s) marked as available.')
+    mark_available.short_description = "🟢 Mark as available"
+
+    def mark_unavailable(self, request, queryset):
+        updated = queryset.update(is_available=False, available_quantity=0)
+        self.message_user(request, f'{updated} connector(s) marked as unavailable.')
+    mark_unavailable.short_description = "🔴 Mark as unavailable"
+
+    def mark_out_of_order(self, request, queryset):
+        updated = queryset.update(is_available=False, status='out_of_order', available_quantity=0)
+        self.message_user(request, f'{updated} connector(s) marked as out of order.')
+    mark_out_of_order.short_description = "⚠️ Mark as out of order"
+
+    def mark_maintenance(self, request, queryset):
+        updated = queryset.update(is_available=False, status='maintenance', available_quantity=0)
+        self.message_user(request, f'{updated} connector(s) marked as under maintenance.')
+    mark_maintenance.short_description = "🔧 Mark as under maintenance"
 
 
 @admin.register(AppContent)
