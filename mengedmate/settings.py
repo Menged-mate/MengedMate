@@ -61,6 +61,7 @@ INSTALLED_APPS = [
     "ocpp_integration",
     "support",
     "docs",
+    "ai_recommendations",
 ]
 
 JAZZMIN_SETTINGS = {
