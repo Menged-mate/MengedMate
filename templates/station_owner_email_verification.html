@@ -1,0 +1,272 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Verify Your Email - evmeri Station Owner</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            line-height: 1.6;
+            color: #2d3748;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            padding: 20px;
+        }
+
+        .email-wrapper {
+            max-width: 600px;
+            margin: 0 auto;
+            background: #ffffff;
+            border-radius: 16px;
+            overflow: hidden;
+            box-shadow: 0 20px 40px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background: linear-gradient(135deg, #805ad5 0%, #b794f6 100%);
+            padding: 40px 30px;
+            text-align: center;
+            position: relative;
+        }
+
+        .header::before {
+            content: '';
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: url('data:image/svg+xml,<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><defs><pattern id="grain" width="100" height="100" patternUnits="userSpaceOnUse"><circle cx="25" cy="25" r="1" fill="white" opacity="0.1"/><circle cx="75" cy="75" r="1" fill="white" opacity="0.1"/></pattern></defs><rect width="100" height="100" fill="url(%23grain)"/></svg>');
+        }
+
+        .logo {
+            position: relative;
+            z-index: 1;
+        }
+
+        .logo h1 {
+            color: #ffffff;
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        .logo p {
+            color: #e9d8fd;
+            font-size: 16px;
+            font-weight: 400;
+        }
+
+        .content {
+            padding: 50px 40px;
+            text-align: center;
+        }
+
+        .welcome-title {
+            font-size: 28px;
+            font-weight: 700;
+            color: #1a202c;
+            margin-bottom: 16px;
+        }
+
+        .welcome-text {
+            font-size: 18px;
+            color: #4a5568;
+            margin-bottom: 32px;
+            line-height: 1.6;
+        }
+
+        .verification-section {
+            background: linear-gradient(135deg, #f7fafc 0%, #edf2f7 100%);
+            border-radius: 16px;
+            padding: 32px;
+            margin: 32px 0;
+            border: 2px solid #e2e8f0;
+        }
+
+        .verification-label {
+            font-size: 16px;
+            font-weight: 600;
+            color: #4a5568;
+            margin-bottom: 16px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .verification-code {
+            font-size: 36px;
+            font-weight: 800;
+            color: #805ad5;
+            background: #ffffff;
+            padding: 20px 32px;
+            border-radius: 12px;
+            letter-spacing: 8px;
+            border: 3px solid #805ad5;
+            box-shadow: 0 4px 12px rgba(128, 90, 213, 0.2);
+            margin-bottom: 16px;
+            font-family: 'Courier New', monospace;
+        }
+
+        .instructions {
+            background: #f0fff4;
+            border: 1px solid #9ae6b4;
+            border-radius: 12px;
+            padding: 24px;
+            margin: 24px 0;
+            text-align: left;
+        }
+
+        .instructions p {
+            color: #22543d;
+            font-size: 16px;
+            margin-bottom: 12px;
+        }
+
+        .security-note {
+            background: #fef5e7;
+            border: 1px solid #f6ad55;
+            border-radius: 12px;
+            padding: 20px;
+            margin: 24px 0;
+            text-align: left;
+        }
+
+        .security-note p {
+            color: #744210;
+            font-size: 14px;
+        }
+
+        .footer {
+            background: #f8fafc;
+            padding: 32px 40px;
+            text-align: center;
+            border-top: 1px solid #e2e8f0;
+        }
+
+        .footer-content {
+            color: #718096;
+            font-size: 14px;
+            line-height: 1.5;
+        }
+
+        .footer-links {
+            margin: 16px 0;
+        }
+
+        .footer-links a {
+            color: #805ad5;
+            text-decoration: none;
+            margin: 0 12px;
+            font-weight: 500;
+        }
+
+        .footer-links a:hover {
+            text-decoration: underline;
+        }
+
+        .social-icons {
+            margin: 16px 0;
+        }
+
+        .social-icon {
+            display: inline-block;
+            margin: 0 8px;
+            font-size: 20px;
+            text-decoration: none;
+        }
+
+        @media (max-width: 600px) {
+            body {
+                padding: 10px;
+            }
+
+            .content {
+                padding: 30px 20px;
+            }
+
+            .header {
+                padding: 30px 20px;
+            }
+
+            .verification-code {
+                font-size: 28px;
+                letter-spacing: 4px;
+                padding: 16px 24px;
+            }
+
+            .footer {
+                padding: 24px 20px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="email-wrapper">
+        <div class="header">
+            <div class="logo">
+                <h1>🏢 evmeri</h1>
+                <p>Station Owner Platform</p>
+            </div>
+        </div>
+
+        <div class="content">
+            <h1 class="welcome-title">Welcome to evmeri Station Owner! 🎉</h1>
+            <p class="welcome-text">
+                Hello <strong>{{ user.first_name|default:"there" }}</strong>,<br>
+                Thank you for joining evmeri as a charging station owner. You're just one step away from managing your EV charging network.
+            </p>
+
+            <div class="verification-section">
+                <div class="verification-label">Your Verification Code</div>
+                <div class="verification-code">{{ verification_code }}</div>
+            </div>
+
+            <div class="instructions">
+                <p><strong>📱 How to verify:</strong> Enter this code in the verification page to activate your station owner account and start adding your charging stations.</p>
+                <p><strong>⚡ Next Steps:</strong> After verification, you'll complete your business profile and upload required documents for approval.</p>
+            </div>
+
+            <div class="security-note">
+                <p><strong>🔒 Security Note:</strong> This code expires in 24 hours. If you didn't create a station owner account with evmeri, please ignore this email.</p>
+            </div>
+
+            <p style="color: #4a5568; margin-top: 32px;">
+                Need help? Our station owner support team is here for you 24/7.<br>
+                <strong>Welcome to the evmeri network!</strong><br>
+                The evmeri Station Owner Team
+            </p>
+        </div>
+
+        <div class="footer">
+            <div class="footer-content">
+                <p><strong>evmeri</strong> - Powering Ethiopia's Electric Future</p>
+                <p>&copy; {% now "Y" %} evmeri. All rights reserved.</p>
+
+                <div class="footer-links">
+                    <a href="#">Station Owner Guide</a>
+                    <a href="#">Support Center</a>
+                    <a href="#">Contact Us</a>
+                </div>
+
+                <div class="social-icons">
+                    <a href="#" class="social-icon">📧</a>
+                    <a href="#" class="social-icon">🐦</a>
+                    <a href="#" class="social-icon">📘</a>
+                </div>
+
+                <p style="margin-top: 16px; font-size: 12px;">
+                    This email was sent to {{ user.email }}<br>
+                    You're receiving this because you created a station owner account with evmeri.
+                </p>
+            </div>
+        </div>
+    </div>
+</body>
+</html>

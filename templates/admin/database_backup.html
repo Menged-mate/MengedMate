@@ -1,0 +1,289 @@
+{% extends "admin/base_site.html" %}
+{% load static %}
+
+{% block title %}{{ title }} | {{ site_title|default:"Django site admin" }}{% endblock %}
+
+{% block extrahead %}
+<style>
+    .backup-container {
+        max-width: 1200px;
+        margin: 20px auto;
+        padding: 20px;
+    }
+    
+    .backup-actions {
+        background: #f8f9fa;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        padding: 20px;
+        margin-bottom: 30px;
+    }
+    
+    .backup-btn {
+        background: #28a745;
+        color: white;
+        border: none;
+        padding: 12px 24px;
+        border-radius: 6px;
+        font-size: 16px;
+        cursor: pointer;
+        margin-right: 10px;
+    }
+    
+    .backup-btn:hover {
+        background: #218838;
+    }
+    
+    .backup-btn:disabled {
+        background: #6c757d;
+        cursor: not-allowed;
+    }
+    
+    .backup-history {
+        background: white;
+        border: 1px solid #dee2e6;
+        border-radius: 8px;
+        overflow: hidden;
+    }
+    
+    .backup-history h3 {
+        background: #007cba;
+        color: white;
+        margin: 0;
+        padding: 15px 20px;
+        font-size: 18px;
+    }
+    
+    .backup-table {
+        width: 100%;
+        border-collapse: collapse;
+    }
+    
+    .backup-table th,
+    .backup-table td {
+        padding: 12px 20px;
+        text-align: left;
+        border-bottom: 1px solid #dee2e6;
+    }
+    
+    .backup-table th {
+        background: #f8f9fa;
+        font-weight: 600;
+    }
+    
+    .backup-table tr:hover {
+        background: #f8f9fa;
+    }
+    
+    .action-btn {
+        padding: 6px 12px;
+        border: none;
+        border-radius: 4px;
+        cursor: pointer;
+        margin-right: 5px;
+        font-size: 12px;
+    }
+    
+    .download-btn {
+        background: #007cba;
+        color: white;
+    }
+    
+    .delete-btn {
+        background: #dc3545;
+        color: white;
+    }
+    
+    .action-btn:hover {
+        opacity: 0.8;
+    }
+    
+    .loading {
+        display: none;
+        color: #007cba;
+        font-style: italic;
+    }
+    
+    .alert {
+        padding: 12px 20px;
+        margin: 10px 0;
+        border-radius: 6px;
+        border: 1px solid;
+    }
+    
+    .alert-success {
+        background: #d4edda;
+        border-color: #c3e6cb;
+        color: #155724;
+    }
+    
+    .alert-error {
+        background: #f8d7da;
+        border-color: #f5c6cb;
+        color: #721c24;
+    }
+</style>
+{% endblock %}
+
+{% block content %}
+<div class="backup-container">
+    <h1>{{ title }}</h1>
+    
+    <div class="backup-actions">
+        <h3>Create New Backup</h3>
+        <p>Create a complete backup of the evmeri database. This includes all station data, user information, and system settings.</p>
+        
+        <button id="createBackupBtn" class="backup-btn" onclick="createBackup()">
+            🗄️ Create Database Backup
+        </button>
+        
+        <span id="loadingText" class="loading">Creating backup, please wait...</span>
+        
+        <div id="alertContainer"></div>
+    </div>
+    
+    <div class="backup-history">
+        <h3>📋 Backup History</h3>
+        
+        {% if backup_history %}
+        <table class="backup-table">
+            <thead>
+                <tr>
+                    <th>Filename</th>
+                    <th>Size</th>
+                    <th>Created</th>
+                    <th>Actions</th>
+                </tr>
+            </thead>
+            <tbody>
+                {% for backup in backup_history %}
+                <tr>
+                    <td>{{ backup.filename }}</td>
+                    <td>{{ backup.size_mb }} MB</td>
+                    <td>{{ backup.created_at|date:"Y-m-d H:i:s" }}</td>
+                    <td>
+                        <button class="action-btn download-btn" onclick="downloadBackup('{{ backup.filename }}')">
+                            📥 Download
+                        </button>
+                        <button class="action-btn delete-btn" onclick="deleteBackup('{{ backup.filename }}')">
+                            🗑️ Delete
+                        </button>
+                    </td>
+                </tr>
+                {% endfor %}
+            </tbody>
+        </table>
+        {% else %}
+        <div style="padding: 40px; text-align: center; color: #6c757d;">
+            <p>No backup files found. Create your first backup using the button above.</p>
+        </div>
+        {% endif %}
+    </div>
+</div>
+
+<script>
+function createBackup() {
+    const btn = document.getElementById('createBackupBtn');
+    const loading = document.getElementById('loadingText');
+    const alertContainer = document.getElementById('alertContainer');
+    
+    btn.disabled = true;
+    loading.style.display = 'inline';
+    alertContainer.innerHTML = '';
+    
+    fetch('', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: 'action=create_backup'
+    })
+    .then(response => response.json())
+    .then(data => {
+        btn.disabled = false;
+        loading.style.display = 'none';
+        
+        if (data.success) {
+            alertContainer.innerHTML = `
+                <div class="alert alert-success">
+                    ✅ Backup created successfully: ${data.filename} (${data.size_mb} MB)
+                </div>
+            `;
+            // Reload page to show new backup in history
+            setTimeout(() => location.reload(), 2000);
+        } else {
+            alertContainer.innerHTML = `
+                <div class="alert alert-error">
+                    ❌ Backup failed: ${data.error}
+                </div>
+            `;
+        }
+    })
+    .catch(error => {
+        btn.disabled = false;
+        loading.style.display = 'none';
+        alertContainer.innerHTML = `
+            <div class="alert alert-error">
+                ❌ Network error: ${error.message}
+            </div>
+        `;
+    });
+}
+
+function downloadBackup(filename) {
+    const form = document.createElement('form');
+    form.method = 'POST';
+    form.action = '';
+    
+    const csrfInput = document.createElement('input');
+    csrfInput.type = 'hidden';
+    csrfInput.name = 'csrfmiddlewaretoken';
+    csrfInput.value = '{{ csrf_token }}';
+    
+    const actionInput = document.createElement('input');
+    actionInput.type = 'hidden';
+    actionInput.name = 'action';
+    actionInput.value = 'download_backup';
+    
+    const filenameInput = document.createElement('input');
+    filenameInput.type = 'hidden';
+    filenameInput.name = 'filename';
+    filenameInput.value = filename;
+    
+    form.appendChild(csrfInput);
+    form.appendChild(actionInput);
+    form.appendChild(filenameInput);
+    
+    document.body.appendChild(form);
+    form.submit();
+    document.body.removeChild(form);
+}
+
+function deleteBackup(filename) {
+    if (!confirm(`Are you sure you want to delete backup: ${filename}?`)) {
+        return;
+    }
+    
+    fetch('', {
+        method: 'POST',
+        headers: {
+            'Content-Type': 'application/x-www-form-urlencoded',
+            'X-CSRFToken': '{{ csrf_token }}'
+        },
+        body: `action=delete_backup&filename=${encodeURIComponent(filename)}`
+    })
+    .then(response => response.json())
+    .then(data => {
+        if (data.success) {
+            location.reload();
+        } else {
+            alert(`Delete failed: ${data.error}`);
+        }
+    })
+    .catch(error => {
+        alert(`Network error: ${error.message}`);
+    });
+}
+</script>
+{% endblock %}
