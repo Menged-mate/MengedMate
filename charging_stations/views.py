@@ -494,33 +494,46 @@ class StationReviewListCreateView(generics.ListCreateAPIView):
         ).order_by('-created_at')
 
     def create(self, request, *args, **kwargs):
-        station_id = self.kwargs.get('station_id')
-        station = get_object_or_404(ChargingStation, id=station_id)
+        try:
+            station_id = self.kwargs.get('station_id')
+            station = get_object_or_404(ChargingStation, id=station_id)
 
-        # Check if user already has a review for this station
-        existing_review = StationReview.objects.filter(
-            user=request.user,
-            station=station
-        ).first()
+            # Check if user already has a review for this station
+            existing_review = StationReview.objects.filter(
+                user=request.user,
+                station=station
+            ).first()
 
-        serializer = self.get_serializer(data=request.data)
-        serializer.is_valid(raise_exception=True)
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
 
-        if existing_review:
-            # Update existing review instead of creating new one
-            for attr, value in serializer.validated_data.items():
-                setattr(existing_review, attr, value)
-            existing_review.updated_at = timezone.now()
-            existing_review.save()  # This will trigger the station rating update
+            if existing_review:
+                # Update existing review instead of creating new one
+                for attr, value in serializer.validated_data.items():
+                    setattr(existing_review, attr, value)
+                existing_review.updated_at = timezone.now()
+                existing_review.save()  # This will trigger the station rating update
 
-            # Return the updated review using the list serializer
-            response_serializer = StationReviewListSerializer(existing_review)
-            return Response(response_serializer.data, status=status.HTTP_200_OK)
-        else:
-            # Create new review
-            review = serializer.save(user=request.user, station=station)
-            response_serializer = StationReviewListSerializer(review)
-            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+                # Return the updated review using the list serializer
+                response_serializer = StationReviewListSerializer(existing_review)
+                return Response(response_serializer.data, status=status.HTTP_200_OK)
+            else:
+                # Create new review
+                review = serializer.save(user=request.user, station=station)
+                response_serializer = StationReviewListSerializer(review)
+                return Response(response_serializer.data, status=status.HTTP_201_CREATED)
+
+        except Exception as e:
+            # Log the error for debugging
+            import traceback
+            print(f"Error creating review: {str(e)}")
+            print(f"Traceback: {traceback.format_exc()}")
+
+            return Response({
+                'success': False,
+                'error': str(e),
+                'details': 'Review submission failed'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class StationReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
