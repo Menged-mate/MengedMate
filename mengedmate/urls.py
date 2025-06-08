@@ -24,6 +24,7 @@ from rest_framework.decorators import api_view, permission_classes
 from rest_framework.permissions import AllowAny
 from django.views.decorators.csrf import csrf_exempt
 from charging_stations.home_views import HomeView, AppConfigView
+from charging_stations.admin_views import DatabaseBackupView
 
 # Simple test view with explicit permission
 @api_view(['GET', 'POST'])
@@ -131,6 +132,7 @@ urlpatterns = [
 
     # Admin site
     path("admin/", admin.site.urls),
+    path("admin/database-backup/", DatabaseBackupView.as_view(), name="database-backup"),
 
     # Health check
     path("health/", health_check, name="health"),

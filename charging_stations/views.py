@@ -787,9 +787,34 @@ class StationOwnerSettingsView(generics.RetrieveUpdateAPIView):
             )
             return settings_obj
         except StationOwner.DoesNotExist:
-            raise Response({
-                'error': 'Station owner profile not found'
-            }, status=status.HTTP_404_NOT_FOUND)
+            from django.http import Http404
+            raise Http404("Station owner profile not found")
+
+    def update(self, request, *args, **kwargs):
+        try:
+            partial = kwargs.pop('partial', True)
+            instance = self.get_object()
+            serializer = self.get_serializer(instance, data=request.data, partial=partial)
+
+            if serializer.is_valid():
+                self.perform_update(serializer)
+                return Response({
+                    'success': True,
+                    'message': 'Settings updated successfully',
+                    'data': serializer.data
+                })
+            else:
+                return Response({
+                    'success': False,
+                    'message': 'Validation failed',
+                    'errors': serializer.errors
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+        except Exception as e:
+            return Response({
+                'success': False,
+                'message': f'Failed to update settings: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class NotificationTemplateListView(generics.ListAPIView):

@@ -7,7 +7,7 @@ from django.db.models import Sum
 from django.utils import timezone
 from datetime import timedelta
 from .models import StationOwner, ChargingStation
-from payments.models import Transaction, WalletTransaction
+from payments.models import QRPaymentSession
 import random
 
 
@@ -26,18 +26,30 @@ class DashboardStatsView(APIView):
             offline_stations = stations.filter(status='closed').count()
             maintenance_stations = stations.filter(status='under_maintenance').count()
 
-            # Get real revenue data from transactions
+            # Get real revenue data from transactions made to station owner's stations
             try:
-                revenue_transactions = Transaction.objects.filter(
-                    user=request.user,
-                    status='completed'
+                # Get all QR payment sessions for this station owner's connectors
+
+                station_connectors = []
+                for station in stations:
+                    station_connectors.extend(station.connectors.all())
+
+                # Get QR payment sessions for these connectors (including initiated payments)
+                revenue_qr_sessions = QRPaymentSession.objects.filter(
+                    connector__in=station_connectors,
+                    status__in=['payment_completed', 'payment_initiated'],
+                    payment_transaction__isnull=False
                 )
-                total_revenue = revenue_transactions.aggregate(
-                    total=Sum('amount')
-                )['total'] or 0
-                total_revenue = float(total_revenue)
-            except:
-                total_revenue = random.randint(1000, 50000)
+
+                # Calculate total revenue from these sessions
+                total_revenue = 0
+                for qr_session in revenue_qr_sessions:
+                    if qr_session.payment_transaction and qr_session.payment_transaction.status in ['completed', 'pending']:
+                        total_revenue += float(qr_session.payment_transaction.amount)
+
+            except Exception as e:
+                print(f"Error calculating revenue: {e}")
+                total_revenue = 0
 
             # Mock sessions data (replace with actual session model when available)
             total_sessions = random.randint(100, 1000)
@@ -183,48 +195,38 @@ class NotificationsView(APIView):
 
     def get(self, request):
         try:
-            station_owner = StationOwner.objects.get(user=request.user)
-            stations = ChargingStation.objects.filter(owner=station_owner)
+            # Get real notifications from the database
+            try:
+                from authentication.notifications import Notification
+                from authentication.notification_serializers import NotificationSerializer
 
-            # Mock notifications data (replace with actual notification model when available)
-            notifications = []
-            notification_types = [
-                'Station maintenance required',
-                'Payment received',
-                'New charging session started',
-                'Station went offline',
-                'Station back online',
-                'Monthly report available',
-                'New user registered',
-                'System update completed'
-            ]
+                notifications = Notification.objects.filter(user=request.user).order_by('-created_at')
+                serializer = NotificationSerializer(notifications, many=True)
 
-            for i in range(15):
-                station = random.choice(stations) if stations.exists() else None
-                notification = {
-                    'id': i + 1,
-                    'title': random.choice(notification_types),
-                    'message': f'Notification message for {random.choice(notification_types)}',
-                    'is_read': random.choice([True, False]),
-                    'created_at': (timezone.now() - timedelta(hours=random.randint(1, 168))).isoformat(),
-                    'station_id': str(station.id) if station else None,
-                    'station_name': station.name if station else None,
-                    'type': random.choice(['info', 'warning', 'success', 'error'])
-                }
-                notifications.append(notification)
+                unread_count = notifications.filter(is_read=False).count()
 
-            # Sort by created_at descending
-            notifications.sort(key=lambda x: x['created_at'], reverse=True)
+                return Response({
+                    'results': serializer.data,
+                    'count': notifications.count(),
+                    'unread_count': unread_count
+                })
 
+            except ImportError:
+                # Fallback if notification system is not available
+                return Response({
+                    'results': [],
+                    'count': 0,
+                    'unread_count': 0,
+                    'message': 'No notifications available'
+                })
+
+        except Exception as e:
             return Response({
-                'results': notifications,
-                'count': len(notifications),
-                'unread_count': len([n for n in notifications if not n['is_read']])
-            })
-        except StationOwner.DoesNotExist:
-            return Response({
-                'error': 'Station owner profile not found'
-            }, status=status.HTTP_404_NOT_FOUND)
+                'error': f'Error fetching notifications: {str(e)}',
+                'results': [],
+                'count': 0,
+                'unread_count': 0
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class MarkNotificationReadView(APIView):
@@ -232,11 +234,24 @@ class MarkNotificationReadView(APIView):
     authentication_classes = [TokenAuthentication, SessionAuthentication]
 
     def post(self, request, notification_id):
-        # Mock implementation - in real app, update notification in database
-        return Response({
-            'message': 'Notification marked as read',
-            'notification_id': notification_id
-        })
+        try:
+            from authentication.notifications import Notification
+
+            notification = Notification.objects.get(id=notification_id, user=request.user)
+            notification.mark_as_read()
+
+            return Response({
+                'message': 'Notification marked as read',
+                'notification_id': notification_id
+            })
+        except ImportError:
+            return Response({
+                'message': 'Notification system not available'
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
+        except Notification.DoesNotExist:
+            return Response({
+                'error': 'Notification not found'
+            }, status=status.HTTP_404_NOT_FOUND)
 
 
 class MarkAllNotificationsReadView(APIView):
@@ -244,10 +259,20 @@ class MarkAllNotificationsReadView(APIView):
     authentication_classes = [TokenAuthentication, SessionAuthentication]
 
     def post(self, request):
-        # Mock implementation - in real app, update all notifications in database
-        return Response({
-            'message': 'All notifications marked as read'
-        })
+        try:
+            from authentication.notifications import Notification
+
+            notifications = Notification.objects.filter(user=request.user, is_read=False)
+            for notification in notifications:
+                notification.mark_as_read()
+
+            return Response({
+                'message': f'{notifications.count()} notifications marked as read'
+            })
+        except ImportError:
+            return Response({
+                'message': 'Notification system not available'
+            }, status=status.HTTP_503_SERVICE_UNAVAILABLE)
 
 
 class AnalyticsReportsView(APIView):
@@ -283,22 +308,27 @@ class AnalyticsReportsView(APIView):
                 except:
                     pass
 
-            # Get real revenue data from transactions
-            revenue_transactions = Transaction.objects.filter(
-                user=request.user,
-                status='completed',
+            # Get real revenue data from transactions made to station owner's stations
+
+            station_connectors = []
+            for station in stations:
+                station_connectors.extend(station.connectors.all())
+
+            # Get QR payment sessions for these connectors within date range (including initiated payments)
+            revenue_qr_sessions = QRPaymentSession.objects.filter(
+                connector__in=station_connectors,
+                status__in=['payment_completed', 'payment_initiated'],
+                payment_transaction__isnull=False,
                 created_at__gte=start_date
             )
 
-            wallet_transactions = WalletTransaction.objects.filter(
-                wallet__user=request.user,
-                created_at__gte=start_date
-            )
-
-            # Calculate total revenue
-            total_revenue = revenue_transactions.aggregate(
-                total=Sum('amount')
-            )['total'] or 0
+            # Calculate total revenue from these sessions
+            total_revenue = 0
+            revenue_transactions = []
+            for qr_session in revenue_qr_sessions:
+                if qr_session.payment_transaction and qr_session.payment_transaction.status in ['completed', 'pending']:
+                    total_revenue += float(qr_session.payment_transaction.amount)
+                    revenue_transactions.append(qr_session.payment_transaction)
 
             # Calculate total energy dispensed from real charging sessions
             total_energy_dispensed = 0
@@ -368,14 +398,24 @@ class AnalyticsReportsView(APIView):
             for i in range(7):
                 month_start = now - timedelta(days=(i+1)*30)
                 month_end = now - timedelta(days=i*30)
-                month_revenue = revenue_transactions.filter(
+
+                # Get QR sessions for this month (including initiated payments)
+                month_qr_sessions = QRPaymentSession.objects.filter(
+                    connector__in=station_connectors,
+                    status__in=['payment_completed', 'payment_initiated'],
+                    payment_transaction__isnull=False,
                     created_at__gte=month_start,
                     created_at__lt=month_end
-                ).aggregate(total=Sum('amount'))['total'] or 0
+                )
+
+                month_revenue = 0
+                for qr_session in month_qr_sessions:
+                    if qr_session.payment_transaction and qr_session.payment_transaction.status in ['completed', 'pending']:
+                        month_revenue += float(qr_session.payment_transaction.amount)
 
                 monthly_revenue.append({
                     'month': month_start.strftime('%b'),
-                    'value': float(month_revenue)
+                    'value': month_revenue
                 })
 
             monthly_revenue.reverse()
@@ -535,7 +575,7 @@ class AnalyticsReportsView(APIView):
                 'timeRange': time_range,
                 'selectedStation': selected_station,
                 'stationsCount': stations.count(),
-                'transactionsCount': revenue_transactions.count()
+                'transactionsCount': len(revenue_transactions)
             })
 
         except StationOwner.DoesNotExist:
@@ -545,4 +585,94 @@ class AnalyticsReportsView(APIView):
         except Exception as e:
             return Response({
                 'error': f'Error fetching analytics data: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class RevenueTransactionsView(APIView):
+    """View to get detailed transaction data for revenue page"""
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+
+    def get(self, request):
+        try:
+            station_owner = StationOwner.objects.get(user=request.user)
+            stations = ChargingStation.objects.filter(owner=station_owner)
+
+            # Get query parameters
+            time_range = request.GET.get('timeRange', '7d')
+            selected_station = request.GET.get('selectedStation', 'All Stations')
+
+            # Calculate date range
+            now = timezone.now()
+            if time_range == '7d':
+                start_date = now - timedelta(days=7)
+            elif time_range == '30d':
+                start_date = now - timedelta(days=30)
+            elif time_range == '90d':
+                start_date = now - timedelta(days=90)
+            else:
+                start_date = now - timedelta(days=7)
+
+            # Filter stations if specific station selected
+            if selected_station != 'All Stations':
+                try:
+                    stations = stations.filter(id=selected_station)
+                except:
+                    pass
+
+            # Get all connectors for these stations
+            station_connectors = []
+            for station in stations:
+                station_connectors.extend(station.connectors.all())
+
+            # Get QR payment sessions for these connectors (including initiated payments)
+            revenue_qr_sessions = QRPaymentSession.objects.filter(
+                connector__in=station_connectors,
+                status__in=['payment_completed', 'payment_initiated'],
+                payment_transaction__isnull=False,
+                created_at__gte=start_date
+            ).select_related('payment_transaction', 'connector', 'connector__station').order_by('-created_at')
+
+            # Format transaction data
+            transactions = []
+            total_revenue = 0
+
+            for qr_session in revenue_qr_sessions:
+                if qr_session.payment_transaction and qr_session.payment_transaction.status in ['completed', 'pending']:
+                    transaction = qr_session.payment_transaction
+                    amount = float(transaction.amount)
+                    total_revenue += amount
+
+                    # Map transaction status to display status
+                    display_status = 'Completed' if transaction.status == 'completed' else 'Pending'
+
+                    transactions.append({
+                        'id': str(transaction.id),
+                        'date': transaction.created_at.strftime('%Y-%m-%d'),
+                        'transaction_id': transaction.reference_number,
+                        'type': 'Charging Payment',
+                        'description': f'Charging at {qr_session.connector.station.name}',
+                        'amount': amount,
+                        'status': display_status
+                    })
+
+            return Response({
+                'success': True,
+                'transactions': transactions,
+                'summary': {
+                    'total_revenue': total_revenue,
+                    'total_transactions': len(transactions),
+                    'currency': 'ETB',
+                    'time_range': time_range,
+                    'selected_station': selected_station
+                }
+            })
+
+        except StationOwner.DoesNotExist:
+            return Response({
+                'error': 'Station owner profile not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({
+                'error': f'Error fetching transaction data: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)

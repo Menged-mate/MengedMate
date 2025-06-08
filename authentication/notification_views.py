@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.permissions import IsAuthenticated
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
-from .notifications import Notification, create_notification
+from .notifications import Notification
 from .notification_serializers import NotificationSerializer
 
 
@@ -66,33 +66,4 @@ class NotificationDeleteView(APIView):
             )
 
 
-class NotificationTestView(APIView):
-    permission_classes = [IsAuthenticated]
-    authentication_classes = [TokenAuthentication, SessionAuthentication]
-    
-    def post(self, request):
-        """Create a test notification"""
-        notification_type = request.data.get('type', 'system')
-        
-        type_map = {
-            'system': Notification.NotificationType.SYSTEM,
-            'station_update': Notification.NotificationType.STATION_UPDATE,
-            'booking': Notification.NotificationType.BOOKING,
-            'payment': Notification.NotificationType.PAYMENT,
-            'maintenance': Notification.NotificationType.MAINTENANCE,
-            'marketing': Notification.NotificationType.MARKETING,
-        }
-        
-        notification_type = type_map.get(notification_type, Notification.NotificationType.SYSTEM)
-        
-        notification = create_notification(
-            user=request.user,
-            notification_type=notification_type,
-            title=request.data.get('title', 'Test Notification'),
-            message=request.data.get('message', 'This is a test notification.'),
-            link=request.data.get('link'),
-            send_email=request.data.get('send_email', False)
-        )
-        
-        serializer = NotificationSerializer(notification)
-        return Response(serializer.data, status=status.HTTP_201_CREATED)
+

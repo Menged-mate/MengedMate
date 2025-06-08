@@ -281,25 +281,37 @@ class StationReview(models.Model):
         was_verified = False
 
         if not is_new:
-            # Check if review was just verified
-            old_review = StationReview.objects.get(pk=self.pk)
-            was_verified = not old_review.is_verified_review and self.is_verified_review
+            try:
+                # Check if review was just verified
+                old_review = StationReview.objects.get(pk=self.pk)
+                was_verified = not old_review.is_verified_review and self.is_verified_review
+            except StationReview.DoesNotExist:
+                pass
 
         super().save(*args, **kwargs)
 
         # Update station rating after saving review
         self.update_station_rating()
 
-        # Send notifications
-        if is_new:
-            self._send_new_review_notification()
-        elif was_verified:
-            self._send_review_verified_notification()
+        # Send notifications (with error handling)
+        try:
+            if is_new:
+                self._send_new_review_notification()
+            elif was_verified:
+                self._send_review_verified_notification()
+        except Exception as e:
+            # Log error but don't fail the save operation
+            print(f"Error sending review notification: {e}")
 
     def _send_new_review_notification(self):
         """Send notification to station owner about new review"""
         try:
-            from authentication.notifications import create_notification, Notification
+            # Check if notification system is available
+            try:
+                from authentication.notifications import create_notification, Notification
+            except ImportError:
+                print("Notification system not available")
+                return
 
             # Notify station owner
             create_notification(
@@ -315,7 +327,12 @@ class StationReview(models.Model):
     def _send_review_verified_notification(self):
         """Send notification to reviewer when review is verified"""
         try:
-            from authentication.notifications import create_notification, Notification
+            # Check if notification system is available
+            try:
+                from authentication.notifications import create_notification, Notification
+            except ImportError:
+                print("Notification system not available")
+                return
 
             # Notify the reviewer
             create_notification(

@@ -21,8 +21,7 @@ from .views import (
 from .notification_views import (
     NotificationListView,
     NotificationMarkReadView,
-    NotificationDeleteView,
-    NotificationTestView
+    NotificationDeleteView
 )
 
 app_name = 'authentication'
@@ -58,7 +57,7 @@ urlpatterns = [
     path('notifications/mark-read/', NotificationMarkReadView.as_view(), name='notification-mark-all-read'),
     path('notifications/<int:notification_id>/mark-read/', NotificationMarkReadView.as_view(), name='notification-mark-read'),
     path('notifications/<int:notification_id>/delete/', NotificationDeleteView.as_view(), name='notification-delete'),
-    path('notifications/test/', NotificationTestView.as_view(), name='notification-test'),
+
 
     path('', include(router.urls)),
 ]
