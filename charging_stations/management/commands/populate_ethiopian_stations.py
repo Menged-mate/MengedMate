@@ -74,9 +74,7 @@ class Command(BaseCommand):
                 'has_restroom': True,
                 'has_wifi': True,
                 'has_restaurant': True,
-                'has_shopping': True,
-                'rating': Decimal('4.5'),
-                'rating_count': 23
+                'has_shopping': True
             },
             {
                 'name': 'Meskel Square Charging Station',
@@ -91,9 +89,7 @@ class Command(BaseCommand):
                 'has_restroom': False,
                 'has_wifi': True,
                 'has_restaurant': False,
-                'has_shopping': False,
-                'rating': Decimal('4.2'),
-                'rating_count': 18
+                'has_shopping': False
             },
             {
                 'name': 'Mercato Market Charging Point',
@@ -108,9 +104,7 @@ class Command(BaseCommand):
                 'has_restroom': True,
                 'has_wifi': False,
                 'has_restaurant': True,
-                'has_shopping': True,
-                'rating': Decimal('3.8'),
-                'rating_count': 12
+                'has_shopping': True
             },
             {
                 'name': 'Unity Park Charging Station',
@@ -125,9 +119,7 @@ class Command(BaseCommand):
                 'has_restroom': True,
                 'has_wifi': True,
                 'has_restaurant': False,
-                'has_shopping': False,
-                'rating': Decimal('4.7'),
-                'rating_count': 31
+                'has_shopping': False
             },
             {
                 'name': 'Bahir Dar Lakeside Charging Hub',
@@ -142,9 +134,7 @@ class Command(BaseCommand):
                 'has_restroom': True,
                 'has_wifi': True,
                 'has_restaurant': True,
-                'has_shopping': False,
-                'rating': Decimal('4.4'),
-                'rating_count': 15
+                'has_shopping': False
             },
             {
                 'name': 'Hawassa Industrial Park Charging Station',
@@ -159,9 +149,7 @@ class Command(BaseCommand):
                 'has_restroom': True,
                 'has_wifi': True,
                 'has_restaurant': True,
-                'has_shopping': False,
-                'rating': Decimal('4.1'),
-                'rating_count': 27
+                'has_shopping': False
             },
             {
                 'name': 'Dire Dawa Railway Station Charging Point',
@@ -176,9 +164,7 @@ class Command(BaseCommand):
                 'has_restroom': True,
                 'has_wifi': False,
                 'has_restaurant': False,
-                'has_shopping': False,
-                'rating': Decimal('3.9'),
-                'rating_count': 8
+                'has_shopping': False
             },
             {
                 'name': 'Mekelle University Charging Hub',
@@ -193,9 +179,7 @@ class Command(BaseCommand):
                 'has_restroom': True,
                 'has_wifi': True,
                 'has_restaurant': True,
-                'has_shopping': False,
-                'rating': Decimal('4.3'),
-                'rating_count': 19
+                'has_shopping': False
             },
             {
                 'name': 'Jimma Hospital Charging Station',
@@ -210,9 +194,7 @@ class Command(BaseCommand):
                 'has_restroom': True,
                 'has_wifi': True,
                 'has_restaurant': False,
-                'has_shopping': False,
-                'rating': Decimal('4.0'),
-                'rating_count': 14
+                'has_shopping': False
             },
             {
                 'name': 'Adama Wind Farm Charging Station',
@@ -227,9 +209,7 @@ class Command(BaseCommand):
                 'has_restroom': True,
                 'has_wifi': True,
                 'has_restaurant': False,
-                'has_shopping': False,
-                'rating': Decimal('4.6'),
-                'rating_count': 22
+                'has_shopping': False
             }
         ]
         
