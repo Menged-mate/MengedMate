@@ -11,7 +11,10 @@ from django.conf import settings
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
-from .models import StationOwner, ChargingStation, StationImage, ChargingConnector, AppContent, StationReview
+from .models import (
+    StationOwner, ChargingStation, StationImage, ChargingConnector,
+    AppContent, StationReview, StationOwnerSettings, NotificationTemplate
+)
 from .serializers import (
     StationOwnerRegistrationSerializer,
     StationOwnerProfileSerializer,
@@ -19,7 +22,9 @@ from .serializers import (
     ChargingConnectorSerializer,
     StationImageSerializer,
     StationReviewSerializer,
-    StationReviewListSerializer
+    StationReviewListSerializer,
+    StationOwnerSettingsSerializer,
+    NotificationTemplateSerializer
 )
 from authentication.authentication import AnonymousAuthentication, TokenAuthentication
 from rest_framework.authentication import SessionAuthentication
@@ -37,12 +42,11 @@ class StationOwnerRegistrationView(generics.GenericAPIView):
         serializer.is_valid(raise_exception=True)
         result = serializer.save()
 
-
         user = result['user']
         verification_code = result['verification_code']
 
-        subject = 'Verify Your EV Charging Station Owner Account'
-        html_message = render_to_string('station_owner_verification_email.html', {
+        subject = 'Verify Your evmeri EV Charging Station Owner Account'
+        html_message = render_to_string('station_owner_email_verification.html', {
             'user': user,
             'verification_code': verification_code,
             'frontend_url': settings.FRONTEND_URL
@@ -133,6 +137,7 @@ class StationOwnerProfileView(generics.RetrieveUpdateAPIView):
         self.perform_update(serializer)
 
         if instance.is_profile_completed and not instance.verified_at:
+            # Send admin notification
             subject = 'New Station Owner Requires Verification'
             message = f'A new station owner ({instance.company_name}) has completed their profile and requires verification.'
             send_mail(
@@ -141,6 +146,16 @@ class StationOwnerProfileView(generics.RetrieveUpdateAPIView):
                 settings.DEFAULT_FROM_EMAIL,
                 [settings.ADMIN_EMAIL],
                 fail_silently=True,
+            )
+
+            # Send real-time notification to user
+            from authentication.notifications import create_notification, Notification
+            create_notification(
+                user=instance.user,
+                notification_type=Notification.NotificationType.SYSTEM,
+                title='Profile Submitted for Verification',
+                message='Your station owner profile has been submitted for verification. Our team will review your documents within 1-3 business days.',
+                link='/dashboard/profile'
             )
 
         return Response(serializer.data)
@@ -478,24 +493,34 @@ class StationReviewListCreateView(generics.ListCreateAPIView):
             is_active=True
         ).order_by('-created_at')
 
-    def perform_create(self, serializer):
+    def create(self, request, *args, **kwargs):
         station_id = self.kwargs.get('station_id')
         station = get_object_or_404(ChargingStation, id=station_id)
 
         # Check if user already has a review for this station
         existing_review = StationReview.objects.filter(
-            user=self.request.user,
+            user=request.user,
             station=station
         ).first()
+
+        serializer = self.get_serializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
 
         if existing_review:
             # Update existing review instead of creating new one
             for attr, value in serializer.validated_data.items():
                 setattr(existing_review, attr, value)
-            existing_review.save()
+            existing_review.updated_at = timezone.now()
+            existing_review.save()  # This will trigger the station rating update
+
+            # Return the updated review using the list serializer
+            response_serializer = StationReviewListSerializer(existing_review)
+            return Response(response_serializer.data, status=status.HTTP_200_OK)
         else:
             # Create new review
-            serializer.save(user=self.request.user, station=station)
+            review = serializer.save(user=request.user, station=station)
+            response_serializer = StationReviewListSerializer(review)
+            return Response(response_serializer.data, status=status.HTTP_201_CREATED)
 
 
 class StationReviewDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -730,3 +755,57 @@ class MobileChargingHistoryView(APIView):
                 'results': [],
                 'count': 0
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class StationOwnerSettingsView(generics.RetrieveUpdateAPIView):
+    """View to manage station owner settings"""
+
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    serializer_class = StationOwnerSettingsSerializer
+
+    def get_object(self):
+        try:
+            station_owner = StationOwner.objects.get(user=self.request.user)
+            settings_obj, created = StationOwnerSettings.objects.get_or_create(
+                owner=station_owner,
+                defaults={
+                    'default_pricing_per_kwh': 5.50,
+                    'auto_accept_bookings': True,
+                    'max_session_duration_hours': 4,
+                    'maintenance_mode': False,
+                    'email_notifications': True,
+                    'sms_notifications': False,
+                    'booking_notifications': True,
+                    'payment_notifications': True,
+                    'maintenance_alerts': True,
+                    'marketing_emails': False,
+                    'station_updates': True,
+                    'brand_color': '#3B82F6',
+                    'display_company_info': True
+                }
+            )
+            return settings_obj
+        except StationOwner.DoesNotExist:
+            raise Response({
+                'error': 'Station owner profile not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class NotificationTemplateListView(generics.ListAPIView):
+    """View to list notification templates"""
+
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    serializer_class = NotificationTemplateSerializer
+    queryset = NotificationTemplate.objects.filter(is_active=True)
+
+
+class NotificationTemplateDetailView(generics.RetrieveUpdateAPIView):
+    """View to retrieve and update notification templates"""
+
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    serializer_class = NotificationTemplateSerializer
+    queryset = NotificationTemplate.objects.all()
+    lookup_field = 'template_type'

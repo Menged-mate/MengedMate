@@ -17,7 +17,10 @@ from .views import (
     UserReviewsView,
     StationReviewStatsView,
     StationOwnerReviewsView,
-    MobileChargingHistoryView
+    MobileChargingHistoryView,
+    StationOwnerSettingsView,
+    NotificationTemplateListView,
+    NotificationTemplateDetailView
 )
 from .map_views import (
     PublicStationListView,
@@ -79,4 +82,9 @@ urlpatterns = [
     path('stations/<uuid:station_id>/review-stats/', StationReviewStatsView.as_view(), name='station-review-stats'),
     path('stations/reviews/', StationOwnerReviewsView.as_view(), name='station-owner-reviews'),
     path('mobile/charging-history/', MobileChargingHistoryView.as_view(), name='mobile-charging-history'),
+
+    # Settings endpoints
+    path('settings/', StationOwnerSettingsView.as_view(), name='station-owner-settings'),
+    path('notification-templates/', NotificationTemplateListView.as_view(), name='notification-templates'),
+    path('notification-templates/<str:template_type>/', NotificationTemplateDetailView.as_view(), name='notification-template-detail'),
 ]

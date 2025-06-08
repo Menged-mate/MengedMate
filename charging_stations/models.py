@@ -277,9 +277,56 @@ class StationReview(models.Model):
         return f"{self.user.email} - {self.station.name} ({self.rating} stars)"
 
     def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        was_verified = False
+
+        if not is_new:
+            # Check if review was just verified
+            old_review = StationReview.objects.get(pk=self.pk)
+            was_verified = not old_review.is_verified_review and self.is_verified_review
+
         super().save(*args, **kwargs)
+
         # Update station rating after saving review
         self.update_station_rating()
+
+        # Send notifications
+        if is_new:
+            self._send_new_review_notification()
+        elif was_verified:
+            self._send_review_verified_notification()
+
+    def _send_new_review_notification(self):
+        """Send notification to station owner about new review"""
+        try:
+            from authentication.notifications import create_notification, Notification
+
+            # Notify station owner
+            create_notification(
+                user=self.station.owner.user,
+                notification_type=Notification.NotificationType.STATION_UPDATE,
+                title='New Review Received',
+                message=f'Your station "{self.station.name}" received a new {self.rating}-star review.',
+                link=f'/dashboard/stations/{self.station.id}/reviews'
+            )
+        except Exception as e:
+            print(f"Error sending new review notification: {e}")
+
+    def _send_review_verified_notification(self):
+        """Send notification to reviewer when review is verified"""
+        try:
+            from authentication.notifications import create_notification, Notification
+
+            # Notify the reviewer
+            create_notification(
+                user=self.user,
+                notification_type=Notification.NotificationType.SYSTEM,
+                title='Review Verified',
+                message=f'Your review for "{self.station.name}" has been verified and is now featured.',
+                link=f'/stations/{self.station.id}'
+            )
+        except Exception as e:
+            print(f"Error sending review verified notification: {e}")
 
     def delete(self, *args, **kwargs):
         station = self.station
@@ -321,7 +368,7 @@ class AppContent(models.Model):
     """Model to store app content like About, Privacy Policy, Terms of Service"""
 
     CONTENT_TYPES = [
-        ('about', 'About MengedMate'),
+        ('about', 'About evmeri'),
         ('privacy_policy', 'Privacy Policy'),
         ('terms_of_service', 'Terms of Service'),
     ]
@@ -341,3 +388,70 @@ class AppContent(models.Model):
 
     def __str__(self):
         return f"{self.get_content_type_display()} - v{self.version}"
+
+
+class StationOwnerSettings(models.Model):
+    """Model to store station owner specific settings"""
+
+    owner = models.OneToOneField(StationOwner, on_delete=models.CASCADE, related_name='settings')
+
+    # Station Configuration Settings
+    default_pricing_per_kwh = models.DecimalField(max_digits=6, decimal_places=2, default=5.50)
+    auto_accept_bookings = models.BooleanField(default=True)
+    max_session_duration_hours = models.PositiveIntegerField(default=4)
+    maintenance_mode = models.BooleanField(default=False)
+
+    # Notification Settings
+    email_notifications = models.BooleanField(default=True)
+    sms_notifications = models.BooleanField(default=False)
+    booking_notifications = models.BooleanField(default=True)
+    payment_notifications = models.BooleanField(default=True)
+    maintenance_alerts = models.BooleanField(default=True)
+    marketing_emails = models.BooleanField(default=False)
+    station_updates = models.BooleanField(default=True)
+
+    # Branding Settings
+    brand_color = models.CharField(max_length=7, default='#3B82F6')  # Hex color
+    logo_url = models.URLField(blank=True, null=True)
+    custom_welcome_message = models.TextField(blank=True, null=True)
+    display_company_info = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Station Owner Settings'
+        verbose_name_plural = 'Station Owner Settings'
+
+    def __str__(self):
+        return f"Settings for {self.owner.company_name}"
+
+
+class NotificationTemplate(models.Model):
+    """Model to store notification templates"""
+
+    TEMPLATE_TYPES = [
+        ('booking_confirmed', 'Booking Confirmed'),
+        ('payment_received', 'Payment Received'),
+        ('session_started', 'Session Started'),
+        ('session_completed', 'Session Completed'),
+        ('maintenance_required', 'Maintenance Required'),
+        ('station_offline', 'Station Offline'),
+        ('low_balance', 'Low Balance'),
+    ]
+
+    template_type = models.CharField(max_length=30, choices=TEMPLATE_TYPES, unique=True)
+    subject = models.CharField(max_length=255)
+    email_body = models.TextField()
+    sms_body = models.TextField(max_length=160)
+    is_active = models.BooleanField(default=True)
+
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        verbose_name = 'Notification Template'
+        verbose_name_plural = 'Notification Templates'
+
+    def __str__(self):
+        return f"{self.get_template_type_display()} Template"

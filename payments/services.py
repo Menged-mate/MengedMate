@@ -212,10 +212,19 @@ class PaymentService:
                     session.save()
                     self.credit_wallet(transaction.user, transaction.amount, transaction)
 
+                    # Send payment received notification
+                    self._send_payment_notification(transaction.user, transaction.amount, 'wallet_credit')
+
                 if qr_session:
                     qr_session.status = 'payment_completed'
                     qr_session.payment_transaction = transaction
                     qr_session.save()
+
+                    # Send charging payment notification
+                    self._send_payment_notification(transaction.user, transaction.amount, 'charging_payment', qr_session)
+
+                    # Send notification to station owner
+                    self._send_station_owner_payment_notification(qr_session, transaction)
 
                     # Auto-start charging if configured
                     self._auto_start_charging_if_enabled(qr_session)
@@ -317,6 +326,54 @@ class PaymentService:
         )
 
         return wallet
+
+    def _send_payment_notification(self, user, amount, payment_type, qr_session=None):
+        """Send notification when payment is received"""
+        try:
+            from authentication.notifications import create_notification, Notification
+
+            if payment_type == 'wallet_credit':
+                title = 'Payment Received'
+                message = f'Your wallet has been credited with {amount} ETB. Payment successful!'
+                link = '/dashboard/wallet'
+            elif payment_type == 'charging_payment':
+                station_name = qr_session.connector.station.name if qr_session else 'Unknown Station'
+                title = 'Charging Payment Successful'
+                message = f'Payment of {amount} ETB received for charging at {station_name}. Charging will start shortly.'
+                link = f'/charging-history'
+            else:
+                title = 'Payment Received'
+                message = f'Payment of {amount} ETB has been processed successfully.'
+                link = '/dashboard'
+
+            create_notification(
+                user=user,
+                notification_type=Notification.NotificationType.PAYMENT,
+                title=title,
+                message=message,
+                link=link
+            )
+
+        except Exception as e:
+            logger.error(f"Error sending payment notification: {e}")
+
+    def _send_station_owner_payment_notification(self, qr_session, transaction):
+        """Send notification to station owner when payment is received"""
+        try:
+            from authentication.notifications import create_notification, Notification
+
+            station_owner = qr_session.connector.station.owner
+
+            create_notification(
+                user=station_owner.user,
+                notification_type=Notification.NotificationType.PAYMENT,
+                title='Payment Received',
+                message=f'Payment of {transaction.amount} ETB received for charging at {qr_session.connector.station.name}.',
+                link=f'/dashboard/stations/{qr_session.connector.station.id}'
+            )
+
+        except Exception as e:
+            logger.error(f"Error sending station owner payment notification: {e}")
 
     def get_transaction_status(self, tx_ref):
         return self.chapa.query_transaction_status(tx_ref)

@@ -2,7 +2,10 @@ from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
-from .models import StationOwner, ChargingStation, StationImage, ChargingConnector, FavoriteStation, StationReview
+from .models import (
+    StationOwner, ChargingStation, StationImage, ChargingConnector,
+    FavoriteStation, StationReview, StationOwnerSettings, NotificationTemplate
+)
 import random
 import string
 
@@ -330,3 +333,53 @@ class StationReviewListSerializer(serializers.ModelSerializer):
             masked_username = username[:2] + '*' * (len(username) - 2) if len(username) > 2 else username
             return f"{masked_username}@{domain}"
         return email
+
+
+class StationOwnerSettingsSerializer(serializers.ModelSerializer):
+    """Serializer for station owner settings"""
+
+    class Meta:
+        model = StationOwnerSettings
+        fields = [
+            'id', 'default_pricing_per_kwh', 'auto_accept_bookings',
+            'max_session_duration_hours', 'maintenance_mode',
+            'email_notifications', 'sms_notifications', 'booking_notifications',
+            'payment_notifications', 'maintenance_alerts', 'marketing_emails',
+            'station_updates', 'brand_color', 'logo_url', 'custom_welcome_message',
+            'display_company_info', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'created_at', 'updated_at']
+
+    def validate_brand_color(self, value):
+        """Validate hex color format"""
+        if value and not value.startswith('#'):
+            raise serializers.ValidationError("Brand color must be a valid hex color (e.g., #3B82F6)")
+        if value and len(value) != 7:
+            raise serializers.ValidationError("Brand color must be a 7-character hex color (e.g., #3B82F6)")
+        return value
+
+    def validate_max_session_duration_hours(self, value):
+        """Validate session duration is reasonable"""
+        if value < 1 or value > 24:
+            raise serializers.ValidationError("Session duration must be between 1 and 24 hours")
+        return value
+
+
+class NotificationTemplateSerializer(serializers.ModelSerializer):
+    """Serializer for notification templates"""
+
+    template_type_display = serializers.CharField(source='get_template_type_display', read_only=True)
+
+    class Meta:
+        model = NotificationTemplate
+        fields = [
+            'id', 'template_type', 'template_type_display', 'subject',
+            'email_body', 'sms_body', 'is_active', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'template_type_display', 'created_at', 'updated_at']
+
+    def validate_sms_body(self, value):
+        """Validate SMS body length"""
+        if len(value) > 160:
+            raise serializers.ValidationError("SMS body must be 160 characters or less")
+        return value

@@ -301,35 +301,69 @@ class AnalyticsReportsView(APIView):
             )['total'] or 0
 
             # Calculate total energy dispensed from real charging sessions
+            total_energy_dispensed = 0
+            avg_session_duration = 0
+
             try:
+                # Try OCPP charging sessions first
                 from ocpp_integration.models import ChargingSession
-                charging_sessions = ChargingSession.objects.filter(
+                ocpp_sessions = ChargingSession.objects.filter(
                     ocpp_station__charging_station__in=stations,
                     start_time__gte=start_date
                 )
-                total_energy_dispensed = sum(
-                    session.energy_consumed or 0 for session in charging_sessions
-                )
+                ocpp_energy = sum(session.energy_consumed or 0 for session in ocpp_sessions)
 
-                # Calculate average session duration from real data
-                completed_sessions = charging_sessions.filter(
-                    end_time__isnull=False
-                )
-                if completed_sessions.exists():
-                    total_duration = sum(
+                # Calculate OCPP session durations
+                completed_ocpp_sessions = ocpp_sessions.filter(end_time__isnull=False)
+                ocpp_duration = 0
+                if completed_ocpp_sessions.exists():
+                    ocpp_duration = sum(
                         (session.end_time - session.start_time).total_seconds() / 60
-                        for session in completed_sessions
-                    )
-                    avg_session_duration = total_duration / completed_sessions.count()
-                else:
-                    avg_session_duration = 0
+                        for session in completed_ocpp_sessions
+                    ) / completed_ocpp_sessions.count()
+
+                total_energy_dispensed += ocpp_energy
 
             except Exception as e:
-                # Fallback to mock data
-                total_energy_dispensed = stations.count() * random.randint(800, 1200)
-                avg_session_duration = random.randint(35, 55)
+                print(f"OCPP sessions error: {e}")
 
-            # Generate monthly revenue data
+            try:
+                # Try Simple charging sessions
+                from payments.models import SimpleChargingSession
+                simple_sessions = SimpleChargingSession.objects.filter(
+                    connector__station__in=stations,
+                    start_time__gte=start_date
+                )
+                simple_energy = sum(session.energy_consumed_kwh or 0 for session in simple_sessions)
+
+                # Calculate simple session durations
+                completed_simple_sessions = simple_sessions.filter(stop_time__isnull=False)
+                simple_duration = 0
+                if completed_simple_sessions.exists():
+                    simple_duration = sum(
+                        session.duration_seconds / 60 for session in completed_simple_sessions
+                    ) / completed_simple_sessions.count()
+
+                total_energy_dispensed += simple_energy
+
+                # Use the average of both session types or the available one
+                total_sessions = completed_ocpp_sessions.count() + completed_simple_sessions.count()
+                if total_sessions > 0:
+                    avg_session_duration = (
+                        (ocpp_duration * completed_ocpp_sessions.count()) +
+                        (simple_duration * completed_simple_sessions.count())
+                    ) / total_sessions
+
+            except Exception as e:
+                print(f"Simple sessions error: {e}")
+
+            # If no real data available, show 0 instead of mock data
+            if total_energy_dispensed == 0:
+                total_energy_dispensed = 0
+            if avg_session_duration == 0:
+                avg_session_duration = 0
+
+            # Generate monthly revenue data from real transactions
             monthly_revenue = []
             for i in range(7):
                 month_start = now - timedelta(days=(i+1)*30)
@@ -337,7 +371,7 @@ class AnalyticsReportsView(APIView):
                 month_revenue = revenue_transactions.filter(
                     created_at__gte=month_start,
                     created_at__lt=month_end
-                ).aggregate(total=Sum('amount'))['total'] or random.randint(8000, 15000)
+                ).aggregate(total=Sum('amount'))['total'] or 0
 
                 monthly_revenue.append({
                     'month': month_start.strftime('%b'),
@@ -346,28 +380,120 @@ class AnalyticsReportsView(APIView):
 
             monthly_revenue.reverse()
 
-            # Generate daily energy data
+            # Generate daily energy data from real charging sessions
             daily_energy_data = []
             for i in range(12):
-                day_energy = stations.count() * random.randint(8, 20)
+                day_start = now - timedelta(days=(i+1)*30)
+                day_end = now - timedelta(days=i*30)
+
+                day_energy = 0
+                try:
+                    # Get energy from OCPP sessions
+                    from ocpp_integration.models import ChargingSession
+                    ocpp_energy = ChargingSession.objects.filter(
+                        ocpp_station__charging_station__in=stations,
+                        start_time__gte=day_start,
+                        start_time__lt=day_end
+                    ).aggregate(total=Sum('energy_consumed'))['total'] or 0
+                    day_energy += ocpp_energy
+                except:
+                    pass
+
+                try:
+                    # Get energy from simple sessions
+                    from payments.models import SimpleChargingSession
+                    simple_energy = SimpleChargingSession.objects.filter(
+                        connector__station__in=stations,
+                        start_time__gte=day_start,
+                        start_time__lt=day_end
+                    ).aggregate(total=Sum('energy_consumed_kwh'))['total'] or 0
+                    day_energy += simple_energy
+                except:
+                    pass
+
                 daily_energy_data.append({
-                    'day': (now - timedelta(days=i*30)).strftime('%b'),
-                    'value': day_energy
+                    'day': day_start.strftime('%b'),
+                    'value': float(day_energy)
                 })
 
             daily_energy_data.reverse()
 
-            # Session distribution (mock data based on time patterns)
+            # Session distribution based on real data
+            morning_sessions = 0
+            afternoon_sessions = 0
+
+            try:
+                # Count OCPP sessions by time of day
+                from ocpp_integration.models import ChargingSession
+                ocpp_sessions = ChargingSession.objects.filter(
+                    ocpp_station__charging_station__in=stations,
+                    start_time__gte=start_date
+                )
+
+                for session in ocpp_sessions:
+                    hour = session.start_time.hour
+                    if 6 <= hour < 12:  # Morning: 6 AM - 12 PM
+                        morning_sessions += 1
+                    elif 12 <= hour < 18:  # Afternoon: 12 PM - 6 PM
+                        afternoon_sessions += 1
+
+            except:
+                pass
+
+            try:
+                # Count simple sessions by time of day
+                from payments.models import SimpleChargingSession
+                simple_sessions = SimpleChargingSession.objects.filter(
+                    connector__station__in=stations,
+                    start_time__gte=start_date
+                )
+
+                for session in simple_sessions:
+                    hour = session.start_time.hour
+                    if 6 <= hour < 12:  # Morning: 6 AM - 12 PM
+                        morning_sessions += 1
+                    elif 12 <= hour < 18:  # Afternoon: 12 PM - 6 PM
+                        afternoon_sessions += 1
+
+            except:
+                pass
+
+            # Calculate percentages
+            total_sessions = morning_sessions + afternoon_sessions
+            if total_sessions > 0:
+                morning_percentage = round((morning_sessions / total_sessions) * 100)
+                afternoon_percentage = round((afternoon_sessions / total_sessions) * 100)
+            else:
+                morning_percentage = 0
+                afternoon_percentage = 0
+
             session_distribution = {
-                'morning': 60,
-                'afternoon': 40
+                'morning': morning_percentage,
+                'afternoon': afternoon_percentage
             }
 
-            # Top stations by revenue
+            # Top stations by revenue from real transactions
             top_stations = []
             for station in stations[:5]:
-                # Mock revenue per station
-                station_revenue = random.randint(1500, 5000)
+                # Calculate real revenue per station from transactions
+                station_revenue = 0
+
+                try:
+                    # Get revenue from transactions related to this station's connectors
+                    from payments.models import SimpleChargingSession
+                    station_sessions = SimpleChargingSession.objects.filter(
+                        connector__station=station,
+                        start_time__gte=start_date
+                    )
+
+                    # Calculate revenue from energy consumed
+                    for session in station_sessions:
+                        if session.energy_consumed_kwh and session.cost_per_kwh:
+                            station_revenue += float(session.energy_consumed_kwh * session.cost_per_kwh)
+
+                except:
+                    pass
+
                 top_stations.append({
                     'name': station.name,
                     'revenue': station_revenue
@@ -376,11 +502,20 @@ class AnalyticsReportsView(APIView):
             # Sort by revenue
             top_stations.sort(key=lambda x: x['revenue'], reverse=True)
 
-            # Fault data (mock data based on station count)
+            # Fault data from real maintenance records
             fault_data = []
             for i in range(9):
-                month_name = (now - timedelta(days=i*30)).strftime('%b')
-                faults = random.randint(2, 10) if stations.count() > 0 else 0
+                month_start = now - timedelta(days=(i+1)*30)
+                month_end = now - timedelta(days=i*30)
+                month_name = month_start.strftime('%b')
+
+                # Count stations that went into maintenance during this period
+                faults = stations.filter(
+                    status='under_maintenance',
+                    updated_at__gte=month_start,
+                    updated_at__lt=month_end
+                ).count()
+
                 fault_data.append({
                     'month': month_name,
                     'faults': faults

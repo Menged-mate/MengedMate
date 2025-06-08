@@ -1,6 +1,9 @@
 from django.contrib import admin
 from django.utils.html import format_html
+from django.urls import path
+from django.shortcuts import render
 from .models import StationOwner, ChargingStation, StationImage, ChargingConnector, AppContent, StationReview
+from .admin_views import DatabaseBackupView, system_stats_view
 
 class StationImageInline(admin.TabularInline):
     model = StationImage
@@ -189,15 +192,25 @@ class StationOwnerAdmin(admin.ModelAdmin):
                     })
 
                     email = EmailMultiAlternatives(
-                        '[MengedMate] Station Owner Verification Approved',
+                        '[evmeri] Station Owner Verification Approved',
                         'Your station owner verification has been approved.',
                         settings.DEFAULT_FROM_EMAIL,
                         [station_owner.user.email]
                     )
                     email.attach_alternative(html_content, "text/html")
                     email.send()
+
+                    # Send real-time notification
+                    from authentication.notifications import create_notification, Notification
+                    create_notification(
+                        user=station_owner.user,
+                        notification_type=Notification.NotificationType.SYSTEM,
+                        title='Account Verified Successfully!',
+                        message='Congratulations! Your station owner account has been verified. You can now add and manage charging stations.',
+                        link='/dashboard/stations'
+                    )
                 except Exception as e:
-                    pass  
+                    pass
 
         self.message_user(request, f'{updated} station owner(s) successfully verified.')
     approve_verification.short_description = "✅ Approve selected station owners"
@@ -538,7 +551,13 @@ class StationReviewAdmin(admin.ModelAdmin):
 
     # Admin Actions
     def mark_as_verified(self, request, queryset):
-        updated = queryset.update(is_verified_review=True)
+        updated = 0
+        for review in queryset:
+            if not review.is_verified_review:
+                review.is_verified_review = True
+                review.save()  # This will trigger the notification in the model's save method
+                updated += 1
+
         self.message_user(request, f'{updated} review(s) marked as verified.')
     mark_as_verified.short_description = "✅ Mark as verified reviews"
 
@@ -556,3 +575,46 @@ class StationReviewAdmin(admin.ModelAdmin):
         updated = queryset.update(is_active=False)
         self.message_user(request, f'{updated} review(s) deactivated.')
     deactivate_reviews.short_description = "🚫 Deactivate reviews"
+
+
+# Custom Admin Site with additional functionality
+class EvmeriAdminSite(admin.AdminSite):
+    site_header = 'evmeri Administration'
+    site_title = 'evmeri Admin'
+    index_title = 'Welcome to evmeri Administration'
+
+    def get_urls(self):
+        urls = super().get_urls()
+        custom_urls = [
+            path('database-backup/', DatabaseBackupView.as_view(), name='database_backup'),
+            path('system-stats/', system_stats_view, name='system_stats'),
+        ]
+        return custom_urls + urls
+
+    def index(self, request, extra_context=None):
+        """Custom admin index with additional links"""
+        extra_context = extra_context or {}
+        extra_context['custom_links'] = [
+            {
+                'title': '🗄️ Database Backup',
+                'url': 'admin:database_backup',
+                'description': 'Create and manage database backups'
+            },
+            {
+                'title': '📊 System Statistics',
+                'url': 'admin:system_stats',
+                'description': 'View system statistics and metrics'
+            }
+        ]
+        return super().index(request, extra_context)
+
+
+# Create custom admin site instance
+admin_site = EvmeriAdminSite(name='evmeri_admin')
+
+# Register models with custom admin site
+admin_site.register(StationOwner, StationOwnerAdmin)
+admin_site.register(ChargingStation, ChargingStationAdmin)
+admin_site.register(ChargingConnector, ChargingConnectorAdmin)
+admin_site.register(AppContent, AppContentAdmin)
+admin_site.register(StationReview, StationReviewAdmin)
