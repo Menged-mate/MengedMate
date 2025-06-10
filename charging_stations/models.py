@@ -411,7 +411,7 @@ class ReviewReply(models.Model):
         ]
 
     def __str__(self):
-        return f"Reply by {self.station_owner.business_name} to review #{self.review.id}"
+        return f"Reply by {self.station_owner.company_name} to review #{self.review.id}"
 
     def save(self, *args, **kwargs):
         is_new = self.pk is None
@@ -436,7 +436,7 @@ class ReviewReply(models.Model):
                 user=self.review.user,
                 notification_type=Notification.NotificationType.SYSTEM,
                 title='Station Owner Replied',
-                message=f'{self.station_owner.business_name} replied to your review for "{self.review.station.name}".',
+                message=f'{self.station_owner.company_name} replied to your review for "{self.review.station.name}".',
                 link=f'/stations/{self.review.station.id}'
             )
         except Exception as e:
@@ -543,3 +543,108 @@ class NotificationTemplate(models.Model):
 
     def __str__(self):
         return f"{self.get_template_type_display()} Template"
+
+
+class PayoutMethod(models.Model):
+    """Model for station owner payout methods"""
+
+    class MethodType(models.TextChoices):
+        BANK_ACCOUNT = 'bank_account', 'Bank Account'
+        CARD = 'card', 'Credit/Debit Card'
+        MOBILE_MONEY = 'mobile_money', 'Mobile Money'
+        PAYPAL = 'paypal', 'PayPal'
+
+    station_owner = models.ForeignKey(
+        StationOwner,
+        on_delete=models.CASCADE,
+        related_name='payout_methods',
+        help_text="Station owner who owns this payout method"
+    )
+    method_type = models.CharField(
+        max_length=20,
+        choices=MethodType.choices,
+        default=MethodType.BANK_ACCOUNT
+    )
+
+    # Bank account fields
+    account_holder_name = models.CharField(max_length=255, blank=True)
+    bank_name = models.CharField(max_length=255, blank=True)
+    account_number = models.CharField(max_length=50, blank=True)
+    routing_number = models.CharField(max_length=20, blank=True)
+    swift_code = models.CharField(max_length=20, blank=True)
+
+    # Card fields
+    card_number = models.CharField(max_length=20, blank=True)  # Encrypted/masked
+    card_type = models.CharField(max_length=20, blank=True)  # Visa, MasterCard, etc.
+    expiry_month = models.CharField(max_length=2, blank=True)
+    expiry_year = models.CharField(max_length=4, blank=True)
+
+    # Mobile money fields
+    phone_number = models.CharField(max_length=20, blank=True)
+    provider = models.CharField(max_length=50, blank=True)  # M-Pesa, Airtel Money, etc.
+
+    # PayPal fields
+    paypal_email = models.EmailField(blank=True)
+
+    # Common fields
+    is_default = models.BooleanField(default=False)
+    is_verified = models.BooleanField(default=False)
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-is_default', '-created_at']
+        indexes = [
+            models.Index(fields=['station_owner', '-created_at']),
+            models.Index(fields=['station_owner', 'is_default']),
+            models.Index(fields=['method_type', 'is_active']),
+        ]
+
+    def __str__(self):
+        if self.method_type == self.MethodType.BANK_ACCOUNT:
+            return f"{self.bank_name} - ****{self.account_number[-4:] if self.account_number else ''}"
+        elif self.method_type == self.MethodType.CARD:
+            return f"{self.card_type} - ****{self.card_number[-4:] if self.card_number else ''}"
+        elif self.method_type == self.MethodType.MOBILE_MONEY:
+            return f"{self.provider} - {self.phone_number}"
+        elif self.method_type == self.MethodType.PAYPAL:
+            return f"PayPal - {self.paypal_email}"
+        return f"{self.get_method_type_display()}"
+
+    def save(self, *args, **kwargs):
+        # Ensure only one default method per station owner
+        if self.is_default:
+            PayoutMethod.objects.filter(
+                station_owner=self.station_owner,
+                is_default=True
+            ).exclude(id=self.id).update(is_default=False)
+        super().save(*args, **kwargs)
+
+    def get_masked_details(self):
+        """Return masked details for display"""
+        if self.method_type == self.MethodType.BANK_ACCOUNT:
+            return {
+                'type': 'Bank Account',
+                'details': f"{self.bank_name} - ****{self.account_number[-4:] if self.account_number else ''}",
+                'holder': self.account_holder_name
+            }
+        elif self.method_type == self.MethodType.CARD:
+            return {
+                'type': self.card_type or 'Card',
+                'details': f"****{self.card_number[-4:] if self.card_number else ''}",
+                'holder': self.account_holder_name
+            }
+        elif self.method_type == self.MethodType.MOBILE_MONEY:
+            return {
+                'type': self.provider or 'Mobile Money',
+                'details': self.phone_number,
+                'holder': self.account_holder_name
+            }
+        elif self.method_type == self.MethodType.PAYPAL:
+            return {
+                'type': 'PayPal',
+                'details': self.paypal_email,
+                'holder': self.account_holder_name
+            }
+        return {'type': 'Unknown', 'details': '', 'holder': ''}

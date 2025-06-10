@@ -24,7 +24,10 @@ from .views import (
     MobileChargingHistoryView,
     StationOwnerSettingsView,
     NotificationTemplateListView,
-    NotificationTemplateDetailView
+    NotificationTemplateDetailView,
+    PayoutMethodListCreateView,
+    PayoutMethodDetailView,
+    SetDefaultPayoutMethodView
 )
 from .map_views import (
     PublicStationListView,
@@ -101,4 +104,9 @@ urlpatterns = [
     path('settings/', StationOwnerSettingsView.as_view(), name='station-owner-settings'),
     path('notification-templates/', NotificationTemplateListView.as_view(), name='notification-templates'),
     path('notification-templates/<str:template_type>/', NotificationTemplateDetailView.as_view(), name='notification-template-detail'),
+
+    # Payout methods endpoints
+    path('payout-methods/', PayoutMethodListCreateView.as_view(), name='payout-methods'),
+    path('payout-methods/<int:id>/', PayoutMethodDetailView.as_view(), name='payout-method-detail'),
+    path('payout-methods/<int:method_id>/set-default/', SetDefaultPayoutMethodView.as_view(), name='set-default-payout-method'),
 ]

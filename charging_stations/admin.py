@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import path
 from django.shortcuts import render
-from .models import StationOwner, ChargingStation, StationImage, ChargingConnector, AppContent, StationReview, ReviewReply
+from .models import StationOwner, ChargingStation, StationImage, ChargingConnector, AppContent, StationReview, ReviewReply, PayoutMethod
 from .admin_views import DatabaseBackupView, system_stats_view
 
 class StationImageInline(admin.TabularInline):
@@ -661,3 +661,76 @@ class ReviewReplyAdmin(admin.ModelAdmin):
 
 # Register ReviewReply with custom admin site
 admin_site.register(ReviewReply, ReviewReplyAdmin)
+
+
+@admin.register(PayoutMethod)
+class PayoutMethodAdmin(admin.ModelAdmin):
+    list_display = ('station_owner_name', 'method_type_display', 'masked_details_display', 'is_default', 'is_verified', 'is_active', 'created_at')
+    list_filter = ('method_type', 'is_default', 'is_verified', 'is_active', 'created_at')
+    search_fields = ('station_owner__company_name', 'station_owner__user__email', 'account_holder_name', 'bank_name')
+    readonly_fields = ('created_at', 'updated_at', 'masked_details_display')
+    fieldsets = (
+        (None, {
+            'fields': ('station_owner', 'method_type', 'is_default', 'is_verified', 'is_active')
+        }),
+        ('Account Details', {
+            'fields': ('account_holder_name',)
+        }),
+        ('Bank Account Details', {
+            'fields': ('bank_name', 'account_number', 'routing_number', 'swift_code'),
+            'classes': ('collapse',),
+        }),
+        ('Card Details', {
+            'fields': ('card_number', 'card_type', 'expiry_month', 'expiry_year'),
+            'classes': ('collapse',),
+        }),
+        ('Mobile Money Details', {
+            'fields': ('phone_number', 'provider'),
+            'classes': ('collapse',),
+        }),
+        ('PayPal Details', {
+            'fields': ('paypal_email',),
+            'classes': ('collapse',),
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
+    list_per_page = 25
+
+    actions = ['verify_methods', 'unverify_methods', 'activate_methods', 'deactivate_methods']
+
+    def station_owner_name(self, obj):
+        return obj.station_owner.company_name
+    station_owner_name.short_description = 'Station Owner'
+
+    def method_type_display(self, obj):
+        return obj.get_method_type_display()
+    method_type_display.short_description = 'Method Type'
+
+    def masked_details_display(self, obj):
+        details = obj.get_masked_details()
+        return f"{details['type']}: {details['details']}"
+    masked_details_display.short_description = 'Details'
+
+    # Admin Actions
+    def verify_methods(self, request, queryset):
+        updated = queryset.update(is_verified=True)
+        self.message_user(request, f'{updated} payout method(s) verified.')
+    verify_methods.short_description = "✅ Verify selected methods"
+
+    def unverify_methods(self, request, queryset):
+        updated = queryset.update(is_verified=False)
+        self.message_user(request, f'{updated} payout method(s) unverified.')
+    unverify_methods.short_description = "❌ Unverify selected methods"
+
+    def activate_methods(self, request, queryset):
+        updated = queryset.update(is_active=True)
+        self.message_user(request, f'{updated} payout method(s) activated.')
+    activate_methods.short_description = "🟢 Activate methods"
+
+    def deactivate_methods(self, request, queryset):
+        updated = queryset.update(is_active=False)
+        self.message_user(request, f'{updated} payout method(s) deactivated.')
+    deactivate_methods.short_description = "🔴 Deactivate methods"

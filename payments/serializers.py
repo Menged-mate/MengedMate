@@ -1,4 +1,5 @@
 from rest_framework import serializers
+from decimal import Decimal
 from .models import PaymentMethod, Transaction, Wallet, WalletTransaction, PaymentSession, QRPaymentSession, SimpleChargingSession
 from charging_stations.models import ChargingConnector
 
@@ -97,7 +98,7 @@ class PaymentSessionSerializer(serializers.ModelSerializer):
 
 
 class InitiatePaymentSerializer(serializers.Serializer):
-    amount = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=1)
+    amount = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal('1.00'))
     phone_number = serializers.CharField(max_length=15)
     description = serializers.CharField(max_length=255, required=False, default="MengedMate Payment")
 
@@ -133,7 +134,7 @@ class TransactionStatusSerializer(serializers.Serializer):
 
 
 class WithdrawSerializer(serializers.Serializer):
-    amount = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=1)
+    amount = serializers.DecimalField(max_digits=10, decimal_places=2, min_value=Decimal('1.00'))
     phone_number = serializers.CharField(max_length=15)
     description = serializers.CharField(max_length=255, required=False, default="Withdrawal")
 

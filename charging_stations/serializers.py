@@ -4,7 +4,8 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from .models import (
     StationOwner, ChargingStation, StationImage, ChargingConnector,
-    FavoriteStation, StationReview, ReviewReply, StationOwnerSettings, NotificationTemplate
+    FavoriteStation, StationReview, ReviewReply, StationOwnerSettings, NotificationTemplate,
+    PayoutMethod
 )
 import random
 import string
@@ -341,7 +342,7 @@ class StationReviewListSerializer(serializers.ModelSerializer):
             reply = obj.reply
             return {
                 'id': reply.id,
-                'station_owner_name': reply.station_owner.business_name,
+                'station_owner_name': reply.station_owner.company_name,
                 'reply_text': reply.reply_text,
                 'created_at': reply.created_at
             }
@@ -553,7 +554,7 @@ class ReviewReplySerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'station_owner', 'station_owner_name', 'created_at', 'updated_at']
 
     def get_station_owner_name(self, obj):
-        return obj.station_owner.business_name
+        return obj.station_owner.company_name
 
     def validate(self, data):
         """Validate that the station owner owns the station being reviewed"""
@@ -587,4 +588,94 @@ class ReviewReplyListSerializer(serializers.ModelSerializer):
         ]
 
     def get_station_owner_name(self, obj):
-        return obj.station_owner.business_name
+        return obj.station_owner.company_name
+
+
+class PayoutMethodSerializer(serializers.ModelSerializer):
+    """Serializer for station owner payout methods"""
+
+    method_type_display = serializers.CharField(source='get_method_type_display', read_only=True)
+    masked_details = serializers.SerializerMethodField()
+
+    class Meta:
+        model = PayoutMethod
+        fields = [
+            'id', 'method_type', 'method_type_display', 'account_holder_name',
+            'bank_name', 'account_number', 'routing_number', 'swift_code',
+            'card_number', 'card_type', 'expiry_month', 'expiry_year',
+            'phone_number', 'provider', 'paypal_email', 'is_default',
+            'is_verified', 'is_active', 'created_at', 'updated_at', 'masked_details'
+        ]
+        read_only_fields = ['id', 'is_verified', 'created_at', 'updated_at', 'masked_details']
+        extra_kwargs = {
+            'account_number': {'write_only': True},
+            'card_number': {'write_only': True},
+            'routing_number': {'write_only': True},
+            'swift_code': {'write_only': True},
+        }
+
+    def get_masked_details(self, obj):
+        """Return masked details for display"""
+        return obj.get_masked_details()
+
+    def validate(self, data):
+        """Validate payout method based on type"""
+        method_type = data.get('method_type')
+
+        if method_type == PayoutMethod.MethodType.BANK_ACCOUNT:
+            required_fields = ['account_holder_name', 'bank_name', 'account_number']
+            for field in required_fields:
+                if not data.get(field):
+                    raise serializers.ValidationError(f"{field} is required for bank account method")
+
+        elif method_type == PayoutMethod.MethodType.CARD:
+            required_fields = ['account_holder_name', 'card_number', 'card_type', 'expiry_month', 'expiry_year']
+            for field in required_fields:
+                if not data.get(field):
+                    raise serializers.ValidationError(f"{field} is required for card method")
+
+            # Validate expiry date
+            try:
+                month = int(data.get('expiry_month', 0))
+                year = int(data.get('expiry_year', 0))
+                if not (1 <= month <= 12):
+                    raise serializers.ValidationError("Invalid expiry month")
+                if year < 2024:
+                    raise serializers.ValidationError("Card has expired")
+            except ValueError:
+                raise serializers.ValidationError("Invalid expiry date format")
+
+        elif method_type == PayoutMethod.MethodType.MOBILE_MONEY:
+            required_fields = ['phone_number', 'provider']
+            for field in required_fields:
+                if not data.get(field):
+                    raise serializers.ValidationError(f"{field} is required for mobile money method")
+
+        elif method_type == PayoutMethod.MethodType.PAYPAL:
+            if not data.get('paypal_email'):
+                raise serializers.ValidationError("PayPal email is required for PayPal method")
+
+        return data
+
+    def create(self, validated_data):
+        """Create payout method for the authenticated station owner"""
+        request = self.context['request']
+        try:
+            station_owner = StationOwner.objects.get(user=request.user)
+        except StationOwner.DoesNotExist:
+            raise serializers.ValidationError("You must be a registered station owner to add payout methods")
+
+        validated_data['station_owner'] = station_owner
+
+        # Mask sensitive data before saving
+        if 'account_number' in validated_data and validated_data['account_number']:
+            # Keep only last 4 digits for display
+            account_number = validated_data['account_number']
+            validated_data['account_number'] = f"****{account_number[-4:]}"
+
+        if 'card_number' in validated_data and validated_data['card_number']:
+            # Keep only last 4 digits for display
+            card_number = validated_data['card_number']
+            validated_data['card_number'] = f"****{card_number[-4:]}"
+
+        return super().create(validated_data)

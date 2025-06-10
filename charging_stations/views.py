@@ -14,7 +14,8 @@ from django.http import HttpResponse
 from math import cos, radians
 from .models import (
     StationOwner, ChargingStation, StationImage, ChargingConnector,
-    AppContent, StationReview, ReviewReply, StationOwnerSettings, NotificationTemplate
+    AppContent, StationReview, ReviewReply, StationOwnerSettings, NotificationTemplate,
+    PayoutMethod
 )
 from .serializers import (
     StationOwnerRegistrationSerializer,
@@ -28,7 +29,8 @@ from .serializers import (
     ReviewReplyListSerializer,
     StationOwnerSettingsSerializer,
     NotificationTemplateSerializer,
-    AvailableStationSerializer
+    AvailableStationSerializer,
+    PayoutMethodSerializer
 )
 from authentication.authentication import AnonymousAuthentication, TokenAuthentication
 from rest_framework.authentication import SessionAuthentication
@@ -1148,3 +1150,161 @@ class AvailableStationsView(generics.ListAPIView):
             'price_range': price_range,
             'last_updated': timezone.now().isoformat()
         }
+
+
+class PayoutMethodListCreateView(generics.ListCreateAPIView):
+    """View to list and create payout methods for station owners"""
+
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    serializer_class = PayoutMethodSerializer
+
+    def get_queryset(self):
+        try:
+            station_owner = StationOwner.objects.get(user=self.request.user)
+            return PayoutMethod.objects.filter(
+                station_owner=station_owner,
+                is_active=True
+            ).order_by('-is_default', '-created_at')
+        except StationOwner.DoesNotExist:
+            return PayoutMethod.objects.none()
+
+    def create(self, request, *args, **kwargs):
+        try:
+            # Check if user is a station owner
+            station_owner = StationOwner.objects.get(user=request.user)
+
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
+
+            # If this is the first payout method, make it default
+            existing_methods = PayoutMethod.objects.filter(
+                station_owner=station_owner,
+                is_active=True
+            ).count()
+
+            if existing_methods == 0:
+                serializer.validated_data['is_default'] = True
+
+            payout_method = serializer.save()
+
+            return Response({
+                'success': True,
+                'message': 'Payout method added successfully',
+                'data': PayoutMethodSerializer(payout_method).data
+            }, status=status.HTTP_201_CREATED)
+
+        except StationOwner.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'You must be a registered station owner to add payout methods'
+            }, status=status.HTTP_403_FORBIDDEN)
+
+
+class PayoutMethodDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """View to retrieve, update, or delete a specific payout method"""
+
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    serializer_class = PayoutMethodSerializer
+    lookup_field = 'id'
+
+    def get_queryset(self):
+        try:
+            station_owner = StationOwner.objects.get(user=self.request.user)
+            return PayoutMethod.objects.filter(
+                station_owner=station_owner,
+                is_active=True
+            )
+        except StationOwner.DoesNotExist:
+            return PayoutMethod.objects.none()
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', True)
+        instance = self.get_object()
+
+        # Don't allow updating sensitive fields after creation
+        protected_fields = ['account_number', 'card_number', 'routing_number']
+        for field in protected_fields:
+            if field in request.data:
+                request.data.pop(field)
+
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+
+        return Response({
+            'success': True,
+            'message': 'Payout method updated successfully',
+            'data': serializer.data
+        })
+
+    def destroy(self, request, *args, **kwargs):
+        instance = self.get_object()
+
+        # Don't allow deleting the default method if it's the only one
+        station_owner = instance.station_owner
+        active_methods = PayoutMethod.objects.filter(
+            station_owner=station_owner,
+            is_active=True
+        ).count()
+
+        if instance.is_default and active_methods == 1:
+            return Response({
+                'success': False,
+                'error': 'Cannot delete the only payout method. Add another method first.'
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # If deleting default method, set another as default
+        if instance.is_default:
+            next_method = PayoutMethod.objects.filter(
+                station_owner=station_owner,
+                is_active=True
+            ).exclude(id=instance.id).first()
+
+            if next_method:
+                next_method.is_default = True
+                next_method.save()
+
+        instance.is_active = False
+        instance.save()
+
+        return Response({
+            'success': True,
+            'message': 'Payout method deleted successfully'
+        }, status=status.HTTP_204_NO_CONTENT)
+
+
+class SetDefaultPayoutMethodView(APIView):
+    """View to set a payout method as default"""
+
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+
+    def post(self, request, method_id):
+        try:
+            station_owner = StationOwner.objects.get(user=request.user)
+
+            # Get the payout method
+            payout_method = get_object_or_404(
+                PayoutMethod,
+                id=method_id,
+                station_owner=station_owner,
+                is_active=True
+            )
+
+            # Set this method as default (this will automatically unset others)
+            payout_method.is_default = True
+            payout_method.save()
+
+            return Response({
+                'success': True,
+                'message': 'Default payout method updated successfully',
+                'data': PayoutMethodSerializer(payout_method).data
+            })
+
+        except StationOwner.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'Station owner profile not found'
+            }, status=status.HTTP_404_NOT_FOUND)
