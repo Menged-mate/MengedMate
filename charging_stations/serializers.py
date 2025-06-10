@@ -4,7 +4,7 @@ from django.contrib.auth.password_validation import validate_password
 from django.core.exceptions import ValidationError
 from .models import (
     StationOwner, ChargingStation, StationImage, ChargingConnector,
-    FavoriteStation, StationReview, StationOwnerSettings, NotificationTemplate
+    FavoriteStation, StationReview, ReviewReply, StationOwnerSettings, NotificationTemplate
 )
 import random
 import string
@@ -313,13 +313,14 @@ class StationReviewListSerializer(serializers.ModelSerializer):
 
     user_name = serializers.SerializerMethodField()
     user_email = serializers.SerializerMethodField()
+    reply = serializers.SerializerMethodField()
 
     class Meta:
         model = StationReview
         fields = [
             'id', 'user_name', 'user_email', 'rating', 'review_text',
             'charging_speed_rating', 'location_rating', 'amenities_rating',
-            'is_verified_review', 'created_at'
+            'is_verified_review', 'created_at', 'reply'
         ]
 
     def get_user_name(self, obj):
@@ -333,6 +334,19 @@ class StationReviewListSerializer(serializers.ModelSerializer):
             masked_username = username[:2] + '*' * (len(username) - 2) if len(username) > 2 else username
             return f"{masked_username}@{domain}"
         return email
+
+    def get_reply(self, obj):
+        """Get the station owner's reply if it exists"""
+        try:
+            reply = obj.reply
+            return {
+                'id': reply.id,
+                'station_owner_name': reply.station_owner.business_name,
+                'reply_text': reply.reply_text,
+                'created_at': reply.created_at
+            }
+        except ReviewReply.DoesNotExist:
+            return None
 
 
 class StationOwnerSettingsSerializer(serializers.ModelSerializer):
@@ -383,3 +397,194 @@ class NotificationTemplateSerializer(serializers.ModelSerializer):
         if len(value) > 160:
             raise serializers.ValidationError("SMS body must be 160 characters or less")
         return value
+
+
+class AvailableStationSerializer(serializers.ModelSerializer):
+    """Serializer for available charging stations with real-time availability"""
+
+    owner_name = serializers.CharField(source='owner.company_name', read_only=True)
+    is_verified_owner = serializers.SerializerMethodField()
+    available_connectors_detail = serializers.SerializerMethodField()
+    distance = serializers.SerializerMethodField()
+    estimated_wait_time = serializers.SerializerMethodField()
+    pricing_info = serializers.SerializerMethodField()
+    real_time_availability = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ChargingStation
+        fields = [
+            'id', 'name', 'address', 'city', 'state', 'zip_code', 'country',
+            'latitude', 'longitude', 'description', 'opening_hours',
+            'status', 'rating', 'rating_count', 'price_range',
+            'available_connectors', 'total_connectors',
+            'has_restroom', 'has_wifi', 'has_restaurant', 'has_shopping',
+            'main_image', 'created_at', 'owner_name', 'is_verified_owner',
+            'available_connectors_detail', 'distance', 'estimated_wait_time',
+            'pricing_info', 'real_time_availability'
+        ]
+
+    def get_is_verified_owner(self, obj):
+        return obj.owner.verification_status == 'verified'
+
+    def get_available_connectors_detail(self, obj):
+        """Get detailed information about available connectors"""
+        connectors = obj.connectors.filter(
+            is_available=True,
+            status='available'
+        ).values(
+            'connector_type',
+            'power_kw',
+            'available_quantity',
+            'price_per_kwh'
+        )
+
+        connector_summary = {}
+        for connector in connectors:
+            connector_type = connector['connector_type']
+            if connector_type not in connector_summary:
+                connector_summary[connector_type] = {
+                    'type': connector_type,
+                    'power_kw': connector['power_kw'],
+                    'available_count': 0,
+                    'price_per_kwh': connector['price_per_kwh']
+                }
+            connector_summary[connector_type]['available_count'] += connector['available_quantity']
+
+        return list(connector_summary.values())
+
+    def get_distance(self, obj):
+        """Calculate distance from user location if provided"""
+        request = self.context.get('request')
+        if request:
+            user_lat = request.query_params.get('user_lat')
+            user_lng = request.query_params.get('user_lng')
+
+            if user_lat and user_lng and obj.latitude and obj.longitude:
+                try:
+                    from math import radians, cos, sin, asin, sqrt
+
+                    # Haversine formula
+                    lat1, lon1 = radians(float(user_lat)), radians(float(user_lng))
+                    lat2, lon2 = radians(float(obj.latitude)), radians(float(obj.longitude))
+
+                    dlat = lat2 - lat1
+                    dlon = lon2 - lon1
+                    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+                    c = 2 * asin(sqrt(a))
+                    r = 6371  # Radius of earth in kilometers
+
+                    return round(c * r, 2)
+                except (ValueError, TypeError):
+                    pass
+        return None
+
+    def get_estimated_wait_time(self, obj):
+        """Estimate wait time based on current usage"""
+        if obj.available_connectors > 0:
+            return 0  # No wait if connectors are available
+
+        # Simple estimation based on total connectors and typical session duration
+        # In a real implementation, this would use historical data
+        if obj.total_connectors > 0:
+            avg_session_minutes = 45  # Average charging session
+            utilization_rate = 0.7  # Typical utilization
+            estimated_minutes = int(avg_session_minutes * utilization_rate)
+            return max(5, estimated_minutes)  # Minimum 5 minutes
+
+        return None
+
+    def get_pricing_info(self, obj):
+        """Get pricing information for the station"""
+        connectors = obj.connectors.filter(
+            is_available=True,
+            price_per_kwh__isnull=False
+        ).values_list('price_per_kwh', flat=True)
+
+        if connectors:
+            prices = list(connectors)
+            return {
+                'min_price': min(prices),
+                'max_price': max(prices),
+                'currency': 'ETB',
+                'pricing_model': 'per_kwh'
+            }
+
+        return {
+            'min_price': None,
+            'max_price': None,
+            'currency': 'ETB',
+            'pricing_model': 'per_kwh'
+        }
+
+    def get_real_time_availability(self, obj):
+        """Get real-time availability status"""
+        if obj.status != 'operational':
+            return {
+                'status': 'unavailable',
+                'reason': obj.get_status_display(),
+                'last_updated': obj.updated_at.isoformat()
+            }
+
+        if obj.available_connectors == 0:
+            return {
+                'status': 'busy',
+                'reason': 'All connectors occupied',
+                'last_updated': obj.updated_at.isoformat()
+            }
+
+        return {
+            'status': 'available',
+            'reason': f'{obj.available_connectors} connectors available',
+            'last_updated': obj.updated_at.isoformat()
+        }
+
+
+class ReviewReplySerializer(serializers.ModelSerializer):
+    """Serializer for creating and updating review replies"""
+
+    station_owner_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ReviewReply
+        fields = [
+            'id', 'review', 'station_owner', 'station_owner_name',
+            'reply_text', 'created_at', 'updated_at'
+        ]
+        read_only_fields = ['id', 'station_owner', 'station_owner_name', 'created_at', 'updated_at']
+
+    def get_station_owner_name(self, obj):
+        return obj.station_owner.business_name
+
+    def validate(self, data):
+        """Validate that the station owner owns the station being reviewed"""
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            try:
+                station_owner = StationOwner.objects.get(user=request.user)
+                review = data.get('review')
+
+                if review and review.station.owner != station_owner:
+                    raise serializers.ValidationError(
+                        "You can only reply to reviews of your own stations."
+                    )
+            except StationOwner.DoesNotExist:
+                raise serializers.ValidationError(
+                    "Only station owners can reply to reviews."
+                )
+
+        return data
+
+
+class ReviewReplyListSerializer(serializers.ModelSerializer):
+    """Serializer for listing review replies (read-only)"""
+
+    station_owner_name = serializers.SerializerMethodField()
+
+    class Meta:
+        model = ReviewReply
+        fields = [
+            'id', 'station_owner_name', 'reply_text', 'created_at'
+        ]
+
+    def get_station_owner_name(self, obj):
+        return obj.station_owner.business_name

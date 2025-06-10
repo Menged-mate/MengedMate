@@ -2,7 +2,7 @@ from django.contrib import admin
 from django.utils.html import format_html
 from django.urls import path
 from django.shortcuts import render
-from .models import StationOwner, ChargingStation, StationImage, ChargingConnector, AppContent, StationReview
+from .models import StationOwner, ChargingStation, StationImage, ChargingConnector, AppContent, StationReview, ReviewReply
 from .admin_views import DatabaseBackupView, system_stats_view
 
 class StationImageInline(admin.TabularInline):
@@ -618,3 +618,46 @@ admin_site.register(ChargingStation, ChargingStationAdmin)
 admin_site.register(ChargingConnector, ChargingConnectorAdmin)
 admin_site.register(AppContent, AppContentAdmin)
 admin_site.register(StationReview, StationReviewAdmin)
+
+
+@admin.register(ReviewReply)
+class ReviewReplyAdmin(admin.ModelAdmin):
+    list_display = ('review_info', 'station_owner_name', 'reply_text_preview', 'is_active', 'created_at')
+    list_filter = ('is_active', 'created_at', 'station_owner__company_name')
+    search_fields = ('review__station__name', 'station_owner__company_name', 'reply_text')
+    readonly_fields = ('created_at', 'updated_at')
+    fieldsets = (
+        (None, {
+            'fields': ('review', 'station_owner', 'reply_text')
+        }),
+        ('Status', {
+            'fields': ('is_active',)
+        }),
+        ('Timestamps', {
+            'fields': ('created_at', 'updated_at'),
+            'classes': ('collapse',),
+        }),
+    )
+
+    def review_info(self, obj):
+        return format_html(
+            '<strong>{}</strong><br><small>Review by: {} ({}⭐)</small>',
+            obj.review.station.name,
+            f"{obj.review.user.first_name} {obj.review.user.last_name}".strip() or obj.review.user.email,
+            obj.review.rating
+        )
+    review_info.short_description = 'Review Information'
+
+    def station_owner_name(self, obj):
+        return obj.station_owner.company_name
+    station_owner_name.short_description = 'Station Owner'
+
+    def reply_text_preview(self, obj):
+        if len(obj.reply_text) > 50:
+            return obj.reply_text[:50] + "..."
+        return obj.reply_text
+    reply_text_preview.short_description = 'Reply Text'
+
+
+# Register ReviewReply with custom admin site
+admin_site.register(ReviewReply, ReviewReplyAdmin)

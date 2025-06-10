@@ -1,4 +1,4 @@
-from rest_framework import generics, status, permissions
+from rest_framework import generics, status, permissions, serializers
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.parsers import MultiPartParser, FormParser, JSONParser
@@ -11,9 +11,10 @@ from django.conf import settings
 from django.utils import timezone
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
+from math import cos, radians
 from .models import (
     StationOwner, ChargingStation, StationImage, ChargingConnector,
-    AppContent, StationReview, StationOwnerSettings, NotificationTemplate
+    AppContent, StationReview, ReviewReply, StationOwnerSettings, NotificationTemplate
 )
 from .serializers import (
     StationOwnerRegistrationSerializer,
@@ -23,8 +24,11 @@ from .serializers import (
     StationImageSerializer,
     StationReviewSerializer,
     StationReviewListSerializer,
+    ReviewReplySerializer,
+    ReviewReplyListSerializer,
     StationOwnerSettingsSerializer,
-    NotificationTemplateSerializer
+    NotificationTemplateSerializer,
+    AvailableStationSerializer
 )
 from authentication.authentication import AnonymousAuthentication, TokenAuthentication
 from rest_framework.authentication import SessionAuthentication
@@ -229,6 +233,11 @@ class ConnectorCreateView(generics.CreateAPIView):
 
             # Update station connector counts
             station.update_connector_counts()
+            return Response({
+                'success': True,
+                'message': 'Connector added successfully',
+                'connector': ChargingConnectorSerializer(connector).data
+            }, status=status.HTTP_201_CREATED)
         except (StationOwner.DoesNotExist, ChargingStation.DoesNotExist):
             raise permissions.PermissionDenied("You don't have permission to add connectors to this station.")
 
@@ -847,3 +856,295 @@ class NotificationTemplateDetailView(generics.RetrieveUpdateAPIView):
     serializer_class = NotificationTemplateSerializer
     queryset = NotificationTemplate.objects.all()
     lookup_field = 'template_type'
+
+
+class ReviewReplyCreateView(generics.CreateAPIView):
+    """View for station owners to reply to reviews"""
+
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    serializer_class = ReviewReplySerializer
+
+    def perform_create(self, serializer):
+        try:
+            station_owner = StationOwner.objects.get(user=self.request.user)
+            review = serializer.validated_data['review']
+
+            # Validate that the station owner owns the station being reviewed
+            if review.station.owner != station_owner:
+                raise permissions.PermissionDenied(
+                    "You can only reply to reviews of your own stations."
+                )
+
+            # Check if reply already exists
+            if hasattr(review, 'reply'):
+                raise serializers.ValidationError(
+                    "A reply already exists for this review. Use the update endpoint to modify it."
+                )
+
+            serializer.save(station_owner=station_owner)
+
+        except StationOwner.DoesNotExist:
+            raise permissions.PermissionDenied("Only station owners can reply to reviews.")
+
+
+class ReviewReplyDetailView(generics.RetrieveUpdateDestroyAPIView):
+    """View for station owners to retrieve, update, or delete their replies"""
+
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    serializer_class = ReviewReplySerializer
+    lookup_field = 'id'
+
+    def get_queryset(self):
+        try:
+            station_owner = StationOwner.objects.get(user=self.request.user)
+            return ReviewReply.objects.filter(station_owner=station_owner)
+        except StationOwner.DoesNotExist:
+            return ReviewReply.objects.none()
+
+    def perform_update(self, serializer):
+        serializer.save()
+
+    def perform_destroy(self, instance):
+        # Soft delete - mark as inactive instead of deleting
+        instance.is_active = False
+        instance.save()
+
+
+class StationOwnerRepliesView(generics.ListAPIView):
+    """View for station owners to see all their replies"""
+
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    serializer_class = ReviewReplyListSerializer
+
+    def get_queryset(self):
+        try:
+            station_owner = StationOwner.objects.get(user=self.request.user)
+            return ReviewReply.objects.filter(
+                station_owner=station_owner,
+                is_active=True
+            ).select_related('review', 'review__station', 'review__user').order_by('-created_at')
+        except StationOwner.DoesNotExist:
+            return ReviewReply.objects.none()
+
+    def list(self, request, *args, **kwargs):
+        queryset = self.get_queryset()
+
+        # Add review and station information to each reply
+        reply_data = []
+        for reply in queryset:
+            reply_serializer = self.get_serializer(reply)
+            reply_info = reply_serializer.data
+
+            # Add review information
+            reply_info['review_info'] = {
+                'id': reply.review.id,
+                'rating': reply.review.rating,
+                'review_text': reply.review.review_text,
+                'user_name': f"{reply.review.user.first_name} {reply.review.user.last_name}".strip() or reply.review.user.email.split('@')[0],
+                'created_at': reply.review.created_at,
+                'station_name': reply.review.station.name,
+                'station_id': reply.review.station.id
+            }
+
+            reply_data.append(reply_info)
+
+        return Response({
+            'success': True,
+            'count': len(reply_data),
+            'results': reply_data
+        })
+
+
+class AvailableStationsView(generics.ListAPIView):
+    """View to fetch only available charging stations with real-time data"""
+
+    serializer_class = AvailableStationSerializer
+    permission_classes = [permissions.AllowAny]
+    authentication_classes = [AnonymousAuthentication, TokenAuthentication, SessionAuthentication]
+
+    def get_queryset(self):
+        """Filter stations to show only available ones"""
+        queryset = ChargingStation.objects.filter(
+            is_active=True,
+            is_public=True,
+            status='operational',
+            available_connectors__gt=0  # Only stations with available connectors
+        ).select_related('owner').prefetch_related('connectors')
+
+        # Apply additional filters
+        queryset = self._apply_filters(queryset)
+
+        # Update connector availability for all stations in queryset
+        self._update_connector_availability(queryset)
+
+        # Re-filter after updating availability
+        queryset = queryset.filter(available_connectors__gt=0)
+
+        # Order by distance if user location provided, otherwise by rating
+        user_lat = self.request.query_params.get('user_lat')
+        user_lng = self.request.query_params.get('user_lng')
+
+        if user_lat and user_lng:
+            # Order by distance (this is a simplified ordering)
+            # In production, you might want to use PostGIS for better distance calculations
+            queryset = queryset.extra(
+                select={
+                    'distance': """
+                        6371 * acos(
+                            cos(radians(%s)) * cos(radians(latitude)) *
+                            cos(radians(longitude) - radians(%s)) +
+                            sin(radians(%s)) * sin(radians(latitude))
+                        )
+                    """
+                },
+                select_params=[user_lat, user_lng, user_lat]
+            ).order_by('distance')
+        else:
+            queryset = queryset.order_by('-rating', '-rating_count')
+
+        return queryset
+
+    def _apply_filters(self, queryset):
+        """Apply various filters based on query parameters"""
+
+        # Filter by connector type
+        connector_type = self.request.query_params.get('connector_type')
+        if connector_type:
+            queryset = queryset.filter(
+                connectors__connector_type=connector_type,
+                connectors__is_available=True
+            ).distinct()
+
+        # Filter by minimum power
+        min_power = self.request.query_params.get('min_power')
+        if min_power:
+            try:
+                queryset = queryset.filter(
+                    connectors__power_kw__gte=float(min_power),
+                    connectors__is_available=True
+                ).distinct()
+            except ValueError:
+                pass
+
+        # Filter by maximum distance
+        max_distance = self.request.query_params.get('max_distance')
+        user_lat = self.request.query_params.get('user_lat')
+        user_lng = self.request.query_params.get('user_lng')
+
+        if max_distance and user_lat and user_lng:
+            try:
+                # Simple bounding box filter (more efficient than exact distance calculation)
+                distance_km = float(max_distance)
+                lat_delta = distance_km / 111.0  # Approximate km per degree latitude
+                lng_delta = distance_km / (111.0 * cos(radians(float(user_lat))))
+
+                queryset = queryset.filter(
+                    latitude__range=[float(user_lat) - lat_delta, float(user_lat) + lat_delta],
+                    longitude__range=[float(user_lng) - lng_delta, float(user_lng) + lng_delta]
+                )
+            except (ValueError, TypeError):
+                pass
+
+        # Filter by amenities
+        amenities = self.request.query_params.getlist('amenities')
+        for amenity in amenities:
+            if amenity == 'restroom':
+                queryset = queryset.filter(has_restroom=True)
+            elif amenity == 'wifi':
+                queryset = queryset.filter(has_wifi=True)
+            elif amenity == 'restaurant':
+                queryset = queryset.filter(has_restaurant=True)
+            elif amenity == 'shopping':
+                queryset = queryset.filter(has_shopping=True)
+
+        # Filter by minimum rating
+        min_rating = self.request.query_params.get('min_rating')
+        if min_rating:
+            try:
+                queryset = queryset.filter(rating__gte=float(min_rating))
+            except ValueError:
+                pass
+
+        # Filter by price range
+        max_price = self.request.query_params.get('max_price')
+        if max_price:
+            try:
+                queryset = queryset.filter(
+                    connectors__price_per_kwh__lte=float(max_price),
+                    connectors__is_available=True
+                ).distinct()
+            except ValueError:
+                pass
+
+        return queryset
+
+    def _update_connector_availability(self, queryset):
+        """Update connector availability for all stations"""
+        for station in queryset:
+            station.update_connector_counts()
+
+    def list(self, request, *args, **kwargs):
+        """Override list to add metadata"""
+        queryset = self.get_queryset()
+        page = self.paginate_queryset(queryset)
+
+        if page is not None:
+            serializer = self.get_serializer(page, many=True)
+            response_data = self.get_paginated_response(serializer.data)
+
+            # Add metadata
+            response_data.data['metadata'] = self._get_metadata(queryset)
+            return response_data
+
+        serializer = self.get_serializer(queryset, many=True)
+
+        return Response({
+            'success': True,
+            'count': len(serializer.data),
+            'results': serializer.data,
+            'metadata': self._get_metadata(queryset)
+        })
+
+    def _get_metadata(self, queryset):
+        """Get metadata about the available stations"""
+        total_stations = queryset.count()
+
+        if total_stations == 0:
+            return {
+                'total_available_stations': 0,
+                'total_available_connectors': 0,
+                'average_rating': 0,
+                'connector_types_available': [],
+                'price_range': {'min': None, 'max': None}
+            }
+
+        # Calculate metadata
+        total_connectors = sum(station.available_connectors for station in queryset)
+        avg_rating = sum(station.rating for station in queryset) / total_stations
+
+        # Get unique connector types
+        connector_types = set()
+        prices = []
+
+        for station in queryset:
+            for connector in station.connectors.filter(is_available=True):
+                connector_types.add(connector.get_connector_type_display())
+                if connector.price_per_kwh:
+                    prices.append(float(connector.price_per_kwh))
+
+        price_range = {
+            'min': min(prices) if prices else None,
+            'max': max(prices) if prices else None
+        }
+
+        return {
+            'total_available_stations': total_stations,
+            'total_available_connectors': total_connectors,
+            'average_rating': round(avg_rating, 2),
+            'connector_types_available': list(connector_types),
+            'price_range': price_range,
+            'last_updated': timezone.now().isoformat()
+        }

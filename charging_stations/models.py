@@ -381,6 +381,77 @@ class StationReview(models.Model):
         station.save(update_fields=['rating', 'rating_count'])
 
 
+class ReviewReply(models.Model):
+    """Model for station owner replies to reviews"""
+
+    review = models.OneToOneField(
+        StationReview,
+        on_delete=models.CASCADE,
+        related_name='reply',
+        help_text="The review this reply is responding to"
+    )
+    station_owner = models.ForeignKey(
+        'StationOwner',
+        on_delete=models.CASCADE,
+        related_name='review_replies',
+        help_text="Station owner who wrote the reply"
+    )
+    reply_text = models.TextField(
+        help_text="Reply text from station owner"
+    )
+    is_active = models.BooleanField(default=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['review', '-created_at']),
+            models.Index(fields=['station_owner', '-created_at']),
+        ]
+
+    def __str__(self):
+        return f"Reply by {self.station_owner.business_name} to review #{self.review.id}"
+
+    def save(self, *args, **kwargs):
+        is_new = self.pk is None
+        super().save(*args, **kwargs)
+
+        # Send notification to reviewer when owner replies
+        if is_new:
+            self._send_reply_notification()
+
+    def _send_reply_notification(self):
+        """Send notification to reviewer when station owner replies"""
+        try:
+            # Check if notification system is available
+            try:
+                from authentication.notifications import create_notification, Notification
+            except ImportError:
+                print("Notification system not available")
+                return
+
+            # Notify the reviewer
+            create_notification(
+                user=self.review.user,
+                notification_type=Notification.NotificationType.SYSTEM,
+                title='Station Owner Replied',
+                message=f'{self.station_owner.business_name} replied to your review for "{self.review.station.name}".',
+                link=f'/stations/{self.review.station.id}'
+            )
+        except Exception as e:
+            print(f"Error sending reply notification: {e}")
+
+    def clean(self):
+        """Validate that the station owner owns the station being reviewed"""
+        from django.core.exceptions import ValidationError
+
+        if self.review.station.owner != self.station_owner:
+            raise ValidationError(
+                "Station owner can only reply to reviews of their own stations."
+            )
+
+
 class AppContent(models.Model):
     """Model to store app content like About, Privacy Policy, Terms of Service"""
 

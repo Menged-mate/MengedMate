@@ -17,6 +17,10 @@ from .views import (
     UserReviewsView,
     StationReviewStatsView,
     StationOwnerReviewsView,
+    ReviewReplyCreateView,
+    ReviewReplyDetailView,
+    StationOwnerRepliesView,
+    AvailableStationsView,
     MobileChargingHistoryView,
     StationOwnerSettingsView,
     NotificationTemplateListView,
@@ -83,6 +87,14 @@ urlpatterns = [
     path('my-reviews/', UserReviewsView.as_view(), name='user-reviews'),
     path('stations/<uuid:station_id>/review-stats/', StationReviewStatsView.as_view(), name='station-review-stats'),
     path('stations/reviews/', StationOwnerReviewsView.as_view(), name='station-owner-reviews'),
+
+    # Review reply endpoints
+    path('reviews/reply/', ReviewReplyCreateView.as_view(), name='review-reply-create'),
+    path('reviews/reply/<int:id>/', ReviewReplyDetailView.as_view(), name='review-reply-detail'),
+    path('my-replies/', StationOwnerRepliesView.as_view(), name='station-owner-replies'),
+
+    # Available stations endpoint
+    path('available-stations/', AvailableStationsView.as_view(), name='available-stations'),
     path('mobile/charging-history/', MobileChargingHistoryView.as_view(), name='mobile-charging-history'),
 
     # Settings endpoints
