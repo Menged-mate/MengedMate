@@ -27,7 +27,8 @@ from .views import (
     NotificationTemplateDetailView,
     PayoutMethodListCreateView,
     PayoutMethodDetailView,
-    SetDefaultPayoutMethodView
+    SetDefaultPayoutMethodView,
+    WithdrawalRequestView
 )
 from .map_views import (
     PublicStationListView,
@@ -109,4 +110,7 @@ urlpatterns = [
     path('payout-methods/', PayoutMethodListCreateView.as_view(), name='payout-methods'),
     path('payout-methods/<int:id>/', PayoutMethodDetailView.as_view(), name='payout-method-detail'),
     path('payout-methods/<int:method_id>/set-default/', SetDefaultPayoutMethodView.as_view(), name='set-default-payout-method'),
+
+    # Withdrawal endpoints
+    path('withdrawals/', WithdrawalRequestView.as_view(), name='withdrawal-request'),
 ]

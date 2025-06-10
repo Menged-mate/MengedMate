@@ -1308,3 +1308,68 @@ class SetDefaultPayoutMethodView(APIView):
                 'success': False,
                 'error': 'Station owner profile not found'
             }, status=status.HTTP_404_NOT_FOUND)
+
+
+class WithdrawalRequestView(APIView):
+    """View to handle withdrawal requests from station owners"""
+
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+
+    def post(self, request):
+        try:
+            station_owner = StationOwner.objects.get(user=request.user)
+
+            amount = request.data.get('amount')
+            payment_method_id = request.data.get('payment_method_id')
+            description = request.data.get('description', 'Withdrawal request')
+
+            # Validate amount
+            if not amount or float(amount) <= 0:
+                return Response({
+                    'success': False,
+                    'error': 'Invalid withdrawal amount'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # Validate payment method
+            try:
+                payout_method = PayoutMethod.objects.get(
+                    id=payment_method_id,
+                    station_owner=station_owner,
+                    is_active=True
+                )
+            except PayoutMethod.DoesNotExist:
+                return Response({
+                    'success': False,
+                    'error': 'Invalid payment method'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            # TODO: Check available balance from wallet or revenue system
+            # For now, we'll assume the withdrawal is valid
+
+            # TODO: Create withdrawal record in database
+            # TODO: Integrate with payment processor for actual withdrawal
+
+            # For demo purposes, return success
+            return Response({
+                'success': True,
+                'message': 'Withdrawal request submitted successfully',
+                'data': {
+                    'amount': float(amount),
+                    'payment_method': PayoutMethodSerializer(payout_method).data,
+                    'description': description,
+                    'status': 'pending',
+                    'estimated_processing_time': '1-3 business days'
+                }
+            })
+
+        except StationOwner.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'Station owner profile not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except ValueError:
+            return Response({
+                'success': False,
+                'error': 'Invalid amount format'
+            }, status=status.HTTP_400_BAD_REQUEST)
