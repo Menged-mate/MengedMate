@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
+from decimal import Decimal
 from .models import (
     UserSearchPreferences, 
     StationRecommendationScore, 
@@ -138,9 +139,9 @@ class NearbyStationSearchSerializer(serializers.Serializer):
     longitude = serializers.DecimalField(max_digits=12, decimal_places=8)
     radius_km = serializers.DecimalField(
         max_digits=5, decimal_places=2,
-        default=10.0,
-        min_value=1.0,
-        max_value=100.0,
+        default=Decimal('10.00'),
+        min_value=Decimal('1.00'),
+        max_value=Decimal('100.00'),
         required=False
     )
     connector_type = serializers.CharField(
@@ -167,7 +168,7 @@ class NearbyStationSearchSerializer(serializers.Serializer):
     )
     min_rating = serializers.DecimalField(
         max_digits=3, decimal_places=2,
-        min_value=0.0, max_value=5.0,
+        min_value=Decimal('0.00'), max_value=Decimal('5.00'),
         required=False,
         allow_null=True
     )

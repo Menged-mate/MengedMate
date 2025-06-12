@@ -23,14 +23,16 @@ class AIRecommendationService:
     """AI-powered station recommendation service"""
     
     def __init__(self):
+        """AI-powered station recommendation service"""
+        # Adjust weights to prioritize compatibility and distance
         self.weights = {
-            'compatibility': 0.25,
-            'distance': 0.20,
-            'availability': 0.15,
-            'review_sentiment': 0.15,
-            'amenities': 0.10,
-            'price': 0.10,
-            'reliability': 0.05
+            'compatibility': 0.40,  # Increased from 0.25
+            'distance': 0.35,      # Increased from 0.20
+            'availability': 0.10,  # Reduced from 0.15
+            'review_sentiment': 0.05,  # Reduced from 0.15
+            'amenities': 0.05,     # Reduced from 0.10
+            'price': 0.03,         # Reduced from 0.10
+            'reliability': 0.02    # Reduced from 0.05
         }
     
     def get_personalized_recommendations(
@@ -123,9 +125,28 @@ class AIRecommendationService:
     ) -> Dict:
         """Calculate comprehensive station score"""
         
-        # Calculate individual scores
+        # Calculate core scores (compatibility and distance)
         compatibility_score = self._calculate_compatibility_score(station, preferences)
         distance_score = self._calculate_distance_score(station.distance_km, preferences['search_radius'])
+        
+        # If compatibility score is 0, return immediately with 0 overall score
+        if compatibility_score == 0:
+            return {
+                'overall_score': 0,
+                'distance_km': station.distance_km,
+                'recommendation_reason': "This station is not compatible with your vehicle's connector type.",
+                'score_breakdown': {
+                    'compatibility': 0,
+                    'distance': float(distance_score),
+                    'availability': 0,
+                    'review_sentiment': 0,
+                    'amenities': 0,
+                    'price': 0,
+                    'reliability': 0
+                }
+            }
+        
+        # Calculate secondary scores
         availability_score = self._calculate_availability_score(station)
         review_sentiment_score = self._calculate_review_sentiment_score(station)
         amenities_score = self._calculate_amenities_score(station, preferences)
@@ -143,7 +164,7 @@ class AIRecommendationService:
             reliability_score * self.weights['reliability']
         )
         
-        # Generate recommendation reason
+        # Generate recommendation reason based primarily on compatibility and distance
         reason = self._generate_recommendation_reason(
             station, compatibility_score, distance_score, 
             review_sentiment_score, amenities_score
@@ -304,31 +325,29 @@ class AIRecommendationService:
         sentiment: Decimal, 
         amenities: Decimal
     ) -> str:
-        """Generate human-readable recommendation reason"""
+        """Generate a human-readable recommendation reason"""
         reasons = []
         
-        if compatibility >= 90:
-            reasons.append("Perfect connector compatibility")
-        elif compatibility >= 70:
-            reasons.append("Good connector compatibility")
-        
-        if distance >= 80:
-            reasons.append("Very close to your location")
-        elif distance >= 60:
-            reasons.append("Conveniently located")
-        
-        if sentiment >= 80:
-            reasons.append("Excellent user reviews")
-        elif sentiment >= 60:
-            reasons.append("Good user feedback")
-        
-        if amenities >= 70:
-            reasons.append("Great amenities match")
-        
-        if not reasons:
-            reasons.append("Available charging option")
-        
-        return " • ".join(reasons[:3])  # Limit to top 3 reasons
+        # Always include compatibility and distance information
+        if float(compatibility) == 100:
+            reasons.append(f"Compatible with your vehicle")
+        elif float(compatibility) > 0:
+            reasons.append(f"Partially compatible with your vehicle")
+            
+        if float(distance) >= 80:
+            reasons.append(f"Very close to your location ({station.distance_km:.1f} km)")
+        elif float(distance) >= 50:
+            reasons.append(f"Within reasonable distance ({station.distance_km:.1f} km)")
+        else:
+            reasons.append(f"{station.distance_km:.1f} km away")
+            
+        # Add additional information only if scores are significant
+        if float(sentiment) > 75:
+            reasons.append("Highly rated by users")
+        if float(amenities) > 75:
+            reasons.append("Good amenities available")
+            
+        return " • ".join(reasons)
     
     def _calculate_distance(self, lat1: float, lng1: float, lat2: float, lng2: float) -> float:
         """Calculate distance between two points using Haversine formula"""
@@ -385,7 +404,29 @@ class SentimentAnalysisService:
 
     def analyze_review(self, review: StationReview) -> Dict:
         """Analyze sentiment of a single review"""
-        text = "good"
+        # Combine review text with any additional rating-specific comments
+        text = review.review_text or ""
+        
+        # Add context from specific ratings if available
+        if review.charging_speed_rating:
+            text += f" Charging speed: {review.charging_speed_rating}/5."
+        if review.location_rating:
+            text += f" Location: {review.location_rating}/5."
+        if review.amenities_rating:
+            text += f" Amenities: {review.amenities_rating}/5."
+
+        # If no text but has rating, create basic sentiment text
+        if not text and review.rating:
+            rating_sentiments = {
+                1: "very poor",
+                2: "poor",
+                3: "average",
+                4: "good",
+                5: "excellent"
+            }
+            text = f"Overall experience was {rating_sentiments.get(review.rating, 'neutral')}"
+        elif not text:
+            text = "neutral"  # Fallback for completely empty reviews
 
         # Overall sentiment analysis
         overall_sentiment = self._calculate_overall_sentiment(text)
@@ -396,11 +437,16 @@ class SentimentAnalysisService:
             aspect_sentiments[f"{aspect}_sentiment"] = self._calculate_aspect_sentiment(text, keywords)
 
         # Extract keywords
-        positive_keywords = self._extract_keywords(text, self.positive_keywords)
-        negative_keywords = self._extract_keywords(text, self.negative_keywords)
+        positive_keywords = self._extract_keywords(text.lower(), self.positive_keywords)
+        negative_keywords = self._extract_keywords(text.lower(), self.negative_keywords)
 
         # Calculate confidence based on text length and keyword matches
         confidence = self._calculate_confidence(text, positive_keywords, negative_keywords)
+
+        # Adjust overall sentiment based on actual rating if available
+        if review.rating:
+            rating_sentiment = (review.rating - 1) / 4  # Convert 1-5 to 0-1
+            overall_sentiment = (overall_sentiment + rating_sentiment) / 2
 
         return {
             'overall_sentiment': overall_sentiment,
