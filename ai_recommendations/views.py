@@ -36,76 +36,112 @@ class AIRecommendationsView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     
     def post(self, request):
-        serializer = NearbyStationSearchSerializer(data=request.data)
-        if not serializer.is_valid():
-            return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-        
-        data = serializer.validated_data
-        user = request.user
-
-        # Clean and prepare data
-        latitude = float(data['latitude'])
-        longitude = float(data['longitude'])
-        radius_km = float(data.get('radius_km') or 10.0)
-        limit = data.get('limit') or 20
-
-        # Get AI recommendations
-        ai_service = AIRecommendationService()
         try:
-            recommendations = ai_service.get_personalized_recommendations(
-                user=user,
-                user_lat=latitude,
-                user_lng=longitude,
-                radius_km=radius_km,
-                limit=limit
-            )
+            serializer = NearbyStationSearchSerializer(data=request.data)
+            if not serializer.is_valid():
+                return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+            
+            data = serializer.validated_data
+            user = request.user
+
+            # Clean and prepare data
+            latitude = float(data['latitude'])
+            longitude = float(data['longitude'])
+            radius_km = float(data.get('radius_km') or 10.0)
+            limit = data.get('limit') or 20
+
+            # Get AI recommendations
+            ai_service = AIRecommendationService()
+            try:
+                recommendations = ai_service.get_personalized_recommendations(
+                    user=user,
+                    user_lat=latitude,
+                    user_lng=longitude,
+                    radius_km=radius_km,
+                    limit=limit
+                )
+            except Exception as e:
+                import traceback
+                print(f"AI Service Error: {str(e)}")
+                print(traceback.format_exc())
+                return Response(
+                    {'error': f'AI service error: {str(e)}'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+            
+            # Enhance recommendations with additional data
+            enhanced_recommendations = []
+            for rec in recommendations:
+                try:
+                    station_data = rec['station']  # This is already a dictionary from the service
+                    
+                    # Calculate estimated charging time
+                    estimated_time = self._calculate_charging_time(user, station_data)
+                    
+                    # Get compatibility status
+                    compatibility_status = self._get_compatibility_status(user, station_data)
+                    
+                    # Get availability status
+                    availability_status = self._get_availability_status(station_data)
+                    
+                    enhanced_rec = {
+                        'station': station_data,
+                        'score': float(rec['score']),
+                        'distance_km': float(rec['distance_km']),
+                        'recommendation_reason': rec['recommendation_reason'],
+                        'score_breakdown': {
+                            k: float(v) for k, v in rec['score_breakdown'].items()
+                        },
+                        'estimated_charging_time': estimated_time,
+                        'compatibility_status': compatibility_status,
+                        'availability_status': availability_status
+                    }
+                    enhanced_recommendations.append(enhanced_rec)
+                except Exception as e:
+                    import traceback
+                    print(f"Error processing recommendation: {str(e)}")
+                    print(traceback.format_exc())
+                    continue
+            
+            if not enhanced_recommendations:
+                return Response(
+                    {'error': 'No valid recommendations found'},
+                    status=status.HTTP_404_NOT_FOUND
+                )
+            
+            # Serialize the recommendations
+            try:
+                response_serializer = RecommendationResponseSerializer(
+                    enhanced_recommendations,
+                    many=True
+                )
+                
+                return Response({
+                    'recommendations': response_serializer.data,
+                    'total_found': len(enhanced_recommendations),
+                    'search_params': data,
+                    'user_location': {
+                        'latitude': data['latitude'],
+                        'longitude': data['longitude']
+                    }
+                })
+            except Exception as e:
+                import traceback
+                print(f"Serialization Error: {str(e)}")
+                print(traceback.format_exc())
+                return Response(
+                    {'error': f'Serialization error: {str(e)}'},
+                    status=status.HTTP_500_INTERNAL_SERVER_ERROR
+                )
+                
         except Exception as e:
+            import traceback
+            print(f"General Error: {str(e)}")
+            print(traceback.format_exc())
             return Response(
-                {'error': f'AI service error: {str(e)}'},
+                {'error': f'Server error: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
             )
-        
-        # Enhance recommendations with additional data
-        enhanced_recommendations = []
-        for rec in recommendations:
-            station_data = rec['station']  # This is already a dictionary from the service
-            
-            # Calculate estimated charging time
-            estimated_time = self._calculate_charging_time(user, station_data)
-            
-            # Get compatibility status
-            compatibility_status = self._get_compatibility_status(user, station_data)
-            
-            # Get availability status
-            availability_status = self._get_availability_status(station_data)
-            
-            enhanced_rec = {
-                'station': station_data,
-                'score': rec['score'],
-                'distance_km': rec['distance_km'],
-                'recommendation_reason': rec['recommendation_reason'],
-                'score_breakdown': rec['score_breakdown'],
-                'estimated_charging_time': estimated_time,
-                'compatibility_status': compatibility_status,
-                'availability_status': availability_status
-            }
-            enhanced_recommendations.append(enhanced_rec)
-        
-        # Serialize the recommendations
-        response_serializer = RecommendationResponseSerializer(
-            enhanced_recommendations,
-            many=True
-        )
-        
-        return Response({
-            'recommendations': response_serializer.data,
-            'total_found': len(enhanced_recommendations),
-            'search_params': data,
-            'user_location': {
-                'latitude': data['latitude'],
-                'longitude': data['longitude']
-            }
-        })
     
     def _calculate_charging_time(self, user, station_data):
         """Calculate estimated charging time"""
