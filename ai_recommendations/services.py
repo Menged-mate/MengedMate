@@ -422,12 +422,19 @@ class AIRecommendationService:
     def _save_recommendation_history(self, user: CustomUser, recommendations: List[Dict]):
         """Save recommendation history for learning"""
         for i, rec in enumerate(recommendations):
-            UserRecommendationHistory.objects.create(
-                user=user,
-                station=rec['station'],
-                recommendation_score=Decimal(str(rec['score'])),
-                recommendation_rank=i + 1
-            )
+            # Get the original station object using the ID from the serialized data
+            station_id = rec['station']['id']
+            try:
+                station = ChargingStation.objects.get(id=station_id)
+                UserRecommendationHistory.objects.create(
+                    user=user,
+                    station=station,  # Use the actual station object
+                    recommendation_score=Decimal(str(rec['score'])),
+                    recommendation_rank=i + 1
+                )
+            except ChargingStation.DoesNotExist:
+                # Skip if station doesn't exist
+                continue
 
 
 class SentimentAnalysisService:
