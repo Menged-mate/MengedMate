@@ -101,7 +101,7 @@ class AIRecommendationService:
             status='operational',
             latitude__isnull=False,
             longitude__isnull=False
-        ).select_related().prefetch_related('connectors', 'amenities', 'reviews')
+        ).select_related().prefetch_related('connectors', 'reviews')
         
         nearby_stations = []
         for station in stations:
@@ -153,15 +153,18 @@ class AIRecommendationService:
         price_score = self._calculate_price_score(station, preferences)
         reliability_score = self._calculate_reliability_score(station)
         
+        # Convert weights to Decimal
+        weights = {k: Decimal(str(v)) for k, v in self.weights.items()}
+        
         # Calculate weighted overall score
         overall_score = (
-            compatibility_score * self.weights['compatibility'] +
-            distance_score * self.weights['distance'] +
-            availability_score * self.weights['availability'] +
-            review_sentiment_score * self.weights['review_sentiment'] +
-            amenities_score * self.weights['amenities'] +
-            price_score * self.weights['price'] +
-            reliability_score * self.weights['reliability']
+            compatibility_score * weights['compatibility'] +
+            distance_score * weights['distance'] +
+            availability_score * weights['availability'] +
+            review_sentiment_score * weights['review_sentiment'] +
+            amenities_score * weights['amenities'] +
+            price_score * weights['price'] +
+            reliability_score * weights['reliability']
         )
         
         # Generate recommendation reason based primarily on compatibility and distance
@@ -289,19 +292,29 @@ class AIRecommendationService:
             return Decimal('50.0')
     
     def _calculate_amenities_score(self, station: ChargingStation, preferences: Dict) -> Decimal:
-        """Calculate amenities match score"""
-        preferred_amenities = preferences.get('amenities', [])
-        if not preferred_amenities:
-            return Decimal('50.0')  # Neutral if no preferences
+        """Calculate amenities score based on available facilities"""
+        score = Decimal('0.0')
+        total_amenities = 0
         
-        station_amenities = set(station.amenities.values_list('id', flat=True))
-        preferred_set = set(preferred_amenities)
+        # Check each amenity
+        if station.has_restroom:
+            score += Decimal('1.0')
+            total_amenities += 1
+        if station.has_wifi:
+            score += Decimal('1.0')
+            total_amenities += 1
+        if station.has_restaurant:
+            score += Decimal('1.0')
+            total_amenities += 1
+        if station.has_shopping:
+            score += Decimal('1.0')
+            total_amenities += 1
         
-        if not preferred_set:
-            return Decimal('50.0')
+        # Calculate final score
+        if total_amenities > 0:
+            score = (score / Decimal(str(total_amenities))) * Decimal('100.0')
         
-        match_ratio = len(station_amenities.intersection(preferred_set)) / len(preferred_set)
-        return Decimal(str(match_ratio * 100))
+        return score
     
     def _calculate_price_score(self, station: ChargingStation, preferences: Dict) -> Decimal:
         """Calculate price competitiveness score"""
