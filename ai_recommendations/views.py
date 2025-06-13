@@ -68,19 +68,19 @@ class AIRecommendationsView(APIView):
         # Enhance recommendations with additional data
         enhanced_recommendations = []
         for rec in recommendations:
-            station = rec['station']
+            station_data = rec['station']  # This is already a dictionary from the service
             
             # Calculate estimated charging time
-            estimated_time = self._calculate_charging_time(user, station)
+            estimated_time = self._calculate_charging_time(user, station_data)
             
             # Get compatibility status
-            compatibility_status = self._get_compatibility_status(user, station)
+            compatibility_status = self._get_compatibility_status(user, station_data)
             
             # Get availability status
-            availability_status = self._get_availability_status(station)
+            availability_status = self._get_availability_status(station_data)
             
             enhanced_rec = {
-                'station': station,
+                'station': station_data,
                 'score': rec['score'],
                 'distance_km': rec['distance_km'],
                 'recommendation_reason': rec['recommendation_reason'],
@@ -107,21 +107,21 @@ class AIRecommendationsView(APIView):
             }
         })
     
-    def _calculate_charging_time(self, user, station):
+    def _calculate_charging_time(self, user, station_data):
         """Calculate estimated charging time"""
         if not user.ev_battery_capacity_kwh:
             return "Unknown"
         
         # Get the most powerful compatible connector
-        compatible_connectors = station.connectors.filter(
-            connector_type=user.ev_connector_type,
-            status='available'
-        ).order_by('-power_kw')
+        compatible_connectors = [
+            c for c in station_data['connectors']
+            if c['type'] == user.ev_connector_type and c['status'] == 'available'
+        ]
         
-        if not compatible_connectors.exists():
+        if not compatible_connectors:
             return "Incompatible"
         
-        max_power = float(compatible_connectors.first().power_kw)
+        max_power = max(c['power_kw'] for c in compatible_connectors)
         battery_capacity = float(user.ev_battery_capacity_kwh)
         
         # Assume charging from 20% to 80% (60% of capacity)
@@ -135,28 +135,36 @@ class AIRecommendationsView(APIView):
         else:
             return f"{estimated_hours:.1f} hours"
     
-    def _get_compatibility_status(self, user, station):
+    def _get_compatibility_status(self, user, station_data):
         """Get connector compatibility status"""
         if not user.ev_connector_type or user.ev_connector_type == 'none':
             return "Unknown"
         
-        compatible_connectors = station.connectors.filter(
-            connector_type=user.ev_connector_type
-        )
+        compatible_connectors = [
+            c for c in station_data['connectors']
+            if c['type'] == user.ev_connector_type
+        ]
         
-        if not compatible_connectors.exists():
+        if not compatible_connectors:
             return "Incompatible"
         
-        available_compatible = compatible_connectors.filter(status='available')
-        if available_compatible.exists():
+        available_compatible = [
+            c for c in compatible_connectors
+            if c['status'] == 'available'
+        ]
+        
+        if available_compatible:
             return "Compatible & Available"
         else:
             return "Compatible (Currently Busy)"
     
-    def _get_availability_status(self, station):
+    def _get_availability_status(self, station_data):
         """Get overall station availability status"""
-        total_connectors = station.connectors.count()
-        available_connectors = station.connectors.filter(status='available').count()
+        total_connectors = len(station_data['connectors'])
+        available_connectors = len([
+            c for c in station_data['connectors']
+            if c['status'] == 'available'
+        ])
         
         if total_connectors == 0:
             return "Unknown"
