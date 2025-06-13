@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from .authentication import AnonymousAuthentication
-from .models import Vehicle
+from .models import Vehicle, TelegramAuth, CustomUser
 from django.contrib.auth import get_user_model, authenticate
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -14,15 +14,22 @@ from django.utils.html import strip_tags
 from django.conf import settings
 from django.shortcuts import redirect
 from django.urls import reverse
+from django.utils import timezone
 import random
 import string
 import json
+import hmac
+import hashlib
+from urllib.parse import parse_qs
+from base64 import b64encode
+from datetime import datetime, timedelta
 from charging_stations.models import StationOwner
 from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
 from allauth.socialaccount.providers.facebook.views import FacebookOAuth2Adapter
 from allauth.socialaccount.providers.apple.views import AppleOAuth2Adapter
 from allauth.socialaccount.providers.oauth2.client import OAuth2Client
 from dj_rest_auth.registration.views import SocialLoginView
+import time
 
 from .serializers import (
     UserSerializer,
@@ -597,4 +604,142 @@ class VehicleViewSet(viewsets.ModelViewSet):
             'active_vehicle': active_vehicle.id if active_vehicle else None,
             'connector_types': request.user.get_compatible_connector_types(),
             'vehicles': VehicleListSerializer(vehicles, many=True, context={'request': request}).data
+        })
+
+
+class TelegramLoginView(APIView):
+    permission_classes = [AllowAny]
+    authentication_classes = [AnonymousAuthentication]
+
+    def verify_telegram_data(self, init_data: str) -> dict:
+        """Verify Telegram Web App init data."""
+        try:
+            # Parse the init_data string into a dictionary
+            data_dict = dict(param.split('=') for param in init_data.split('&'))
+            
+            # Get the hash from the data
+            received_hash = data_dict.pop('hash')
+            
+            # Sort the data alphabetically
+            data_check_string = '\n'.join(f"{k}={v}" for k, v in sorted(data_dict.items()))
+            
+            # Create a secret key using the bot token
+            secret_key = hashlib.sha256(settings.TELEGRAM_BOT_TOKEN.encode()).digest()
+            
+            # Calculate the hash
+            calculated_hash = hmac.new(
+                secret_key,
+                data_check_string.encode(),
+                hashlib.sha256
+            ).hexdigest()
+            
+            # Verify the hash
+            if calculated_hash != received_hash:
+                raise ValueError("Invalid hash")
+            
+            # Verify auth date is not too old (within last 24 hours)
+            auth_date = int(data_dict.get('auth_date', 0))
+            if time.time() - auth_date > 86400:
+                raise ValueError("Auth date expired")
+            
+            # Parse user data
+            user_data = json.loads(data_dict.get('user', '{}'))
+            return user_data
+            
+        except Exception as e:
+            raise ValueError(f"Invalid init data: {str(e)}")
+
+    def post(self, request):
+        try:
+            # Get and verify Telegram data
+            init_data = request.data.get('initData')
+            if not init_data:
+                return Response(
+                    {'error': 'No init data provided'},
+                    status=status.HTTP_400_BAD_REQUEST
+                )
+
+            user_data = self.verify_telegram_data(init_data)
+            
+            # Get or create user
+            User = get_user_model()
+            user, created = User.objects.get_or_create(
+                telegram_id=str(user_data.get('id')),
+                defaults={
+                    'email': f"{user_data.get('id')}@telegram.user",
+                    'telegram_username': user_data.get('username'),
+                    'telegram_first_name': user_data.get('first_name'),
+                    'telegram_last_name': user_data.get('last_name'),
+                    'telegram_photo_url': user_data.get('photo_url'),
+                    'is_verified': True,
+                    'first_name': user_data.get('first_name', ''),
+                    'last_name': user_data.get('last_name', ''),
+                }
+            )
+
+            # Update user data if not created
+            if not created:
+                user.telegram_username = user_data.get('username')
+                user.telegram_first_name = user_data.get('first_name')
+                user.telegram_last_name = user_data.get('last_name')
+                user.telegram_photo_url = user_data.get('photo_url')
+                user.telegram_auth_date = timezone.now()
+                user.save()
+
+            # Create or get token
+            token, _ = Token.objects.get_or_create(user=user)
+
+            return Response({
+                'token': token.key,
+                'user': {
+                    'id': user.id,
+                    'email': user.email,
+                    'first_name': user.first_name,
+                    'last_name': user.last_name,
+                    'telegram_username': user.telegram_username,
+                    'telegram_photo_url': user.telegram_photo_url,
+                }
+            })
+
+        except ValueError as e:
+            return Response(
+                {'error': str(e)},
+                status=status.HTTP_400_BAD_REQUEST
+            )
+        except Exception as e:
+            return Response(
+                {'error': 'Authentication failed'},
+                status=status.HTTP_500_INTERNAL_SERVER_ERROR
+            )
+
+
+class TelegramWebAppView(APIView):
+    """Handle Telegram Web App initialization and validation"""
+    permission_classes = [AllowAny]
+    authentication_classes = [AnonymousAuthentication]
+
+    def get(self, request):
+        """Return necessary data for Telegram Web App initialization"""
+        return Response({
+            "bot_username": settings.TELEGRAM_BOT_USERNAME,
+            "return_url": settings.TELEGRAM_RETURN_URL,
+        })
+
+    def post(self, request):
+        """Validate Telegram Web App data"""
+        init_data = request.data.get('initData')
+        if not init_data:
+            return Response({
+                "message": "No Telegram init data provided"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        # Verify the data using the same method as in TelegramLoginView
+        telegram_login = TelegramLoginView()
+        if not telegram_login.verify_telegram_data(init_data):
+            return Response({
+                "message": "Invalid Telegram data"
+            }, status=status.HTTP_400_BAD_REQUEST)
+
+        return Response({
+            "message": "Telegram Web App data validated successfully"
         })

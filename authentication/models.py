@@ -43,6 +43,14 @@ class CustomUser(AbstractUser):
     verification_code = models.CharField(max_length=6, blank=True, null=True)
     password_reset_token = models.CharField(max_length=100, blank=True, null=True)
 
+    # Telegram fields
+    telegram_id = models.CharField(max_length=100, blank=True, null=True, unique=True)
+    telegram_username = models.CharField(max_length=100, blank=True, null=True)
+    telegram_first_name = models.CharField(max_length=100, blank=True, null=True)
+    telegram_last_name = models.CharField(max_length=100, blank=True, null=True)
+    telegram_photo_url = models.URLField(max_length=500, blank=True, null=True)
+    telegram_auth_date = models.DateTimeField(blank=True, null=True)
+
     phone_number = models.CharField(max_length=20, blank=True, null=True)
     address = models.CharField(max_length=255, blank=True, null=True)
     city = models.CharField(max_length=100, blank=True, null=True)
@@ -268,3 +276,18 @@ class Vehicle(models.Model):
             return 'Fast'
         else:
             return 'Slow'
+
+
+class TelegramAuth(models.Model):
+    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='telegram_auth')
+    auth_token = models.CharField(max_length=500)
+    init_data = models.TextField(blank=True, null=True)
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    def __str__(self):
+        return f"Telegram Auth for {self.user.email}"
+
+    class Meta:
+        verbose_name = "Telegram Authentication"
+        verbose_name_plural = "Telegram Authentications"

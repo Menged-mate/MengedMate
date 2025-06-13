@@ -16,7 +16,9 @@ from .views import (
     AppleLoginView,
     SocialAuthCallbackView,
     CheckEmailVerificationView,
-    VehicleViewSet
+    VehicleViewSet,
+    TelegramLoginView,
+    TelegramWebAppView
 )
 from .notification_views import (
     NotificationListView,
@@ -60,4 +62,7 @@ urlpatterns = [
 
 
     path('', include(router.urls)),
+
+    path('telegram/login/', TelegramLoginView.as_view(), name='telegram-login'),
+    path('telegram/webapp/', TelegramWebAppView.as_view(), name='telegram-webapp'),
 ]
