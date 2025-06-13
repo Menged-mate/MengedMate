@@ -63,7 +63,7 @@ class AIRecommendationService:
                 # Convert station to dictionary
                 station_data = {
                     'id': str(station.id),  # Convert UUID to string
-                    'name': station.name,
+                    'name': station.name.strip() if station.name and station.name.strip() else f"Station {station.id}",
                     'address': station.address,
                     'city': station.city,
                     'state': station.state,
