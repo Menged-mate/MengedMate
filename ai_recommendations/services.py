@@ -65,20 +65,36 @@ class AIRecommendationService:
                     'id': str(station.id),  # Convert UUID to string
                     'name': station.name,
                     'address': station.address,
+                    'city': station.city,
+                    'state': station.state,
+                    'zip_code': station.zip_code,
+                    'country': station.country,
                     'latitude': float(station.latitude) if station.latitude else None,
                     'longitude': float(station.longitude) if station.longitude else None,
+                    'description': station.description,
                     'rating': float(station.rating) if station.rating else 0.0,
-                    'total_reviews': station.rating_count,
+                    'rating_count': station.rating_count,
                     'status': station.status,
-                    'operating_hours': station.opening_hours,
-                    'amenities': list(station.amenities.values_list('id', flat=True)),
+                    'opening_hours': station.opening_hours,
+                    'price_range': station.price_range,
+                    'available_connectors': station.available_connectors,
+                    'total_connectors': station.total_connectors,
+                    'has_restroom': station.has_restroom,
+                    'has_wifi': station.has_wifi,
+                    'has_restaurant': station.has_restaurant,
+                    'has_shopping': station.has_shopping,
+                    'main_image': station.main_image.url if station.main_image else None,
+                    'marker_icon': station.marker_icon,
                     'connectors': [
                         {
                             'id': str(c.id),  # Convert UUID to string
                             'type': c.connector_type,
                             'power_kw': float(c.power_kw),
                             'status': c.status,
-                            'price_per_kwh': float(c.price_per_kwh) if c.price_per_kwh else None
+                            'price_per_kwh': float(c.price_per_kwh) if c.price_per_kwh else None,
+                            'quantity': c.quantity,
+                            'available_quantity': c.available_quantity,
+                            'description': c.description
                         }
                         for c in station.connectors.all()
                     ]
