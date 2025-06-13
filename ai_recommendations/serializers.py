@@ -187,11 +187,17 @@ class NearbyStationSearchSerializer(serializers.Serializer):
 
 
 class RecommendationResponseSerializer(serializers.Serializer):
-    station = ChargingStationSerializer()
-    score = serializers.DecimalField(max_digits=5, decimal_places=2)
-    distance_km = serializers.DecimalField(max_digits=6, decimal_places=2)
+    station = serializers.DictField(
+        child=serializers.CharField(),
+        allow_empty=True
+    )
+    score = serializers.FloatField()
+    distance_km = serializers.FloatField()
     recommendation_reason = serializers.CharField()
-    score_breakdown = serializers.DictField()
+    score_breakdown = serializers.DictField(
+        child=serializers.FloatField(),
+        allow_empty=True
+    )
     
     # Additional computed fields
     estimated_charging_time = serializers.CharField(read_only=True)

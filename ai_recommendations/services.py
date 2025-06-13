@@ -62,11 +62,11 @@ class AIRecommendationService:
             if score_data['overall_score'] > 0:
                 # Convert station to dictionary
                 station_data = {
-                    'id': station.id,
+                    'id': str(station.id),  # Convert UUID to string
                     'name': station.name,
                     'address': station.address,
-                    'latitude': float(station.latitude),
-                    'longitude': float(station.longitude),
+                    'latitude': float(station.latitude) if station.latitude else None,
+                    'longitude': float(station.longitude) if station.longitude else None,
                     'rating': float(station.rating) if station.rating else 0.0,
                     'total_reviews': station.total_reviews,
                     'status': station.status,
@@ -74,7 +74,7 @@ class AIRecommendationService:
                     'amenities': list(station.amenities.values_list('id', flat=True)),
                     'connectors': [
                         {
-                            'id': c.id,
+                            'id': str(c.id),  # Convert UUID to string
                             'type': c.connector_type,
                             'power_kw': float(c.power_kw),
                             'status': c.status,
@@ -86,10 +86,12 @@ class AIRecommendationService:
                 
                 recommendations.append({
                     'station': station_data,
-                    'score': score_data['overall_score'],
-                    'distance_km': score_data['distance_km'],
+                    'score': float(score_data['overall_score']),
+                    'distance_km': float(score_data['distance_km']),
                     'recommendation_reason': score_data['recommendation_reason'],
-                    'score_breakdown': score_data['score_breakdown']
+                    'score_breakdown': {
+                        k: float(v) for k, v in score_data['score_breakdown'].items()
+                    }
                 })
         
         # Sort by score and limit results
