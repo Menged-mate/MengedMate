@@ -80,15 +80,25 @@ class AIRecommendationsView(APIView):
             availability_status = self._get_availability_status(station)
             
             enhanced_rec = {
-                **rec,
+                'station': station,
+                'score': rec['score'],
+                'distance_km': rec['distance_km'],
+                'recommendation_reason': rec['recommendation_reason'],
+                'score_breakdown': rec['score_breakdown'],
                 'estimated_charging_time': estimated_time,
                 'compatibility_status': compatibility_status,
                 'availability_status': availability_status
             }
             enhanced_recommendations.append(enhanced_rec)
         
+        # Serialize the recommendations
+        response_serializer = RecommendationResponseSerializer(
+            enhanced_recommendations,
+            many=True
+        )
+        
         return Response({
-            'recommendations': enhanced_recommendations,
+            'recommendations': response_serializer.data,
             'total_found': len(enhanced_recommendations),
             'search_params': data,
             'user_location': {
