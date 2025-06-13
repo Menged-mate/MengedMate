@@ -68,9 +68,9 @@ class AIRecommendationService:
                     'latitude': float(station.latitude) if station.latitude else None,
                     'longitude': float(station.longitude) if station.longitude else None,
                     'rating': float(station.rating) if station.rating else 0.0,
-                    'total_reviews': station.total_reviews,
+                    'total_reviews': station.rating_count,
                     'status': station.status,
-                    'operating_hours': station.operating_hours,
+                    'operating_hours': station.opening_hours,
                     'amenities': list(station.amenities.values_list('id', flat=True)),
                     'connectors': [
                         {
