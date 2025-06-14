@@ -27,6 +27,7 @@ urlpatterns = [
     path('qr-sessions/<str:session_token>/stop-charging/', views.StopChargingFromQRView.as_view(), name='stop-charging-from-qr'),
     path('qr-sessions/<str:session_token>/test-complete/', views.TestCompletePaymentView.as_view(), name='test-complete-payment'),
     path('qr-sessions/<str:session_token>/test-create-charging/', views.TestCreateChargingSessionView.as_view(), name='test-create-charging'),
+    path('withdrawals/', views.WithdrawalView.as_view(), name='withdrawals'),
 
     # Charging History
     path('charging-history/', views.ChargingHistoryView.as_view(), name='charging-history'),

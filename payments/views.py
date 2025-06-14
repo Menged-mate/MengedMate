@@ -16,6 +16,7 @@ from .serializers import (
 from charging_stations.models import ChargingConnector
 from .services import PaymentService
 import logging
+import uuid
 
 logger = logging.getLogger(__name__)
 
@@ -322,10 +323,6 @@ class StartChargingFromQRView(APIView):
 
             # For now, just update the QR session status without creating a separate charging session
             # This avoids the complex OCPP integration and model dependencies
-            import uuid
-
-            # Generate a simple session ID for tracking
-            session_id = str(uuid.uuid4())[:8]
 
             # Update QR session status
             qr_session.status = 'charging_started'
@@ -342,7 +339,7 @@ class StartChargingFromQRView(APIView):
                 'message': 'Charging session started successfully',
                 'qr_session': session_serializer.data,
                 'charging_session': {
-                    'id': session_id,
+                    'id': session_token,
                     'status': 'started',
                     'start_time': timezone.now(),
                     'max_power_kw': qr_session.connector.power_kw
@@ -670,3 +667,51 @@ class MobileReturnView(APIView):
         '''
 
         return HttpResponse(html_content, content_type='text/html')
+
+
+class WithdrawalView(APIView):
+    permission_classes = [IsAuthenticated]
+
+    def post(self, request):
+        serializer = WithdrawSerializer(data=request.data, context={'request': request})
+        if serializer.is_valid():
+            payment_service = PaymentService()
+            
+            # Create withdrawal transaction
+            transaction = Transaction.objects.create(
+                user=request.user,
+                transaction_type=Transaction.TransactionType.WITHDRAWAL,
+                amount=serializer.validated_data['amount'],
+                phone_number=serializer.validated_data['phone_number'],
+                description=serializer.validated_data.get('description', 'Withdrawal'),
+                reference_number=str(uuid.uuid4()),
+                status=Transaction.TransactionStatus.PENDING
+            )
+            
+            # Debit the wallet
+            wallet = payment_service.debit_wallet(request.user, transaction.amount, transaction)
+            
+            if wallet:
+                transaction.status = Transaction.TransactionStatus.COMPLETED
+                transaction.completed_at = timezone.now()
+                transaction.save()
+                
+                return Response({
+                    'success': True,
+                    'message': 'Withdrawal successful',
+                    'data': {
+                        'transaction_id': transaction.id,
+                        'amount': transaction.amount,
+                        'new_balance': wallet.balance
+                    }
+                }, status=status.HTTP_200_OK)
+            else:
+                transaction.status = Transaction.TransactionStatus.FAILED
+                transaction.save()
+                
+                return Response({
+                    'success': False,
+                    'message': 'Insufficient wallet balance'
+                }, status=status.HTTP_400_BAD_REQUEST)
+                
+        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
