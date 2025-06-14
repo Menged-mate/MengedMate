@@ -1348,18 +1348,14 @@ class WithdrawalRequestView(APIView):
 
             # Check available balance from wallet system
             from payments.models import Wallet, WalletTransaction
-            try:
-                wallet = Wallet.objects.get(user=request.user)
-                if wallet.balance < float(amount):
-                    return Response({
-                        'success': False,
-                        'error': f'Insufficient balance. Available: {wallet.balance} ETB'
-                    }, status=status.HTTP_400_BAD_REQUEST)
-            except Wallet.DoesNotExist:
+            # Create wallet if it doesn't exist (similar to WalletDetailView)
+            wallet, created = Wallet.objects.get_or_create(user=request.user)
+
+            if wallet.balance < float(amount):
                 return Response({
                     'success': False,
-                    'error': 'Wallet not found. Please contact support.'
-                }, status=status.HTTP_404_NOT_FOUND)
+                    'error': f'Insufficient balance. Available: {wallet.balance} ETB'
+                }, status=status.HTTP_400_BAD_REQUEST)
 
             # Create withdrawal record in database
             withdrawal_request = WithdrawalRequest.objects.create(
@@ -1370,19 +1366,33 @@ class WithdrawalRequestView(APIView):
                 status=WithdrawalRequest.WithdrawalStatus.PENDING
             )
 
-            # Create a pending wallet transaction (will be completed when admin approves)
-            WalletTransaction.objects.create(
-                wallet=wallet,
-                transaction_type=WalletTransaction.TransactionType.DEBIT,
+            # Create a Transaction object for the withdrawal
+            from payments.models import Transaction
+            withdrawal_transaction = Transaction.objects.create(
+                user=request.user,
                 amount=float(amount),
-                description=f'Withdrawal request {withdrawal_request.reference_number}',
-                reference_id=str(withdrawal_request.id),
-                status='pending'
+                currency='ETB',
+                transaction_type='withdrawal',
+                status='pending',
+                reference_number=withdrawal_request.reference_number,
+                description=f'Withdrawal request {withdrawal_request.reference_number}'
             )
 
-            # Reserve the amount (deduct from available balance but don't complete transaction yet)
+            # Create a pending wallet transaction (will be completed when admin approves)
+            balance_before = wallet.balance
             wallet.balance -= float(amount)
+            balance_after = wallet.balance
             wallet.save()
+
+            WalletTransaction.objects.create(
+                wallet=wallet,
+                transaction=withdrawal_transaction,
+                transaction_type=WalletTransaction.TransactionType.DEBIT,
+                amount=float(amount),
+                balance_before=balance_before,
+                balance_after=balance_after,
+                description=f'Withdrawal request {withdrawal_request.reference_number}'
+            )
 
             # Send notification to admins about new withdrawal request
             from django.contrib.auth import get_user_model
