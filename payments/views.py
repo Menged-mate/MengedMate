@@ -427,6 +427,36 @@ class StopChargingFromQRView(APIView):
                 charging_session.energy_consumed_kwh = 5.0   # Demo value
                 charging_session.save()
 
+                # Credit station owner's wallet with additional revenue from energy consumed
+                if charging_session.energy_consumed_kwh and charging_session.cost_per_kwh:
+                    additional_revenue = float(charging_session.energy_consumed_kwh * charging_session.cost_per_kwh)
+
+                    # Only credit if there's additional revenue beyond the initial payment
+                    initial_payment = float(qr_session.payment_transaction.amount) if qr_session.payment_transaction else 0
+                    if additional_revenue > initial_payment:
+                        extra_revenue = additional_revenue - initial_payment
+
+                        # Create a new transaction for the additional revenue
+                        from .models import Transaction
+                        additional_transaction = Transaction.objects.create(
+                            user=qr_session.connector.station.owner.user,
+                            transaction_type=Transaction.TransactionType.PAYMENT,
+                            status=Transaction.TransactionStatus.COMPLETED,
+                            amount=extra_revenue,
+                            description=f"Additional revenue from charging session {charging_session.transaction_id}",
+                            reference_number=f"ENERGY_{charging_session.transaction_id}",
+                            completed_at=timezone.now()
+                        )
+
+                        # Credit the station owner's wallet
+                        from .services import PaymentService
+                        payment_service = PaymentService()
+                        payment_service.credit_wallet(
+                            qr_session.connector.station.owner.user,
+                            extra_revenue,
+                            additional_transaction
+                        )
+
             # Update QR session status to completed
             qr_session.status = 'charging_completed'
             qr_session.save()

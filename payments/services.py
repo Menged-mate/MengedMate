@@ -220,6 +220,10 @@ class PaymentService:
                     qr_session.payment_transaction = transaction
                     qr_session.save()
 
+                    # Credit the station owner's wallet with the payment amount
+                    station_owner = qr_session.connector.station.owner
+                    self.credit_wallet(station_owner.user, transaction.amount, transaction)
+
                     # Send charging payment notification
                     self._send_payment_notification(transaction.user, transaction.amount, 'charging_payment', qr_session)
 
