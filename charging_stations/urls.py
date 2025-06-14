@@ -28,7 +28,9 @@ from .views import (
     PayoutMethodListCreateView,
     PayoutMethodDetailView,
     SetDefaultPayoutMethodView,
-    WithdrawalRequestView
+    WithdrawalRequestView,
+    WithdrawalRequestDetailView,
+    WithdrawalRequestListView
 )
 from .map_views import (
     PublicStationListView,
@@ -115,4 +117,6 @@ urlpatterns = [
 
     # Withdrawal endpoints
     path('withdrawals/', WithdrawalRequestView.as_view(), name='withdrawal-request'),
+    path('withdrawals/<uuid:id>/', WithdrawalRequestDetailView.as_view(), name='withdrawal-detail'),
+    path('admin/withdrawals/', WithdrawalRequestListView.as_view(), name='admin-withdrawal-list'),
 ]

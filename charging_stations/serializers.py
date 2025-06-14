@@ -5,7 +5,7 @@ from django.core.exceptions import ValidationError
 from .models import (
     StationOwner, ChargingStation, StationImage, ChargingConnector,
     FavoriteStation, StationReview, ReviewReply, StationOwnerSettings, NotificationTemplate,
-    PayoutMethod
+    PayoutMethod, WithdrawalRequest
 )
 import random
 import string
@@ -679,3 +679,96 @@ class PayoutMethodSerializer(serializers.ModelSerializer):
             validated_data['card_number'] = f"****{card_number[-4:]}"
 
         return super().create(validated_data)
+
+
+class WithdrawalRequestSerializer(serializers.ModelSerializer):
+    """Serializer for withdrawal requests"""
+
+    station_owner_name = serializers.CharField(source='station_owner.company_name', read_only=True)
+    payout_method_details = PayoutMethodSerializer(source='payout_method', read_only=True)
+    status_display = serializers.CharField(source='get_status_display', read_only=True)
+    approved_by_name = serializers.CharField(source='approved_by.username', read_only=True)
+
+    class Meta:
+        model = WithdrawalRequest
+        fields = [
+            'id', 'station_owner', 'station_owner_name', 'payout_method', 'payout_method_details',
+            'amount', 'currency', 'description', 'status', 'status_display', 'reference_number',
+            'approved_by', 'approved_by_name', 'admin_notes', 'processed_at',
+            'created_at', 'updated_at'
+        ]
+        read_only_fields = [
+            'id', 'station_owner', 'station_owner_name', 'reference_number', 'status',
+            'approved_by', 'approved_by_name', 'admin_notes', 'processed_at',
+            'created_at', 'updated_at'
+        ]
+
+    def validate_amount(self, value):
+        """Validate withdrawal amount"""
+        if value <= 0:
+            raise serializers.ValidationError("Withdrawal amount must be greater than 0")
+
+        # TODO: Add balance validation here
+        # Check if user has sufficient balance
+
+        return value
+
+    def validate_payout_method(self, value):
+        """Validate that the payout method belongs to the requesting station owner"""
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            try:
+                station_owner = StationOwner.objects.get(user=request.user)
+                if value.station_owner != station_owner:
+                    raise serializers.ValidationError("Invalid payout method")
+                if not value.is_active:
+                    raise serializers.ValidationError("Payout method is not active")
+            except StationOwner.DoesNotExist:
+                raise serializers.ValidationError("You must be a registered station owner")
+
+        return value
+
+    def create(self, validated_data):
+        """Create withdrawal request for the authenticated station owner"""
+        request = self.context['request']
+        try:
+            station_owner = StationOwner.objects.get(user=request.user)
+        except StationOwner.DoesNotExist:
+            raise serializers.ValidationError("You must be a registered station owner to request withdrawals")
+
+        validated_data['station_owner'] = station_owner
+        return super().create(validated_data)
+
+
+class WithdrawalRequestAdminSerializer(serializers.ModelSerializer):
+    """Serializer for admin management of withdrawal requests"""
+
+    station_owner_name = serializers.CharField(source='station_owner.company_name', read_only=True)
+    payout_method_details = PayoutMethodSerializer(source='payout_method', read_only=True)
+
+    class Meta:
+        model = WithdrawalRequest
+        fields = [
+            'id', 'station_owner', 'station_owner_name', 'payout_method', 'payout_method_details',
+            'amount', 'currency', 'description', 'status', 'reference_number',
+            'approved_by', 'admin_notes', 'processed_at', 'created_at', 'updated_at'
+        ]
+        read_only_fields = [
+            'id', 'station_owner', 'station_owner_name', 'payout_method', 'payout_method_details',
+            'amount', 'currency', 'description', 'reference_number', 'created_at', 'updated_at'
+        ]
+
+    def update(self, instance, validated_data):
+        """Update withdrawal request status"""
+        request = self.context.get('request')
+        if request and hasattr(request, 'user'):
+            # Set the admin who is updating the status
+            if 'status' in validated_data:
+                validated_data['approved_by'] = request.user
+
+                # Set processed_at when status changes to completed/failed/rejected
+                if validated_data['status'] in ['completed', 'failed', 'rejected']:
+                    from django.utils import timezone
+                    validated_data['processed_at'] = timezone.now()
+
+        return super().update(instance, validated_data)

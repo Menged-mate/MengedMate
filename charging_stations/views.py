@@ -15,7 +15,7 @@ from math import cos, radians
 from .models import (
     StationOwner, ChargingStation, StationImage, ChargingConnector,
     AppContent, StationReview, ReviewReply, StationOwnerSettings, NotificationTemplate,
-    PayoutMethod
+    PayoutMethod, WithdrawalRequest
 )
 from .serializers import (
     StationOwnerRegistrationSerializer,
@@ -30,7 +30,9 @@ from .serializers import (
     StationOwnerSettingsSerializer,
     NotificationTemplateSerializer,
     AvailableStationSerializer,
-    PayoutMethodSerializer
+    PayoutMethodSerializer,
+    WithdrawalRequestSerializer,
+    WithdrawalRequestAdminSerializer
 )
 from authentication.authentication import AnonymousAuthentication, TokenAuthentication
 from rest_framework.authentication import SessionAuthentication
@@ -1347,20 +1349,22 @@ class WithdrawalRequestView(APIView):
             # TODO: Check available balance from wallet or revenue system
             # For now, we'll assume the withdrawal is valid
 
-            # TODO: Create withdrawal record in database
+            # Create withdrawal record in database
+            withdrawal_request = WithdrawalRequest.objects.create(
+                station_owner=station_owner,
+                payout_method=payout_method,
+                amount=float(amount),
+                description=description,
+                status=WithdrawalRequest.WithdrawalStatus.PENDING
+            )
+
+            # TODO: Send notification to admins about new withdrawal request
             # TODO: Integrate with payment processor for actual withdrawal
 
-            # For demo purposes, return success
             return Response({
                 'success': True,
                 'message': 'Withdrawal request submitted successfully',
-                'data': {
-                    'amount': float(amount),
-                    'payment_method': PayoutMethodSerializer(payout_method).data,
-                    'description': description,
-                    'status': 'pending',
-                    'estimated_processing_time': '1-3 business days'
-                }
+                'data': WithdrawalRequestSerializer(withdrawal_request).data
             })
 
         except StationOwner.DoesNotExist:
@@ -1373,3 +1377,107 @@ class WithdrawalRequestView(APIView):
                 'success': False,
                 'error': 'Invalid amount format'
             }, status=status.HTTP_400_BAD_REQUEST)
+
+    def get(self, request):
+        """Get withdrawal requests for the authenticated station owner"""
+        try:
+            station_owner = StationOwner.objects.get(user=request.user)
+            withdrawals = WithdrawalRequest.objects.filter(station_owner=station_owner).order_by('-created_at')
+
+            return Response({
+                'success': True,
+                'data': WithdrawalRequestSerializer(withdrawals, many=True).data
+            })
+        except StationOwner.DoesNotExist:
+            return Response({
+                'success': False,
+                'error': 'Station owner profile not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+
+
+class WithdrawalRequestDetailView(generics.RetrieveUpdateAPIView):
+    """View to retrieve and update specific withdrawal requests"""
+
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    lookup_field = 'id'
+
+    def get_serializer_class(self):
+        """Return appropriate serializer based on user type"""
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            return WithdrawalRequestAdminSerializer
+        return WithdrawalRequestSerializer
+
+    def get_queryset(self):
+        """Get withdrawal requests based on user type"""
+        if self.request.user.is_staff or self.request.user.is_superuser:
+            # Admins can see all withdrawal requests
+            return WithdrawalRequest.objects.all()
+        else:
+            # Station owners can only see their own requests
+            try:
+                station_owner = StationOwner.objects.get(user=self.request.user)
+                return WithdrawalRequest.objects.filter(station_owner=station_owner)
+            except StationOwner.DoesNotExist:
+                return WithdrawalRequest.objects.none()
+
+    def update(self, request, *args, **kwargs):
+        """Update withdrawal request (admin only for status changes)"""
+        instance = self.get_object()
+
+        # Only admins can change status
+        if 'status' in request.data and not (request.user.is_staff or request.user.is_superuser):
+            return Response({
+                'success': False,
+                'error': 'Only administrators can change withdrawal status'
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # Station owners can only update their own requests and only if pending
+        if not (request.user.is_staff or request.user.is_superuser):
+            try:
+                station_owner = StationOwner.objects.get(user=request.user)
+                if instance.station_owner != station_owner:
+                    return Response({
+                        'success': False,
+                        'error': 'You can only update your own withdrawal requests'
+                    }, status=status.HTTP_403_FORBIDDEN)
+
+                if instance.status != WithdrawalRequest.WithdrawalStatus.PENDING:
+                    return Response({
+                        'success': False,
+                        'error': 'You can only update pending withdrawal requests'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+            except StationOwner.DoesNotExist:
+                return Response({
+                    'success': False,
+                    'error': 'Station owner profile not found'
+                }, status=status.HTTP_404_NOT_FOUND)
+
+        return super().update(request, *args, **kwargs)
+
+
+class WithdrawalRequestListView(generics.ListAPIView):
+    """Admin view to list all withdrawal requests"""
+
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+    serializer_class = WithdrawalRequestAdminSerializer
+
+    def get_queryset(self):
+        """Only admins can access this view"""
+        if not (self.request.user.is_staff or self.request.user.is_superuser):
+            return WithdrawalRequest.objects.none()
+
+        queryset = WithdrawalRequest.objects.all()
+
+        # Filter by status if provided
+        status_filter = self.request.query_params.get('status')
+        if status_filter:
+            queryset = queryset.filter(status=status_filter)
+
+        # Filter by station owner if provided
+        station_owner_id = self.request.query_params.get('station_owner')
+        if station_owner_id:
+            queryset = queryset.filter(station_owner_id=station_owner_id)
+
+        return queryset.order_by('-created_at')
