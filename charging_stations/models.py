@@ -138,6 +138,7 @@ class ChargingConnector(models.Model):
         OUT_OF_ORDER = 'out_of_order', _('Out of Order')
         MAINTENANCE = 'maintenance', _('Under Maintenance')
 
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
     station = models.ForeignKey(ChargingStation, on_delete=models.CASCADE, related_name='connectors')
     connector_type = models.CharField(max_length=20, choices=ConnectorType.choices)
     power_kw = models.DecimalField(max_digits=6, decimal_places=2, help_text='Power in kW')
