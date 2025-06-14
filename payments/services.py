@@ -215,6 +215,15 @@ class PaymentService:
                     # Send payment received notification
                     self._send_payment_notification(transaction.user, transaction.amount, 'wallet_credit')
 
+                    # --- NEW LOGIC: Credit station owner for non-QR charging payments ---
+                    # Try to infer the station owner from the session if possible
+                    if hasattr(session, 'connector') and session.connector:
+                        try:
+                            station_owner = session.connector.station.owner
+                            self.credit_wallet(station_owner.user, transaction.amount, transaction)
+                        except Exception as e:
+                            logger.error(f"Could not credit station owner for non-QR payment: {e}")
+
                 if qr_session:
                     qr_session.status = 'payment_completed'
                     qr_session.payment_transaction = transaction
