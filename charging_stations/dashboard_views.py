@@ -28,24 +28,38 @@ class DashboardStatsView(APIView):
 
             # Get real revenue data from transactions made to station owner's stations
             try:
-                # Get all QR payment sessions for this station owner's connectors
-
+                # Get all connectors for this station owner's stations
                 station_connectors = []
                 for station in stations:
                     station_connectors.extend(station.connectors.all())
 
-                # Get QR payment sessions for these connectors (including initiated payments)
+                # Get QR payment sessions for these connectors that have successful payments
                 revenue_qr_sessions = QRPaymentSession.objects.filter(
                     connector__in=station_connectors,
-                    status__in=['payment_completed', 'payment_initiated'],
+                    status__in=['payment_completed', 'payment_initiated', 'charging_started', 'charging_completed'],
                     payment_transaction__isnull=False
-                )
+                ).select_related('payment_transaction')
 
-                # Calculate total revenue from these sessions
+                # Calculate total revenue from successful transactions
                 total_revenue = 0
                 for qr_session in revenue_qr_sessions:
-                    if qr_session.payment_transaction and qr_session.payment_transaction.status in ['completed', 'pending']:
+                    if (qr_session.payment_transaction and
+                        qr_session.payment_transaction.status in ['completed', 'pending', 'processing']):
                         total_revenue += float(qr_session.payment_transaction.amount)
+
+                # Also include revenue from simple charging sessions
+                try:
+                    from payments.models import SimpleChargingSession
+                    simple_sessions = SimpleChargingSession.objects.filter(
+                        connector__in=station_connectors,
+                        status__in=['completed', 'stopped']
+                    )
+
+                    for session in simple_sessions:
+                        if session.energy_consumed_kwh and session.cost_per_kwh:
+                            total_revenue += float(session.energy_consumed_kwh * session.cost_per_kwh)
+                except Exception as simple_error:
+                    print(f"Error calculating simple session revenue: {simple_error}")
 
             except Exception as e:
                 print(f"Error calculating revenue: {e}")
@@ -309,26 +323,41 @@ class AnalyticsReportsView(APIView):
                     pass
 
             # Get real revenue data from transactions made to station owner's stations
-
             station_connectors = []
             for station in stations:
                 station_connectors.extend(station.connectors.all())
 
-            # Get QR payment sessions for these connectors within date range (including initiated payments)
+            # Get QR payment sessions for these connectors within date range
             revenue_qr_sessions = QRPaymentSession.objects.filter(
                 connector__in=station_connectors,
-                status__in=['payment_completed', 'payment_initiated'],
+                status__in=['payment_completed', 'payment_initiated', 'charging_started', 'charging_completed'],
                 payment_transaction__isnull=False,
                 created_at__gte=start_date
-            )
+            ).select_related('payment_transaction')
 
-            # Calculate total revenue from these sessions
+            # Calculate total revenue from successful transactions
             total_revenue = 0
             revenue_transactions = []
             for qr_session in revenue_qr_sessions:
-                if qr_session.payment_transaction and qr_session.payment_transaction.status in ['completed', 'pending']:
+                if (qr_session.payment_transaction and
+                    qr_session.payment_transaction.status in ['completed', 'pending', 'processing']):
                     total_revenue += float(qr_session.payment_transaction.amount)
                     revenue_transactions.append(qr_session.payment_transaction)
+
+            # Also include revenue from simple charging sessions within date range
+            try:
+                from payments.models import SimpleChargingSession
+                simple_sessions = SimpleChargingSession.objects.filter(
+                    connector__in=station_connectors,
+                    status__in=['completed', 'stopped'],
+                    start_time__gte=start_date
+                )
+
+                for session in simple_sessions:
+                    if session.energy_consumed_kwh and session.cost_per_kwh:
+                        total_revenue += float(session.energy_consumed_kwh * session.cost_per_kwh)
+            except Exception as simple_error:
+                print(f"Error calculating simple session revenue: {simple_error}")
 
             # Calculate total energy dispensed from real charging sessions
             total_energy_dispensed = 0
@@ -399,19 +428,36 @@ class AnalyticsReportsView(APIView):
                 month_start = now - timedelta(days=(i+1)*30)
                 month_end = now - timedelta(days=i*30)
 
-                # Get QR sessions for this month (including initiated payments)
+                # Get QR sessions for this month with successful payments
                 month_qr_sessions = QRPaymentSession.objects.filter(
                     connector__in=station_connectors,
-                    status__in=['payment_completed', 'payment_initiated'],
+                    status__in=['payment_completed', 'payment_initiated', 'charging_started', 'charging_completed'],
                     payment_transaction__isnull=False,
                     created_at__gte=month_start,
                     created_at__lt=month_end
-                )
+                ).select_related('payment_transaction')
 
                 month_revenue = 0
                 for qr_session in month_qr_sessions:
-                    if qr_session.payment_transaction and qr_session.payment_transaction.status in ['completed', 'pending']:
+                    if (qr_session.payment_transaction and
+                        qr_session.payment_transaction.status in ['completed', 'pending', 'processing']):
                         month_revenue += float(qr_session.payment_transaction.amount)
+
+                # Also include revenue from simple charging sessions for this month
+                try:
+                    from payments.models import SimpleChargingSession
+                    month_simple_sessions = SimpleChargingSession.objects.filter(
+                        connector__in=station_connectors,
+                        status__in=['completed', 'stopped'],
+                        start_time__gte=month_start,
+                        start_time__lt=month_end
+                    )
+
+                    for session in month_simple_sessions:
+                        if session.energy_consumed_kwh and session.cost_per_kwh:
+                            month_revenue += float(session.energy_consumed_kwh * session.cost_per_kwh)
+                except:
+                    pass
 
                 monthly_revenue.append({
                     'month': month_start.strftime('%b'),
@@ -625,10 +671,10 @@ class RevenueTransactionsView(APIView):
             for station in stations:
                 station_connectors.extend(station.connectors.all())
 
-            # Get QR payment sessions for these connectors (including initiated payments)
+            # Get QR payment sessions for these connectors with successful payments
             revenue_qr_sessions = QRPaymentSession.objects.filter(
                 connector__in=station_connectors,
-                status__in=['payment_completed', 'payment_initiated'],
+                status__in=['payment_completed', 'payment_initiated', 'charging_started', 'charging_completed'],
                 payment_transaction__isnull=False,
                 created_at__gte=start_date
             ).select_related('payment_transaction', 'connector', 'connector__station').order_by('-created_at')
@@ -638,13 +684,19 @@ class RevenueTransactionsView(APIView):
             total_revenue = 0
 
             for qr_session in revenue_qr_sessions:
-                if qr_session.payment_transaction and qr_session.payment_transaction.status in ['completed', 'pending']:
+                if (qr_session.payment_transaction and
+                    qr_session.payment_transaction.status in ['completed', 'pending', 'processing']):
                     transaction = qr_session.payment_transaction
                     amount = float(transaction.amount)
                     total_revenue += amount
 
                     # Map transaction status to display status
-                    display_status = 'Completed' if transaction.status == 'completed' else 'Pending'
+                    status_mapping = {
+                        'completed': 'Completed',
+                        'pending': 'Pending',
+                        'processing': 'Processing'
+                    }
+                    display_status = status_mapping.get(transaction.status, transaction.status.title())
 
                     transactions.append({
                         'id': str(transaction.id),
@@ -653,8 +705,43 @@ class RevenueTransactionsView(APIView):
                         'type': 'Charging Payment',
                         'description': f'Charging at {qr_session.connector.station.name}',
                         'amount': amount,
-                        'status': display_status
+                        'status': display_status,
+                        'user_email': qr_session.user.email,
+                        'connector_id': str(qr_session.connector.id)
                     })
+
+            # Also include simple charging sessions
+            try:
+                from payments.models import SimpleChargingSession
+                simple_sessions = SimpleChargingSession.objects.filter(
+                    connector__in=station_connectors,
+                    status__in=['completed', 'stopped'],
+                    start_time__gte=start_date
+                ).select_related('connector__station', 'user').order_by('-start_time')
+
+                for session in simple_sessions:
+                    if session.energy_consumed_kwh and session.cost_per_kwh:
+                        amount = float(session.energy_consumed_kwh * session.cost_per_kwh)
+                        total_revenue += amount
+
+                        transactions.append({
+                            'id': str(session.id),
+                            'date': session.start_time.strftime('%Y-%m-%d'),
+                            'transaction_id': f'SIMPLE-{session.id}',
+                            'type': 'Simple Charging',
+                            'description': f'Simple charging at {session.connector.station.name}',
+                            'amount': amount,
+                            'status': 'Completed',
+                            'user_email': session.user.email,
+                            'connector_id': str(session.connector.id),
+                            'energy_consumed': float(session.energy_consumed_kwh),
+                            'cost_per_kwh': float(session.cost_per_kwh)
+                        })
+            except Exception as e:
+                print(f"Error processing simple sessions in transaction history: {e}")
+
+            # Sort all transactions by date (newest first)
+            transactions.sort(key=lambda x: x['date'], reverse=True)
 
             return Response({
                 'success': True,
@@ -675,4 +762,158 @@ class RevenueTransactionsView(APIView):
         except Exception as e:
             return Response({
                 'error': f'Error fetching transaction data: {str(e)}'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+class RevenueDetailView(APIView):
+    """Detailed revenue tracking for station owners"""
+    permission_classes = [permissions.IsAuthenticated]
+    authentication_classes = [TokenAuthentication, SessionAuthentication]
+
+    def get(self, request):
+        try:
+            station_owner = StationOwner.objects.get(user=request.user)
+            stations = ChargingStation.objects.filter(owner=station_owner)
+
+            # Get query parameters
+            time_range = request.GET.get('time_range', 'Last 30 Days')
+            selected_station = request.GET.get('station', 'All Stations')
+
+            # Calculate date range
+            now = timezone.now()
+            if time_range == 'Last 7 Days':
+                start_date = now - timedelta(days=7)
+            elif time_range == 'Last 30 Days':
+                start_date = now - timedelta(days=30)
+            elif time_range == 'Last 90 Days':
+                start_date = now - timedelta(days=90)
+            elif time_range == 'Last Year':
+                start_date = now - timedelta(days=365)
+            else:
+                start_date = now - timedelta(days=30)
+
+            # Filter stations if specific station selected
+            if selected_station != 'All Stations':
+                try:
+                    stations = stations.filter(id=selected_station)
+                except:
+                    pass
+
+            # Get all connectors for these stations
+            station_connectors = []
+            for station in stations:
+                station_connectors.extend(station.connectors.all())
+
+            # Get detailed revenue breakdown
+            revenue_breakdown = {
+                'qr_payments': 0,
+                'simple_sessions': 0,
+                'total_transactions': 0,
+                'successful_transactions': 0,
+                'failed_transactions': 0,
+                'pending_transactions': 0,
+                'transaction_details': []
+            }
+
+            # QR Payment Sessions Revenue
+            qr_sessions = QRPaymentSession.objects.filter(
+                connector__in=station_connectors,
+                created_at__gte=start_date
+            ).select_related('payment_transaction', 'connector__station')
+
+            for qr_session in qr_sessions:
+                transaction_detail = {
+                    'id': str(qr_session.id),
+                    'type': 'QR Payment',
+                    'station_name': qr_session.connector.station.name,
+                    'connector_id': str(qr_session.connector.id),
+                    'user_email': qr_session.user.email,
+                    'amount': 0,
+                    'status': qr_session.status,
+                    'payment_status': None,
+                    'created_at': qr_session.created_at.isoformat(),
+                    'payment_amount': float(qr_session.get_payment_amount())
+                }
+
+                revenue_breakdown['total_transactions'] += 1
+
+                if qr_session.payment_transaction:
+                    transaction_detail['payment_status'] = qr_session.payment_transaction.status
+                    transaction_detail['amount'] = float(qr_session.payment_transaction.amount)
+
+                    if qr_session.payment_transaction.status in ['completed', 'pending', 'processing']:
+                        revenue_breakdown['qr_payments'] += float(qr_session.payment_transaction.amount)
+                        revenue_breakdown['successful_transactions'] += 1
+                    elif qr_session.payment_transaction.status == 'failed':
+                        revenue_breakdown['failed_transactions'] += 1
+                    elif qr_session.payment_transaction.status == 'pending':
+                        revenue_breakdown['pending_transactions'] += 1
+
+                revenue_breakdown['transaction_details'].append(transaction_detail)
+
+            # Simple Charging Sessions Revenue
+            try:
+                from payments.models import SimpleChargingSession
+                simple_sessions = SimpleChargingSession.objects.filter(
+                    connector__in=station_connectors,
+                    start_time__gte=start_date
+                ).select_related('connector__station', 'user')
+
+                for session in simple_sessions:
+                    session_revenue = 0
+                    if session.energy_consumed_kwh and session.cost_per_kwh:
+                        session_revenue = float(session.energy_consumed_kwh * session.cost_per_kwh)
+                        revenue_breakdown['simple_sessions'] += session_revenue
+
+                    transaction_detail = {
+                        'id': str(session.id),
+                        'type': 'Simple Session',
+                        'station_name': session.connector.station.name,
+                        'connector_id': str(session.connector.id),
+                        'user_email': session.user.email,
+                        'amount': session_revenue,
+                        'status': session.status,
+                        'payment_status': 'completed' if session_revenue > 0 else 'no_payment',
+                        'created_at': session.start_time.isoformat(),
+                        'energy_consumed': float(session.energy_consumed_kwh or 0),
+                        'cost_per_kwh': float(session.cost_per_kwh or 0)
+                    }
+
+                    revenue_breakdown['transaction_details'].append(transaction_detail)
+                    revenue_breakdown['total_transactions'] += 1
+
+                    if session_revenue > 0:
+                        revenue_breakdown['successful_transactions'] += 1
+
+            except Exception as e:
+                print(f"Error processing simple sessions: {e}")
+
+            # Calculate totals
+            total_revenue = revenue_breakdown['qr_payments'] + revenue_breakdown['simple_sessions']
+
+            # Sort transaction details by date (newest first)
+            revenue_breakdown['transaction_details'].sort(
+                key=lambda x: x['created_at'],
+                reverse=True
+            )
+
+            return Response({
+                'total_revenue': total_revenue,
+                'revenue_breakdown': revenue_breakdown,
+                'time_range': time_range,
+                'selected_station': selected_station,
+                'stations_count': stations.count(),
+                'date_range': {
+                    'start': start_date.isoformat(),
+                    'end': now.isoformat()
+                }
+            })
+
+        except StationOwner.DoesNotExist:
+            return Response({
+                'error': 'Station owner profile not found'
+            }, status=status.HTTP_404_NOT_FOUND)
+        except Exception as e:
+            return Response({
+                'error': f'Error calculating revenue details: {str(e)}'
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
