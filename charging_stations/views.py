@@ -1346,8 +1346,20 @@ class WithdrawalRequestView(APIView):
                     'error': 'Invalid payment method'
                 }, status=status.HTTP_400_BAD_REQUEST)
 
-            # TODO: Check available balance from wallet or revenue system
-            # For now, we'll assume the withdrawal is valid
+            # Check available balance from wallet system
+            from payments.models import Wallet, WalletTransaction
+            try:
+                wallet = Wallet.objects.get(user=request.user)
+                if wallet.balance < float(amount):
+                    return Response({
+                        'success': False,
+                        'error': f'Insufficient balance. Available: {wallet.balance} ETB'
+                    }, status=status.HTTP_400_BAD_REQUEST)
+            except Wallet.DoesNotExist:
+                return Response({
+                    'success': False,
+                    'error': 'Wallet not found. Please contact support.'
+                }, status=status.HTTP_404_NOT_FOUND)
 
             # Create withdrawal record in database
             withdrawal_request = WithdrawalRequest.objects.create(
@@ -1358,12 +1370,34 @@ class WithdrawalRequestView(APIView):
                 status=WithdrawalRequest.WithdrawalStatus.PENDING
             )
 
-            # TODO: Send notification to admins about new withdrawal request
-            # TODO: Integrate with payment processor for actual withdrawal
+            # Create a pending wallet transaction (will be completed when admin approves)
+            WalletTransaction.objects.create(
+                wallet=wallet,
+                transaction_type=WalletTransaction.TransactionType.DEBIT,
+                amount=float(amount),
+                description=f'Withdrawal request {withdrawal_request.reference_number}',
+                reference_id=str(withdrawal_request.id),
+                status='pending'
+            )
+
+            # Reserve the amount (deduct from available balance but don't complete transaction yet)
+            wallet.balance -= float(amount)
+            wallet.save()
+
+            # Send notification to admins about new withdrawal request
+            from django.contrib.auth import get_user_model
+            User = get_user_model()
+            admin_users = User.objects.filter(is_staff=True, is_active=True)
+
+            # TODO: Implement actual notification system (email, in-app notifications)
+            # For now, we'll just log it
+            import logging
+            logger = logging.getLogger(__name__)
+            logger.info(f'New withdrawal request {withdrawal_request.reference_number} from {station_owner.company_name} for {amount} ETB')
 
             return Response({
                 'success': True,
-                'message': 'Withdrawal request submitted successfully',
+                'message': 'Withdrawal request submitted successfully. It will be processed within 1-3 business days.',
                 'data': WithdrawalRequestSerializer(withdrawal_request).data
             })
 
