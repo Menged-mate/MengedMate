@@ -206,13 +206,14 @@ class ConnectorCreateView(generics.CreateAPIView):
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     serializer_class = ChargingConnectorSerializer
 
-    def perform_create(self, serializer):
+    def post(self, request, *args, **kwargs):
         station_id = self.kwargs.get('station_id')
         try:
-            station_owner = StationOwner.objects.get(user=self.request.user)
+            station_owner = StationOwner.objects.get(user=request.user)
             station = ChargingStation.objects.get(id=station_id, owner=station_owner)
 
-            # Check if a connector with the same type and power already exists
+            serializer = self.get_serializer(data=request.data)
+            serializer.is_valid(raise_exception=True)
             connector_type = serializer.validated_data.get('connector_type')
             power_kw = serializer.validated_data.get('power_kw')
             price_per_kwh = serializer.validated_data.get('price_per_kwh')
@@ -226,16 +227,13 @@ class ConnectorCreateView(generics.CreateAPIView):
             ).first()
 
             if existing_connector:
-                # Update existing connector quantity
                 existing_connector.quantity += quantity_to_add
                 existing_connector.available_quantity += quantity_to_add
                 existing_connector.save()
                 connector = existing_connector
             else:
-                # Create new connector
                 connector = serializer.save(station=station)
 
-            # Update station connector counts
             station.update_connector_counts()
             return Response({
                 'success': True,
@@ -260,6 +258,14 @@ class ConnectorDetailView(generics.RetrieveUpdateDestroyAPIView):
             return ChargingConnector.objects.filter(station=station)
         except (StationOwner.DoesNotExist, ChargingStation.DoesNotExist):
             return ChargingConnector.objects.none()
+
+    def update(self, request, *args, **kwargs):
+        partial = kwargs.pop('partial', False)
+        instance = self.get_object()
+        serializer = self.get_serializer(instance, data=request.data, partial=partial)
+        serializer.is_valid(raise_exception=True)
+        self.perform_update(serializer)
+        return Response(serializer.data, status=status.HTTP_200_OK)
 
     def perform_update(self, serializer):
         connector = serializer.save()
