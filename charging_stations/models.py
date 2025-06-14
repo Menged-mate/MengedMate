@@ -648,3 +648,79 @@ class PayoutMethod(models.Model):
                 'holder': self.account_holder_name
             }
         return {'type': 'Unknown', 'details': '', 'holder': ''}
+
+
+class WithdrawalRequest(models.Model):
+    """Model for tracking withdrawal/payout requests from station owners"""
+
+    class WithdrawalStatus(models.TextChoices):
+        PENDING = 'pending', 'Pending'
+        APPROVED = 'approved', 'Approved'
+        PROCESSING = 'processing', 'Processing'
+        COMPLETED = 'completed', 'Completed'
+        REJECTED = 'rejected', 'Rejected'
+        FAILED = 'failed', 'Failed'
+
+    id = models.UUIDField(primary_key=True, default=uuid.uuid4, editable=False)
+    station_owner = models.ForeignKey(
+        StationOwner,
+        on_delete=models.CASCADE,
+        related_name='withdrawal_requests',
+        help_text="Station owner requesting the withdrawal"
+    )
+    payout_method = models.ForeignKey(
+        PayoutMethod,
+        on_delete=models.CASCADE,
+        related_name='withdrawals',
+        help_text="Payment method for the withdrawal"
+    )
+
+    # Withdrawal details
+    amount = models.DecimalField(
+        max_digits=10,
+        decimal_places=2,
+        help_text="Amount to withdraw"
+    )
+    currency = models.CharField(max_length=3, default='ETB')
+    description = models.TextField(blank=True, null=True)
+
+    # Status and tracking
+    status = models.CharField(
+        max_length=20,
+        choices=WithdrawalStatus.choices,
+        default=WithdrawalStatus.PENDING
+    )
+    reference_number = models.CharField(max_length=100, unique=True, blank=True)
+
+    # Admin fields
+    approved_by = models.ForeignKey(
+        settings.AUTH_USER_MODEL,
+        on_delete=models.SET_NULL,
+        null=True, blank=True,
+        related_name='approved_withdrawals',
+        help_text="Admin who approved/rejected this withdrawal"
+    )
+    admin_notes = models.TextField(blank=True, null=True)
+    processed_at = models.DateTimeField(null=True, blank=True)
+
+    # Timestamps
+    created_at = models.DateTimeField(auto_now_add=True)
+    updated_at = models.DateTimeField(auto_now=True)
+
+    class Meta:
+        ordering = ['-created_at']
+        indexes = [
+            models.Index(fields=['station_owner', '-created_at']),
+            models.Index(fields=['status', '-created_at']),
+            models.Index(fields=['reference_number']),
+        ]
+
+    def __str__(self):
+        return f"Withdrawal {self.reference_number} - {self.amount} {self.currency} ({self.status})"
+
+    def save(self, *args, **kwargs):
+        if not self.reference_number:
+            import random
+            import string
+            self.reference_number = 'WD' + ''.join(random.choices(string.ascii_uppercase + string.digits, k=8))
+        super().save(*args, **kwargs)
