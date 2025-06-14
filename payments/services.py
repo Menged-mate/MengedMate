@@ -210,37 +210,52 @@ class PaymentService:
                 if session:
                     session.status = PaymentSession.SessionStatus.COMPLETED
                     session.save()
+                    
+                    # Credit user's wallet
                     self.credit_wallet(transaction.user, transaction.amount, transaction)
+                    logger.info(f"Credited user wallet: {transaction.user.email} with {transaction.amount}")
 
                     # Send payment received notification
                     self._send_payment_notification(transaction.user, transaction.amount, 'wallet_credit')
 
-                    # --- NEW LOGIC: Credit station owner for non-QR charging payments ---
-                    # Try to infer the station owner from the session if possible
+                    # Credit station owner for non-QR charging payments
                     if hasattr(session, 'connector') and session.connector:
                         try:
                             station_owner = session.connector.station.owner
+                            logger.info(f"Found station owner: {station_owner.user.email}")
                             self.credit_wallet(station_owner.user, transaction.amount, transaction)
+                            logger.info(f"Credited station owner wallet: {station_owner.user.email} with {transaction.amount}")
                         except Exception as e:
                             logger.error(f"Could not credit station owner for non-QR payment: {e}")
+                            logger.error(f"Session connector: {session.connector}")
+                            if session.connector and session.connector.station:
+                                logger.error(f"Station owner: {session.connector.station.owner}")
 
                 if qr_session:
                     qr_session.status = 'payment_completed'
                     qr_session.payment_transaction = transaction
                     qr_session.save()
 
-                    # Credit the station owner's wallet with the payment amount
-                    station_owner = qr_session.connector.station.owner
-                    self.credit_wallet(station_owner.user, transaction.amount, transaction)
+                    try:
+                        # Credit the station owner's wallet with the payment amount
+                        station_owner = qr_session.connector.station.owner
+                        logger.info(f"Found station owner for QR session: {station_owner.user.email}")
+                        self.credit_wallet(station_owner.user, transaction.amount, transaction)
+                        logger.info(f"Credited station owner wallet: {station_owner.user.email} with {transaction.amount}")
 
-                    # Send charging payment notification
-                    self._send_payment_notification(transaction.user, transaction.amount, 'charging_payment', qr_session)
+                        # Send charging payment notification
+                        self._send_payment_notification(transaction.user, transaction.amount, 'charging_payment', qr_session)
 
-                    # Send notification to station owner
-                    self._send_station_owner_payment_notification(qr_session, transaction)
+                        # Send notification to station owner
+                        self._send_station_owner_payment_notification(qr_session, transaction)
 
-                    # Auto-start charging if configured
-                    self._auto_start_charging_if_enabled(qr_session)
+                        # Auto-start charging if configured
+                        self._auto_start_charging_if_enabled(qr_session)
+                    except Exception as e:
+                        logger.error(f"Error processing QR session payment: {e}")
+                        logger.error(f"QR session connector: {qr_session.connector}")
+                        if qr_session.connector and qr_session.connector.station:
+                            logger.error(f"Station owner: {qr_session.connector.station.owner}")
             else:
                 transaction.status = Transaction.TransactionStatus.FAILED
 
@@ -259,6 +274,8 @@ class PaymentService:
 
         except Exception as e:
             logger.error(f"Callback processing failed: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
             return {'success': False, 'message': str(e)}
 
     def _auto_start_charging_if_enabled(self, qr_session):
@@ -301,23 +318,50 @@ class PaymentService:
             logger.error(f"Traceback: {traceback.format_exc()}")
 
     def credit_wallet(self, user, amount, transaction):
-        wallet, created = Wallet.objects.get_or_create(user=user)
-
-        balance_before = wallet.balance
-        wallet.balance += amount
-        wallet.save()
-
-        WalletTransaction.objects.create(
-            wallet=wallet,
-            transaction=transaction,
-            transaction_type=WalletTransaction.TransactionType.CREDIT,
-            amount=amount,
-            balance_before=balance_before,
-            balance_after=wallet.balance,
-            description=f"Credit from payment {transaction.reference_number}"
-        )
-
-        return wallet
+        try:
+            logger.info(f"Attempting to credit wallet for user: {user.email} with amount: {amount}")
+            
+            # Get or create wallet
+            wallet, created = Wallet.objects.get_or_create(
+                user=user,
+                defaults={
+                    'balance': 0,
+                    'currency': 'ETB',
+                    'is_active': True
+                }
+            )
+            
+            if created:
+                logger.info(f"Created new wallet for user: {user.email}")
+            
+            # Get current balance
+            balance_before = wallet.balance
+            logger.info(f"Current wallet balance for {user.email}: {balance_before}")
+            
+            # Update balance
+            wallet.balance += amount
+            wallet.save()
+            logger.info(f"Updated wallet balance for {user.email}: {wallet.balance}")
+            
+            # Create wallet transaction record
+            wallet_transaction = WalletTransaction.objects.create(
+                wallet=wallet,
+                transaction=transaction,
+                transaction_type=WalletTransaction.TransactionType.CREDIT,
+                amount=amount,
+                balance_before=balance_before,
+                balance_after=wallet.balance,
+                description=f"Credit from payment {transaction.reference_number}"
+            )
+            logger.info(f"Created wallet transaction: {wallet_transaction.id}")
+            
+            return wallet
+            
+        except Exception as e:
+            logger.error(f"Error crediting wallet for user {user.email}: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            raise
 
     def debit_wallet(self, user, amount, transaction):
         wallet = Wallet.objects.filter(user=user).first()
