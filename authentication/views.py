@@ -795,6 +795,7 @@ class TelegramWebAppView(APIView):
     def get(self, request):
         """Return necessary data for Telegram Web App initialization"""
         try:
+            # Use getattr with default values to avoid AttributeError
             bot_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', '')
             bot_username = getattr(settings, 'TELEGRAM_BOT_USERNAME', '')
             return_url = getattr(settings, 'TELEGRAM_RETURN_URL', '')
