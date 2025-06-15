@@ -760,6 +760,12 @@ class TelegramLoginView(APIView):
         except ValueError as e:
             logger.error(f"Telegram authentication ValueError: {str(e)}")
             logger.error(f"Request data (on error): {request.data}")
+            import sys
+            print("\n" + "="*40)
+            print("TELEGRAM LOGIN ERROR (ValueError)")
+            print(f"Request data: {request.data}")
+            print(f"Error: {str(e)}")
+            print("="*40 + "\n", file=sys.stderr)
             return Response({
                 'error': str(e),
                 'error_type': 'validation_error'
@@ -769,6 +775,12 @@ class TelegramLoginView(APIView):
             import traceback
             logger.error(f"Traceback: {traceback.format_exc()}")
             logger.error(f"Request data (on exception): {request.data}")
+            import sys
+            print("\n" + "="*40)
+            print("TELEGRAM LOGIN ERROR (Exception)")
+            print(f"Request data: {request.data}")
+            print(f"Error: {str(e)}")
+            print("="*40 + "\n", file=sys.stderr)
             return Response({
                 'error': 'Authentication failed',
                 'error_type': 'server_error'
