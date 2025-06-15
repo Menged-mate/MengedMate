@@ -20,7 +20,7 @@ import string
 import json
 import hmac
 import hashlib
-from urllib.parse import parse_qs
+from urllib.parse import parse_qs, unquote
 from base64 import b64encode
 from datetime import datetime, timedelta
 from charging_stations.models import StationOwner
@@ -614,38 +614,59 @@ class TelegramLoginView(APIView):
     def verify_telegram_data(self, init_data: str) -> dict:
         """Verify Telegram Web App init data."""
         try:
-            # Parse the init_data string into a dictionary
-            data_dict = dict(param.split('=') for param in init_data.split('&'))
-            
+            if not settings.TELEGRAM_BOT_TOKEN:
+                raise ValueError("TELEGRAM_BOT_TOKEN not configured")
+
+            # Parse the init_data string into a dictionary with URL decoding
+            data_dict = {}
+            for param in init_data.split('&'):
+                if '=' in param:
+                    key, value = param.split('=', 1)
+                    data_dict[key] = unquote(value)
+
             # Get the hash from the data
-            received_hash = data_dict.pop('hash')
-            
+            received_hash = data_dict.pop('hash', None)
+            if not received_hash:
+                raise ValueError("No hash provided in init data")
+
             # Sort the data alphabetically
             data_check_string = '\n'.join(f"{k}={v}" for k, v in sorted(data_dict.items()))
-            
+
             # Create a secret key using the bot token
             secret_key = hashlib.sha256(settings.TELEGRAM_BOT_TOKEN.encode()).digest()
-            
+
             # Calculate the hash
             calculated_hash = hmac.new(
                 secret_key,
                 data_check_string.encode(),
                 hashlib.sha256
             ).hexdigest()
-            
+
             # Verify the hash
             if calculated_hash != received_hash:
-                raise ValueError("Invalid hash")
-            
+                raise ValueError("Invalid hash - authentication failed")
+
             # Verify auth date is not too old (within last 24 hours)
             auth_date = int(data_dict.get('auth_date', 0))
-            if time.time() - auth_date > 86400:
-                raise ValueError("Auth date expired")
-            
+            current_time = int(time.time())
+            if current_time - auth_date > 86400:
+                raise ValueError("Auth date expired (older than 24 hours)")
+
             # Parse user data
-            user_data = json.loads(data_dict.get('user', '{}'))
+            user_json = data_dict.get('user', '{}')
+            if not user_json:
+                raise ValueError("No user data provided")
+
+            user_data = json.loads(user_json)
+
+            # Validate required user fields
+            if not user_data.get('id'):
+                raise ValueError("User ID missing from Telegram data")
+
             return user_data
-            
+
+        except json.JSONDecodeError as e:
+            raise ValueError(f"Invalid JSON in user data: {str(e)}")
         except Exception as e:
             raise ValueError(f"Invalid init data: {str(e)}")
 
@@ -733,13 +754,20 @@ class TelegramWebAppView(APIView):
                 "message": "No Telegram init data provided"
             }, status=status.HTTP_400_BAD_REQUEST)
 
-        # Verify the data using the same method as in TelegramLoginView
-        telegram_login = TelegramLoginView()
-        if not telegram_login.verify_telegram_data(init_data):
-            return Response({
-                "message": "Invalid Telegram data"
-            }, status=status.HTTP_400_BAD_REQUEST)
+        try:
+            # Verify the data using the same method as in TelegramLoginView
+            telegram_login = TelegramLoginView()
+            user_data = telegram_login.verify_telegram_data(init_data)
 
-        return Response({
-            "message": "Telegram Web App data validated successfully"
-        })
+            return Response({
+                "message": "Telegram Web App data validated successfully",
+                "user_data": user_data
+            })
+        except ValueError as e:
+            return Response({
+                "message": f"Invalid Telegram data: {str(e)}"
+            }, status=status.HTTP_400_BAD_REQUEST)
+        except Exception as e:
+            return Response({
+                "message": "Validation failed"
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
