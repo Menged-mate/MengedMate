@@ -611,10 +611,26 @@ class TelegramLoginView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = [AnonymousAuthentication]
 
+    def get(self, request):
+        """Provide information about the Telegram login endpoint"""
+        return Response({
+            'message': 'Telegram Login Endpoint',
+            'description': 'This endpoint accepts POST requests with Telegram Web App initData for authentication',
+            'method': 'POST',
+            'required_fields': ['initData'],
+            'bot_configured': bool(settings.TELEGRAM_BOT_TOKEN),
+            'example_usage': {
+                'method': 'POST',
+                'headers': {'Content-Type': 'application/json'},
+                'body': {'initData': 'telegram_web_app_init_data_string'}
+            }
+        })
+
     def verify_telegram_data(self, init_data: str) -> dict:
         """Verify Telegram Web App init data."""
         try:
-            if not settings.TELEGRAM_BOT_TOKEN:
+            bot_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', '')
+            if not bot_token:
                 raise ValueError("TELEGRAM_BOT_TOKEN not configured")
 
             # Parse the init_data string into a dictionary with URL decoding
@@ -633,7 +649,7 @@ class TelegramLoginView(APIView):
             data_check_string = '\n'.join(f"{k}={v}" for k, v in sorted(data_dict.items()))
 
             # Create a secret key using the bot token
-            secret_key = hashlib.sha256(settings.TELEGRAM_BOT_TOKEN.encode()).digest()
+            secret_key = hashlib.sha256(bot_token.encode()).digest()
 
             # Calculate the hash
             calculated_hash = hmac.new(
@@ -741,10 +757,32 @@ class TelegramWebAppView(APIView):
 
     def get(self, request):
         """Return necessary data for Telegram Web App initialization"""
-        return Response({
-            "bot_username": settings.TELEGRAM_BOT_USERNAME,
-            "return_url": settings.TELEGRAM_RETURN_URL,
-        })
+        try:
+            bot_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', '')
+            bot_username = getattr(settings, 'TELEGRAM_BOT_USERNAME', '')
+            return_url = getattr(settings, 'TELEGRAM_RETURN_URL', '')
+
+            return Response({
+                "bot_username": bot_username,
+                "return_url": return_url,
+                "bot_configured": bool(bot_token),
+                "api_status": "ready",
+                "endpoints": {
+                    "login": "/api/auth/telegram/login/",
+                    "webapp": "/api/auth/telegram/webapp/"
+                },
+                "settings_status": {
+                    "TELEGRAM_BOT_TOKEN": "configured" if bot_token else "missing",
+                    "TELEGRAM_BOT_USERNAME": "configured" if bot_username else "missing",
+                    "TELEGRAM_RETURN_URL": "configured" if return_url else "missing"
+                }
+            })
+        except Exception as e:
+            return Response({
+                "error": f"Configuration error: {str(e)}",
+                "api_status": "error",
+                "bot_configured": False
+            }, status=500)
 
     def post(self, request):
         """Validate Telegram Web App data"""

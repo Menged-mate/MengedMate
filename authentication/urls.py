@@ -65,4 +65,5 @@ urlpatterns = [
 
     path('telegram/login/', TelegramLoginView.as_view(), name='telegram-login'),
     path('telegram/webapp/', TelegramWebAppView.as_view(), name='telegram-webapp'),
+    path('telegram/test/', TelegramWebAppView.as_view(), name='telegram-test'),
 ]
