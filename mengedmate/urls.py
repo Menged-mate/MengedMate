@@ -111,7 +111,6 @@ def api_info(request):
     return HttpResponse(html_content)
 
 urlpatterns = [
-    # API endpoints
     path("api/auth/", include("authentication.urls")),
     path("api/payments/", include("payments.urls")),
     path("api/ocpp/", include("ocpp_integration.urls")),
@@ -122,7 +121,6 @@ urlpatterns = [
     path("api/register-test/", register_view, name="register-test"),
     path("api/health/", health_check, name="api-health"),
 
-    # Documentation
     path("docs/", include("docs.urls")),
 
     # Django allauth URLs
@@ -130,24 +128,18 @@ urlpatterns = [
     path("api/dj-rest-auth/", include("dj_rest_auth.urls")),
     path("api/dj-rest-auth/registration/", include("dj_rest_auth.registration.urls")),
 
-    # Admin site
     path("admin/", admin.site.urls),
     path("admin/database-backup/", DatabaseBackupView.as_view(), name="database-backup"),
 
-    # Health check
     path("health/", health_check, name="health"),
 
-    # Home page with map
     path("map/", HomeView.as_view(), name="home"),
     path("api/config/", AppConfigView.as_view(), name="app-config"),
 
-    # API info page (root URL)
     path("", api_info, name="api-info"),
 
-    # Telegram auth URLs
     path('api/auth/telegram/', include('telegram_auth.urls')),
 ]
 
-# Serve static and media files
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)
 urlpatterns += static(settings.MEDIA_URL, document_root=settings.MEDIA_ROOT)
