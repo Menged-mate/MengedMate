@@ -688,15 +688,31 @@ class TelegramLoginView(APIView):
 
     def post(self, request):
         try:
+            # Log the request for debugging
+            import logging
+            logger = logging.getLogger(__name__)
+
+            logger.info(f"Telegram login request received")
+            logger.info(f"Request data keys: {list(request.data.keys())}")
+            logger.info(f"Request content type: {request.content_type}")
+
             # Get and verify Telegram data
             init_data = request.data.get('initData')
             if not init_data:
-                return Response(
-                    {'error': 'No init data provided'},
-                    status=status.HTTP_400_BAD_REQUEST
-                )
+                # Try alternative key names
+                init_data = request.data.get('init_data') or request.data.get('initdata')
 
+            if not init_data:
+                logger.error("No init data found in request")
+                return Response({
+                    'error': 'No init data provided',
+                    'received_keys': list(request.data.keys()),
+                    'expected_key': 'initData'
+                }, status=status.HTTP_400_BAD_REQUEST)
+
+            logger.info(f"Attempting to verify init data: {init_data[:50]}...")
             user_data = self.verify_telegram_data(init_data)
+            logger.info(f"Verification successful, user data: {user_data}")
             
             # Get or create user
             User = get_user_model()
@@ -739,15 +755,19 @@ class TelegramLoginView(APIView):
             })
 
         except ValueError as e:
-            return Response(
-                {'error': str(e)},
-                status=status.HTTP_400_BAD_REQUEST
-            )
+            logger.error(f"Telegram authentication ValueError: {str(e)}")
+            return Response({
+                'error': str(e),
+                'error_type': 'validation_error'
+            }, status=status.HTTP_400_BAD_REQUEST)
         except Exception as e:
-            return Response(
-                {'error': 'Authentication failed'},
-                status=status.HTTP_500_INTERNAL_SERVER_ERROR
-            )
+            logger.error(f"Telegram authentication Exception: {str(e)}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            return Response({
+                'error': 'Authentication failed',
+                'error_type': 'server_error'
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class TelegramWebAppView(APIView):
