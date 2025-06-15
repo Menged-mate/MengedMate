@@ -36,3 +36,4 @@ psycopg2-binary>=2.9.6
 requests>=2.31.0
 qrcode[PIL]
 markdown>=3.4.0
+telegram-webapp-auth
