@@ -375,7 +375,6 @@ CSRF_COOKIE_NAME = 'csrftoken'
 CSRF_COOKIE_SAMESITE = None
 
 # Email Configuration
-# Use environment variable to control email backend
 USE_CONSOLE_EMAIL = os.environ.get('USE_CONSOLE_EMAIL', 'False').lower() == 'true'
 
 if USE_CONSOLE_EMAIL:
@@ -491,9 +490,9 @@ ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
 
-FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://mengedmate.vercel.app')
+FRONTEND_URL = os.environ.get('FRONTEND_URL', 'https://evvmeri.onrender.com')
 if DEBUG:
-    FRONTEND_URL = 'http://localhost:3000'
+    FRONTEND_URL = 'https://evvmeri.onrender.com'
 
 ADMIN_EMAIL = 'admin@example.com'
 
