@@ -333,16 +333,16 @@ class PaymentService:
             
             if created:
                 logger.info(f"Created new wallet for user: {user.email}")
-            
+
             # Get current balance
             balance_before = wallet.balance
             logger.info(f"Current wallet balance for {user.email}: {balance_before}")
-            
+
             # Update balance
             wallet.balance += amount
             wallet.save()
             logger.info(f"Updated wallet balance for {user.email}: {wallet.balance}")
-            
+
             # Create wallet transaction record
             wallet_transaction = WalletTransaction.objects.create(
                 wallet=wallet,
@@ -354,7 +354,7 @@ class PaymentService:
                 description=f"Credit from payment {transaction.reference_number}"
             )
             logger.info(f"Created wallet transaction: {wallet_transaction.id}")
-            
+
             return wallet
             
         except Exception as e:
