@@ -501,6 +501,22 @@ GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '')
 
 API_BASE_URL = os.environ.get('API_BASE_URL', 'https://mengedmate.onrender.com')
 
+# Telegram Bot Configuration
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '')
+TELEGRAM_BOT_USERNAME = os.environ.get('TELEGRAM_BOT_USERNAME', '')
+TELEGRAM_RETURN_URL = os.environ.get('TELEGRAM_RETURN_URL', f'{API_BASE_URL}/api/auth/telegram/webapp/')
+
+# Print Telegram configuration status
+if TELEGRAM_BOT_TOKEN:
+    print("✅ Telegram bot token configured")
+    if TELEGRAM_BOT_USERNAME:
+        print(f"✅ Telegram bot username: @{TELEGRAM_BOT_USERNAME}")
+    else:
+        print("⚠️  TELEGRAM_BOT_USERNAME not set (optional)")
+else:
+    print("⚠️  TELEGRAM_BOT_TOKEN not set - Telegram authentication will not work")
+    print("   Set TELEGRAM_BOT_TOKEN environment variable to enable Telegram login")
+
 CHAPA_SETTINGS = {
     'SECRET_KEY': os.environ.get('CHAPA_SECRET_KEY', 'CHASECK_TEST-BjSm5vKqLLOfYqar7ilo0E1vyz6sagAe'),
     'PUBLIC_KEY': os.environ.get('CHAPA_PUBLIC_KEY', 'CHAPUBK_TEST-5FVf5w5JfADqLQsB4xk3b6jXQEdeb7EF'),
