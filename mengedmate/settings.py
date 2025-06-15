@@ -501,9 +501,9 @@ GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '')
 API_BASE_URL = os.environ.get('API_BASE_URL', 'https://mengedmate.onrender.com')
 
 # Telegram Bot Configuration
-TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN', '7253073810:AAFEMEUA7ZVz2ZzFQmuxel8VMr8BYlVcRT8')
-TELEGRAM_BOT_USERNAME = os.environ.get('TELEGRAM_BOT_USERNAME', '@evmeribot')
-TELEGRAM_RETURN_URL = os.environ.get('TELEGRAM_RETURN_URL', f'{API_BASE_URL}/api/auth/telegram/webapp/')
+TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
+TELEGRAM_BOT_USERNAME = os.environ.get('TELEGRAM_BOT_USERNAME')
+TELEGRAM_RETURN_URL = os.environ.get('TELEGRAM_RETURN_URL')
 
 # Print Telegram configuration status
 if TELEGRAM_BOT_TOKEN:
