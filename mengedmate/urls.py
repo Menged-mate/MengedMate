@@ -143,6 +143,9 @@ urlpatterns = [
 
     # API info page (root URL)
     path("", api_info, name="api-info"),
+
+    # Telegram auth URLs
+    path('api/auth/telegram/', include('telegram_auth.urls')),
 ]
 
 # Serve static and media files
