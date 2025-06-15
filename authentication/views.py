@@ -693,6 +693,7 @@ class TelegramLoginView(APIView):
             logger = logging.getLogger(__name__)
 
             logger.info(f"Telegram login request received")
+            logger.info(f"Request data: {request.data}")
             logger.info(f"Request data keys: {list(request.data.keys())}")
             logger.info(f"Request content type: {request.content_type}")
 
@@ -701,6 +702,8 @@ class TelegramLoginView(APIView):
             if not init_data:
                 # Try alternative key names
                 init_data = request.data.get('init_data') or request.data.get('initdata')
+
+            logger.info(f"init_data value: {init_data}")
 
             if not init_data:
                 logger.error("No init data found in request")
@@ -756,6 +759,7 @@ class TelegramLoginView(APIView):
 
         except ValueError as e:
             logger.error(f"Telegram authentication ValueError: {str(e)}")
+            logger.error(f"Request data (on error): {request.data}")
             return Response({
                 'error': str(e),
                 'error_type': 'validation_error'
@@ -764,6 +768,7 @@ class TelegramLoginView(APIView):
             logger.error(f"Telegram authentication Exception: {str(e)}")
             import traceback
             logger.error(f"Traceback: {traceback.format_exc()}")
+            logger.error(f"Request data (on exception): {request.data}")
             return Response({
                 'error': 'Authentication failed',
                 'error_type': 'server_error'
