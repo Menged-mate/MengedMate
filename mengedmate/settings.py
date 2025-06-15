@@ -62,6 +62,7 @@ INSTALLED_APPS = [
     "support",
     "docs",
     "ai_recommendations",
+    "telegram_auth",
 ]
 
 JAZZMIN_SETTINGS = {
