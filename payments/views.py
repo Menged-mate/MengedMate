@@ -154,10 +154,23 @@ def process_pending_credits(request):
         payment_service = PaymentService()
         result = payment_service.process_pending_station_owner_credits()
 
+        # Also get current wallet balance for the user if they're a station owner
+        wallet_balance = 0
+        try:
+            from charging_stations.models import StationOwner
+            station_owner = StationOwner.objects.get(user=request.user)
+            wallet, created = Wallet.objects.get_or_create(user=request.user)
+            wallet_balance = float(wallet.balance)
+        except StationOwner.DoesNotExist:
+            pass
+
         return Response({
             'success': True,
             'message': 'Pending credits processed successfully',
-            'data': result
+            'data': {
+                **result,
+                'current_wallet_balance': wallet_balance
+            }
         }, status=status.HTTP_200_OK)
 
     except Exception as e:
@@ -409,6 +422,25 @@ class TestCompletePaymentView(APIView):
                 # Mark QR session as payment completed
                 qr_session.status = 'payment_completed'
                 qr_session.save()
+
+                # CRITICAL FIX: Credit station owner wallet when payment is completed
+                try:
+                    from .services import PaymentService
+                    payment_service = PaymentService()
+
+                    # Credit station owner wallet
+                    success = payment_service._credit_station_owner_for_qr_payment(
+                        qr_session,
+                        qr_session.payment_transaction
+                    )
+
+                    if success:
+                        logger.info(f"Successfully credited station owner for test payment completion: {session_token}")
+                    else:
+                        logger.error(f"Failed to credit station owner for test payment completion: {session_token}")
+
+                except Exception as e:
+                    logger.error(f"Error crediting station owner for test payment: {e}")
 
                 session_serializer = QRPaymentSessionSerializer(qr_session)
                 return Response({
@@ -749,3 +781,78 @@ class WithdrawalView(APIView):
                 }, status=status.HTTP_400_BAD_REQUEST)
                 
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+
+
+@api_view(['GET'])
+@permission_classes([IsAuthenticated])
+def check_wallet_status(request):
+    """
+    Check current wallet status and missing credits for station owners
+    """
+    try:
+        from charging_stations.models import StationOwner
+
+        # Check if user is a station owner
+        try:
+            station_owner = StationOwner.objects.get(user=request.user)
+        except StationOwner.DoesNotExist:
+            return Response({
+                'success': False,
+                'message': 'User is not a station owner'
+            }, status=status.HTTP_403_FORBIDDEN)
+
+        # Get wallet
+        wallet, created = Wallet.objects.get_or_create(user=request.user)
+
+        # Get completed QR sessions
+        qr_sessions = QRPaymentSession.objects.filter(
+            connector__station__owner=station_owner,
+            payment_transaction__status='completed'
+        )
+
+        total_expected = 0
+        credited_amount = 0
+        missing_credits = []
+
+        for qr_session in qr_sessions:
+            if qr_session.payment_transaction:
+                amount = float(qr_session.payment_transaction.amount)
+                total_expected += amount
+
+                # Check if credited
+                existing_credit = WalletTransaction.objects.filter(
+                    wallet=wallet,
+                    transaction=qr_session.payment_transaction,
+                    transaction_type=WalletTransaction.TransactionType.CREDIT
+                ).first()
+
+                if existing_credit:
+                    credited_amount += float(existing_credit.amount)
+                else:
+                    missing_credits.append({
+                        'session_token': qr_session.session_token,
+                        'amount': amount,
+                        'transaction_ref': qr_session.payment_transaction.reference_number,
+                        'created_at': qr_session.created_at.isoformat()
+                    })
+
+        return Response({
+            'success': True,
+            'wallet_status': {
+                'current_balance': float(wallet.balance),
+                'total_expected': total_expected,
+                'total_credited': credited_amount,
+                'missing_amount': total_expected - credited_amount,
+                'missing_credits_count': len(missing_credits),
+                'missing_credits': missing_credits[:5],  # Show first 5
+                'needs_fix': len(missing_credits) > 0
+            }
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        logger.error(f"Error checking wallet status: {e}")
+        return Response({
+            'success': False,
+            'message': 'Failed to check wallet status',
+            'error': str(e)
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
