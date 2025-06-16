@@ -301,7 +301,7 @@ class ForgotPasswordView(APIView):
                 user.password_reset_token = token
                 user.save()
 
-                reset_url = f"{settings.FRONTEND_URL}/reset-password?token={token}&email={email}"
+                reset_url = f"https://evvmeri.onrender.com/reset-password?token={token}&email={email}"
 
                 subject = 'Reset Your Password'
                 html_message = render_to_string('password_reset_email.html', {
