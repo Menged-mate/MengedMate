@@ -18,7 +18,6 @@ urlpatterns = [
 
     path('sessions/', views.PaymentSessionListView.as_view(), name='payment-sessions'),
 
-    # QR Code Payment URLs
     path('qr-info/<str:qr_token>/', views.QRConnectorInfoView.as_view(), name='qr-connector-info'),
     path('qr-initiate/<str:qr_token>/', views.QRPaymentInitiateView.as_view(), name='qr-payment-initiate'),
     path('qr-sessions/', views.QRPaymentSessionListView.as_view(), name='qr-payment-sessions'),
@@ -29,6 +28,5 @@ urlpatterns = [
     path('qr-sessions/<str:session_token>/test-create-charging/', views.TestCreateChargingSessionView.as_view(), name='test-create-charging'),
     path('withdrawals/', views.WithdrawalView.as_view(), name='withdrawals'),
 
-    # Charging History
     path('charging-history/', views.ChargingHistoryView.as_view(), name='charging-history'),
 ]
