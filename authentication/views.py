@@ -6,7 +6,7 @@ from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 from .authentication import AnonymousAuthentication
-from .models import Vehicle, TelegramAuth, CustomUser
+from .models import Vehicle, CustomUser
 from django.contrib.auth import get_user_model, authenticate
 from django.core.mail import send_mail
 from django.template.loader import render_to_string
@@ -24,11 +24,7 @@ from urllib.parse import parse_qs, unquote
 from base64 import b64encode
 from datetime import datetime, timedelta
 from charging_stations.models import StationOwner
-from allauth.socialaccount.providers.google.views import GoogleOAuth2Adapter
-from allauth.socialaccount.providers.facebook.views import FacebookOAuth2Adapter
-from allauth.socialaccount.providers.apple.views import AppleOAuth2Adapter
-from allauth.socialaccount.providers.oauth2.client import OAuth2Client
-from dj_rest_auth.registration.views import SocialLoginView
+
 import time
 
 from .serializers import (
@@ -353,69 +349,7 @@ class ResetPasswordView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-from allauth.account.adapter import get_adapter
 
-class GoogleLoginView(SocialLoginView):
-    adapter_class = GoogleOAuth2Adapter
-    callback_url = settings.FRONTEND_URL
-    client_class = OAuth2Client
-
-    def process_login(self):
-        get_adapter(self.request).login(self.request, self.user)
-        token, created = Token.objects.get_or_create(user=self.user)
-        return token
-
-
-class FacebookLoginView(SocialLoginView):
-
-    adapter_class = FacebookOAuth2Adapter
-    callback_url = settings.FRONTEND_URL
-    client_class = OAuth2Client
-
-    def process_login(self):
-
-        get_adapter(self.request).login(self.request, self.user)
-        token, created = Token.objects.get_or_create(user=self.user)
-        return token
-
-
-class AppleLoginView(SocialLoginView):
-    adapter_class = AppleOAuth2Adapter
-    callback_url = settings.FRONTEND_URL
-    client_class = OAuth2Client
-
-    def process_login(self):
-
-        get_adapter(self.request).login(self.request, self.user)
-        token, created = Token.objects.get_or_create(user=self.user)
-        return token
-
-
-class SocialAuthCallbackView(APIView):
-
-    permission_classes = [AllowAny]
-    authentication_classes = [AnonymousAuthentication]
-
-    def get(self, request):
-
-        provider = request.GET.get('provider')
-        token = request.GET.get('token')
-
-        if not provider or not token:
-            return Response({
-                "message": "Provider and token are required."
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            return Response({
-                "message": f"Successfully authenticated with {provider}.",
-                "token": token
-            }, status=status.HTTP_200_OK)
-
-        except Exception as e:
-            return Response({
-                "message": f"Authentication failed: {str(e)}"
-            }, status=status.HTTP_400_BAD_REQUEST)
 
 
 class CheckEmailVerificationView(APIView):
@@ -607,24 +541,7 @@ class VehicleViewSet(viewsets.ModelViewSet):
         })
 
 
-class TelegramLoginView(APIView):
-    permission_classes = [AllowAny]
-    authentication_classes = [AnonymousAuthentication]
 
-    def get(self, request):
-        """Provide information about the Telegram login endpoint"""
-        return Response({
-            'message': 'Telegram Login Endpoint',
-            'description': 'This endpoint accepts POST requests with Telegram Web App initData for authentication',
-            'method': 'POST',
-            'required_fields': ['initData'],
-            'bot_configured': bool(settings.TELEGRAM_BOT_TOKEN),
-            'example_usage': {
-                'method': 'POST',
-                'headers': {'Content-Type': 'application/json'},
-                'body': {'initData': 'telegram_web_app_init_data_string'}
-            }
-        })
 
     def verify_telegram_data(self, init_data: str) -> dict:
         """Verify Telegram Web App init data."""
@@ -787,63 +704,4 @@ class TelegramLoginView(APIView):
             }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
-class TelegramWebAppView(APIView):
-    """Handle Telegram Web App initialization and validation"""
-    permission_classes = [AllowAny]
-    authentication_classes = [AnonymousAuthentication]
 
-    def get(self, request):
-        """Return necessary data for Telegram Web App initialization"""
-        try:
-            # Use getattr with default values to avoid AttributeError
-            bot_token = getattr(settings, 'TELEGRAM_BOT_TOKEN', '')
-            bot_username = getattr(settings, 'TELEGRAM_BOT_USERNAME', '')
-            return_url = getattr(settings, 'TELEGRAM_RETURN_URL', '')
-
-            return Response({
-                "bot_username": bot_username,
-                "return_url": return_url,
-                "bot_configured": bool(bot_token),
-                "api_status": "ready",
-                "endpoints": {
-                    "login": "/api/auth/telegram/login/",
-                    "webapp": "/api/auth/telegram/webapp/"
-                },
-                "settings_status": {
-                    "TELEGRAM_BOT_TOKEN": "configured" if bot_token else "missing",
-                    "TELEGRAM_BOT_USERNAME": "configured" if bot_username else "missing",
-                    "TELEGRAM_RETURN_URL": "configured" if return_url else "missing"
-                }
-            })
-        except Exception as e:
-            return Response({
-                "error": f"Configuration error: {str(e)}",
-                "api_status": "error",
-                "bot_configured": False
-            }, status=500)
-
-    def post(self, request):
-        """Validate Telegram Web App data"""
-        init_data = request.data.get('initData')
-        if not init_data:
-            return Response({
-                "message": "No Telegram init data provided"
-            }, status=status.HTTP_400_BAD_REQUEST)
-
-        try:
-            # Verify the data using the same method as in TelegramLoginView
-            telegram_login = TelegramLoginView()
-            user_data = telegram_login.verify_telegram_data(init_data)
-
-            return Response({
-                "message": "Telegram Web App data validated successfully",
-                "user_data": user_data
-            })
-        except ValueError as e:
-            return Response({
-                "message": f"Invalid Telegram data: {str(e)}"
-            }, status=status.HTTP_400_BAD_REQUEST)
-        except Exception as e:
-            return Response({
-                "message": "Validation failed"
-            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
