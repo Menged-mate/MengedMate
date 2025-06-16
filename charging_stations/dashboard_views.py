@@ -743,12 +743,22 @@ class RevenueTransactionsView(APIView):
             # Sort all transactions by date (newest first)
             transactions.sort(key=lambda x: x['date'], reverse=True)
 
+            # Get station owner's wallet balance for available balance
+            available_balance = 0
+            try:
+                from payments.models import Wallet
+                wallet, created = Wallet.objects.get_or_create(user=request.user)
+                available_balance = float(wallet.balance)
+            except Exception as e:
+                print(f"Error getting wallet balance: {e}")
+
             return Response({
                 'success': True,
                 'transactions': transactions,
                 'summary': {
                     'total_revenue': total_revenue,
                     'total_transactions': len(transactions),
+                    'available_balance': available_balance,
                     'currency': 'ETB',
                     'time_range': time_range,
                     'selected_station': selected_station
