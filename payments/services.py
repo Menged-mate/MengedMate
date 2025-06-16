@@ -169,6 +169,7 @@ class PaymentService:
         try:
             tx_ref = callback_data.get('tx_ref')
             logger.info(f"Processing callback for tx_ref: {tx_ref}")
+            logger.info(f"Full callback data: {callback_data}")
 
             if not tx_ref:
                 logger.error("Missing tx_ref in callback data")
@@ -179,17 +180,37 @@ class PaymentService:
                 merchant_request_id=tx_ref
             ).first()
 
-            # Check for QR payment session
+            # Check for QR payment session - try multiple ways to find it
             from .models import QRPaymentSession
             qr_session = QRPaymentSession.objects.filter(
                 payment_transaction__external_reference=tx_ref
             ).first()
 
+            # If not found, try by session token (in case tx_ref is the session token)
+            if not qr_session:
+                qr_session = QRPaymentSession.objects.filter(
+                    session_token=tx_ref
+                ).first()
+
             logger.info(f"Found session: {session}, QR session: {qr_session}")
 
             if not session and not qr_session:
                 logger.error(f"No session found for tx_ref: {tx_ref}")
-                return {'success': False, 'message': 'Session not found'}
+                # Try to find transaction directly
+                transaction = Transaction.objects.filter(
+                    external_reference=tx_ref
+                ).first()
+                if transaction:
+                    logger.info(f"Found orphaned transaction: {transaction.reference_number}")
+                    # Try to find QR session by transaction
+                    qr_session = QRPaymentSession.objects.filter(
+                        payment_transaction=transaction
+                    ).first()
+                    if qr_session:
+                        logger.info(f"Found QR session via transaction: {qr_session.session_token}")
+
+                if not qr_session and not session:
+                    return {'success': False, 'message': 'Session not found'}
 
             transaction = Transaction.objects.filter(
                 external_reference=tx_ref
@@ -232,30 +253,28 @@ class PaymentService:
                                 logger.error(f"Station owner: {session.connector.station.owner}")
 
                 if qr_session:
+                    logger.info(f"Processing QR session payment completion: {qr_session.session_token}")
                     qr_session.status = 'payment_completed'
                     qr_session.payment_transaction = transaction
                     qr_session.save()
 
-                    try:
-                        # Credit the station owner's wallet with the payment amount
-                        station_owner = qr_session.connector.station.owner
-                        logger.info(f"Found station owner for QR session: {station_owner.user.email}")
-                        self.credit_wallet(station_owner.user, transaction.amount, transaction)
-                        logger.info(f"Credited station owner wallet: {station_owner.user.email} with {transaction.amount}")
+                    # Credit station owner wallet - this is the critical part
+                    success = self._credit_station_owner_for_qr_payment(qr_session, transaction)
 
-                        # Send charging payment notification
-                        self._send_payment_notification(transaction.user, transaction.amount, 'charging_payment', qr_session)
+                    if success:
+                        try:
+                            # Send charging payment notification
+                            self._send_payment_notification(transaction.user, transaction.amount, 'charging_payment', qr_session)
 
-                        # Send notification to station owner
-                        self._send_station_owner_payment_notification(qr_session, transaction)
+                            # Send notification to station owner
+                            self._send_station_owner_payment_notification(qr_session, transaction)
 
-                        # Auto-start charging if configured
-                        self._auto_start_charging_if_enabled(qr_session)
-                    except Exception as e:
-                        logger.error(f"Error processing QR session payment: {e}")
-                        logger.error(f"QR session connector: {qr_session.connector}")
-                        if qr_session.connector and qr_session.connector.station:
-                            logger.error(f"Station owner: {qr_session.connector.station.owner}")
+                            # Auto-start charging if configured
+                            self._auto_start_charging_if_enabled(qr_session)
+                        except Exception as e:
+                            logger.error(f"Error sending notifications: {e}")
+                    else:
+                        logger.error(f"Failed to credit station owner for QR session {qr_session.session_token}")
             else:
                 transaction.status = Transaction.TransactionStatus.FAILED
 
@@ -316,6 +335,62 @@ class PaymentService:
             logger.error(f"Auto-start charging failed: {e}")
             import traceback
             logger.error(f"Traceback: {traceback.format_exc()}")
+
+    def _credit_station_owner_for_qr_payment(self, qr_session, transaction):
+        """
+        Credit station owner wallet for QR payment - dedicated method with comprehensive error handling
+        """
+        try:
+            logger.info(f"Starting station owner credit process for QR session: {qr_session.session_token}")
+
+            # Validate QR session has all required components
+            if not qr_session.connector:
+                logger.error(f"QR session {qr_session.session_token} has no connector")
+                return False
+
+            if not qr_session.connector.station:
+                logger.error(f"QR session {qr_session.session_token} connector has no station")
+                return False
+
+            if not qr_session.connector.station.owner:
+                logger.error(f"QR session {qr_session.session_token} station has no owner")
+                return False
+
+            station_owner = qr_session.connector.station.owner
+            logger.info(f"Station owner identified: {station_owner.user.email}")
+            logger.info(f"Station: {qr_session.connector.station.name}")
+            logger.info(f"Connector: {qr_session.connector.name}")
+            logger.info(f"Payment amount: {transaction.amount} ETB")
+
+            # Check if wallet already credited for this transaction
+            existing_credit = WalletTransaction.objects.filter(
+                wallet__user=station_owner.user,
+                transaction=transaction,
+                transaction_type=WalletTransaction.TransactionType.CREDIT
+            ).first()
+
+            if existing_credit:
+                logger.info(f"Station owner wallet already credited for transaction {transaction.reference_number}")
+                logger.info(f"Existing credit amount: {existing_credit.amount} ETB")
+                return True
+
+            # Credit the wallet
+            logger.info(f"Crediting station owner wallet: {station_owner.user.email} with {transaction.amount} ETB")
+            wallet = self.credit_wallet(station_owner.user, transaction.amount, transaction)
+
+            if wallet:
+                logger.info(f"Successfully credited station owner wallet")
+                logger.info(f"New wallet balance: {wallet.balance} ETB")
+                return True
+            else:
+                logger.error(f"Failed to credit station owner wallet")
+                return False
+
+        except Exception as e:
+            logger.error(f"Error crediting station owner wallet for QR session {qr_session.session_token}: {e}")
+            import traceback
+            logger.error(f"Traceback: {traceback.format_exc()}")
+            return False
 
     def credit_wallet(self, user, amount, transaction):
         try:
@@ -434,3 +509,56 @@ class PaymentService:
 
     def get_transaction_status(self, tx_ref):
         return self.chapa.query_transaction_status(tx_ref)
+
+    def process_pending_station_owner_credits(self):
+        """
+        Process any completed QR payments that haven't credited station owner wallets yet.
+        This can be called periodically to catch any missed credits.
+        """
+        logger.info("Processing pending station owner credits...")
+
+        from .models import QRPaymentSession
+
+        # Find completed QR payments that should have credited station owners
+        qr_sessions = QRPaymentSession.objects.filter(
+            status='payment_completed',
+            payment_transaction__status='completed'
+        ).select_related(
+            'payment_transaction',
+            'connector__station__owner__user'
+        )
+
+        processed_count = 0
+        error_count = 0
+
+        for qr_session in qr_sessions:
+            try:
+                if (qr_session.connector and
+                    qr_session.connector.station and
+                    qr_session.connector.station.owner and
+                    qr_session.payment_transaction):
+
+                    station_owner = qr_session.connector.station.owner
+                    transaction = qr_session.payment_transaction
+
+                    # Check if already credited
+                    existing_credit = WalletTransaction.objects.filter(
+                        wallet__user=station_owner.user,
+                        transaction=transaction,
+                        transaction_type=WalletTransaction.TransactionType.CREDIT
+                    ).first()
+
+                    if not existing_credit:
+                        logger.info(f"Processing missed credit for QR session {qr_session.session_token}")
+                        success = self._credit_station_owner_for_qr_payment(qr_session, transaction)
+                        if success:
+                            processed_count += 1
+                        else:
+                            error_count += 1
+
+            except Exception as e:
+                logger.error(f"Error processing QR session {qr_session.session_token}: {e}")
+                error_count += 1
+
+        logger.info(f"Processed {processed_count} pending credits, {error_count} errors")
+        return {'processed': processed_count, 'errors': error_count}

@@ -122,6 +122,14 @@ def payment_callback(request):
 
         logger.info(f"Callback processing result: {result}")
 
+        # If callback processing was successful, also process any pending credits
+        if result.get('success'):
+            try:
+                pending_result = payment_service.process_pending_station_owner_credits()
+                logger.info(f"Pending credits processed: {pending_result}")
+            except Exception as e:
+                logger.error(f"Error processing pending credits: {e}")
+
         return Response({
             'status': 'success',
             'message': 'Callback processed successfully'
@@ -132,6 +140,32 @@ def payment_callback(request):
         return Response({
             'status': 'error',
             'message': 'Callback processing failed'
+        }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
+
+
+@api_view(['POST'])
+@permission_classes([IsAuthenticated])
+def process_pending_credits(request):
+    """
+    Manual endpoint to process pending station owner credits
+    Only accessible by authenticated users (can be restricted to staff only)
+    """
+    try:
+        payment_service = PaymentService()
+        result = payment_service.process_pending_station_owner_credits()
+
+        return Response({
+            'success': True,
+            'message': 'Pending credits processed successfully',
+            'data': result
+        }, status=status.HTTP_200_OK)
+
+    except Exception as e:
+        logger.error(f"Error processing pending credits: {e}")
+        return Response({
+            'success': False,
+            'message': 'Failed to process pending credits',
+            'error': str(e)
         }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 

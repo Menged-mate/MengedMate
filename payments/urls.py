@@ -15,6 +15,7 @@ urlpatterns = [
     path('callback/', views.payment_callback, name='payment-callback'),
     path('mobile-return/', views.MobileReturnView.as_view(), name='mobile-return'),
     path('status/', views.TransactionStatusView.as_view(), name='transaction-status'),
+    path('process-pending-credits/', views.process_pending_credits, name='process-pending-credits'),
 
     path('sessions/', views.PaymentSessionListView.as_view(), name='payment-sessions'),
 
