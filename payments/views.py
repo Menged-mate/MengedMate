@@ -6,10 +6,10 @@ from rest_framework.views import APIView
 from django.shortcuts import get_object_or_404
 from django.http import HttpResponse
 from django.utils import timezone
-from .models import PaymentMethod, Transaction, Wallet, WalletTransaction, PaymentSession, QRPaymentSession
+from .models import Transaction, Wallet, WalletTransaction, QRPaymentSession, SimpleChargingSession
 from .serializers import (
-    PaymentMethodSerializer, TransactionSerializer, WalletSerializer,
-    WalletTransactionSerializer, PaymentSessionSerializer, InitiatePaymentSerializer,
+    TransactionSerializer, WalletSerializer,
+    WalletTransactionSerializer, InitiatePaymentSerializer,
     PaymentCallbackSerializer, TransactionStatusSerializer, WithdrawSerializer,
     QRConnectorInfoSerializer, QRPaymentInitiateSerializer, QRPaymentSessionSerializer
 )
@@ -21,24 +21,7 @@ import uuid
 logger = logging.getLogger(__name__)
 
 
-class PaymentMethodListCreateView(generics.ListCreateAPIView):
-    serializer_class = PaymentMethodSerializer
-    permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return PaymentMethod.objects.filter(user=self.request.user, is_active=True)
-
-
-class PaymentMethodDetailView(generics.RetrieveUpdateDestroyAPIView):
-    serializer_class = PaymentMethodSerializer
-    permission_classes = [IsAuthenticated]
-
-    def get_queryset(self):
-        return PaymentMethod.objects.filter(user=self.request.user)
-
-    def perform_destroy(self, instance):
-        instance.is_active = False
-        instance.save()
 
 
 class TransactionListView(generics.ListAPIView):
@@ -199,12 +182,7 @@ class TransactionStatusView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-class PaymentSessionListView(generics.ListAPIView):
-    serializer_class = PaymentSessionSerializer
-    permission_classes = [IsAuthenticated]
 
-    def get_queryset(self):
-        return PaymentSession.objects.filter(user=self.request.user)
 
 
 class QRConnectorInfoView(APIView):

@@ -1,38 +1,7 @@
 from rest_framework import serializers
 from decimal import Decimal
-from .models import PaymentMethod, Transaction, Wallet, WalletTransaction, PaymentSession, QRPaymentSession, SimpleChargingSession
+from .models import Transaction, Wallet, WalletTransaction, QRPaymentSession, SimpleChargingSession
 from charging_stations.models import ChargingConnector
-
-
-class PaymentMethodSerializer(serializers.ModelSerializer):
-    method_type_display = serializers.CharField(source='get_method_type_display', read_only=True)
-
-    class Meta:
-        model = PaymentMethod
-        fields = [
-            'id', 'method_type', 'method_type_display', 'phone_number',
-            'account_name', 'account_number', 'is_default', 'is_active',
-            'created_at', 'updated_at'
-        ]
-        read_only_fields = ['id', 'created_at', 'updated_at']
-
-    def create(self, validated_data):
-        user = self.context['request'].user
-        validated_data['user'] = user
-
-        if validated_data.get('is_default'):
-            PaymentMethod.objects.filter(user=user, is_default=True).update(is_default=False)
-
-        return super().create(validated_data)
-
-    def update(self, instance, validated_data):
-        if validated_data.get('is_default'):
-            PaymentMethod.objects.filter(
-                user=instance.user,
-                is_default=True
-            ).exclude(id=instance.id).update(is_default=False)
-
-        return super().update(instance, validated_data)
 
 
 class TransactionSerializer(serializers.ModelSerializer):
@@ -80,21 +49,7 @@ class WalletTransactionSerializer(serializers.ModelSerializer):
         read_only_fields = ['id', 'created_at']
 
 
-class PaymentSessionSerializer(serializers.ModelSerializer):
-    status_display = serializers.CharField(source='get_status_display', read_only=True)
-    user_email = serializers.CharField(source='user.email', read_only=True)
 
-    class Meta:
-        model = PaymentSession
-        fields = [
-            'id', 'user_email', 'session_id', 'amount', 'currency',
-            'phone_number', 'status', 'status_display', 'checkout_request_id',
-            'merchant_request_id', 'expires_at', 'created_at', 'updated_at'
-        ]
-        read_only_fields = [
-            'id', 'user_email', 'session_id', 'checkout_request_id',
-            'merchant_request_id', 'created_at', 'updated_at'
-        ]
 
 
 class InitiatePaymentSerializer(serializers.Serializer):

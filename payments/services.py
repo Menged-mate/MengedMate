@@ -5,7 +5,7 @@ import logging
 from datetime import datetime, timedelta
 from django.conf import settings
 from django.utils import timezone
-from .models import Transaction, PaymentSession, Wallet, WalletTransaction
+from .models import Transaction, Wallet, WalletTransaction
 import uuid
 
 logger = logging.getLogger(__name__)
@@ -107,27 +107,29 @@ class PaymentService:
     def __init__(self):
         self.chapa = ChapaService()
 
-    def create_payment_session(self, user, amount, phone_number, description="Payment"):
-        session_id = str(uuid.uuid4())
-        expires_at = timezone.now() + timedelta(minutes=10)
+    def create_transaction_for_wallet_deposit(self, user, amount, phone_number, description="Wallet Deposit"):
+        """Create a transaction for wallet deposit without PaymentSession"""
+        reference_number = str(uuid.uuid4())
 
-        session = PaymentSession.objects.create(
+        transaction = Transaction.objects.create(
             user=user,
-            session_id=session_id,
+            transaction_type=Transaction.TransactionType.DEPOSIT,
             amount=amount,
             phone_number=phone_number,
-            expires_at=expires_at
+            description=description,
+            reference_number=reference_number,
+            external_reference=reference_number
         )
 
-        return session
+        return transaction
 
     def initiate_chapa_payment(self, user, amount, phone_number, description="evmeri Payment", use_mobile_return=False):
-        session = self.create_payment_session(user, amount, phone_number, description)
+        transaction = self.create_transaction_for_wallet_deposit(user, amount, phone_number, description)
 
         result = self.chapa.initiate_payment(
             phone_number=phone_number,
             amount=amount,
-            account_reference=session.session_id,
+            account_reference=transaction.reference_number,
             transaction_desc=description,
             email=user.email,
             first_name=user.first_name or 'User',
@@ -137,32 +139,21 @@ class PaymentService:
 
         if result['success']:
             data = result['data']
-            session.checkout_request_id = data.get('data', {}).get('checkout_url', '')
-            # The tx_ref is the account_reference we sent to Chapa (session.session_id)
-            session.merchant_request_id = session.session_id
-            session.save()
+            checkout_url = data.get('data', {}).get('checkout_url', '')
 
-            transaction = Transaction.objects.create(
-                user=user,
-                transaction_type=Transaction.TransactionType.DEPOSIT,
-                amount=amount,
-                phone_number=phone_number,
-                description=description,
-                reference_number=session.session_id,
-                external_reference=session.session_id,  # Use session_id as tx_ref
-                provider_response=data
-            )
+            # Update transaction with provider response
+            transaction.provider_response = data
+            transaction.save()
 
             return {
                 'success': True,
-                'session_id': session.session_id,
-                'checkout_url': session.checkout_request_id,
-                'tx_ref': session.session_id,  # Return the actual tx_ref
+                'checkout_url': checkout_url,
+                'tx_ref': transaction.reference_number,
                 'transaction_id': transaction.id
             }
         else:
-            session.status = PaymentSession.SessionStatus.CANCELLED
-            session.save()
+            transaction.status = Transaction.TransactionStatus.FAILED
+            transaction.save()
             return result
 
     def process_callback(self, callback_data):
@@ -174,11 +165,6 @@ class PaymentService:
             if not tx_ref:
                 logger.error("Missing tx_ref in callback data")
                 return {'success': False, 'message': 'Missing tx_ref'}
-
-            # Check for regular payment session
-            session = PaymentSession.objects.filter(
-                merchant_request_id=tx_ref
-            ).first()
 
             # Check for QR payment session - try multiple ways to find it
             from .models import QRPaymentSession
@@ -192,10 +178,10 @@ class PaymentService:
                     session_token=tx_ref
                 ).first()
 
-            logger.info(f"Found session: {session}, QR session: {qr_session}")
+            logger.info(f"Found QR session: {qr_session}")
 
-            if not session and not qr_session:
-                logger.error(f"No session found for tx_ref: {tx_ref}")
+            if not qr_session:
+                logger.error(f"No QR session found for tx_ref: {tx_ref}")
                 # Try to find transaction directly
                 transaction = Transaction.objects.filter(
                     external_reference=tx_ref
@@ -209,7 +195,7 @@ class PaymentService:
                     if qr_session:
                         logger.info(f"Found QR session via transaction: {qr_session.session_token}")
 
-                if not qr_session and not session:
+                if not qr_session:
                     return {'success': False, 'message': 'Session not found'}
 
             transaction = Transaction.objects.filter(
@@ -227,30 +213,6 @@ class PaymentService:
             if status == 'success':
                 transaction.status = Transaction.TransactionStatus.COMPLETED
                 transaction.completed_at = timezone.now()
-
-                if session:
-                    session.status = PaymentSession.SessionStatus.COMPLETED
-                    session.save()
-                    
-                    # Credit user's wallet
-                    self.credit_wallet(transaction.user, transaction.amount, transaction)
-                    logger.info(f"Credited user wallet: {transaction.user.email} with {transaction.amount}")
-
-                    # Send payment received notification
-                    self._send_payment_notification(transaction.user, transaction.amount, 'wallet_credit')
-
-                    # Credit station owner for non-QR charging payments
-                    if hasattr(session, 'connector') and session.connector:
-                        try:
-                            station_owner = session.connector.station.owner
-                            logger.info(f"Found station owner: {station_owner.user.email}")
-                            self.credit_wallet(station_owner.user, transaction.amount, transaction)
-                            logger.info(f"Credited station owner wallet: {station_owner.user.email} with {transaction.amount}")
-                        except Exception as e:
-                            logger.error(f"Could not credit station owner for non-QR payment: {e}")
-                            logger.error(f"Session connector: {session.connector}")
-                            if session.connector and session.connector.station:
-                                logger.error(f"Station owner: {session.connector.station.owner}")
 
                 if qr_session:
                     logger.info(f"Processing QR session payment completion: {qr_session.session_token}")
@@ -275,12 +237,15 @@ class PaymentService:
                             logger.error(f"Error sending notifications: {e}")
                     else:
                         logger.error(f"Failed to credit station owner for QR session {qr_session.session_token}")
+                else:
+                    # For non-QR payments (direct wallet deposits), credit user's wallet
+                    self.credit_wallet(transaction.user, transaction.amount, transaction)
+                    logger.info(f"Credited user wallet: {transaction.user.email} with {transaction.amount}")
+
+                    # Send payment received notification
+                    self._send_payment_notification(transaction.user, transaction.amount, 'wallet_credit')
             else:
                 transaction.status = Transaction.TransactionStatus.FAILED
-
-                if session:
-                    session.status = PaymentSession.SessionStatus.CANCELLED
-                    session.save()
 
                 if qr_session:
                     qr_session.status = 'failed'

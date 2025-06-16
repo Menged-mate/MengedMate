@@ -123,11 +123,6 @@ urlpatterns = [
 
     path("docs/", include("docs.urls")),
 
-    # Django allauth URLs
-    path("accounts/", include("allauth.urls")),
-    path("api/dj-rest-auth/", include("dj_rest_auth.urls")),
-    path("api/dj-rest-auth/registration/", include("dj_rest_auth.registration.urls")),
-
     path("admin/", admin.site.urls),
     path("admin/database-backup/", DatabaseBackupView.as_view(), name="database-backup"),
 
@@ -137,8 +132,6 @@ urlpatterns = [
     path("api/config/", AppConfigView.as_view(), name="app-config"),
 
     path("", api_info, name="api-info"),
-
-    path('api/auth/telegram/', include('telegram_auth.urls')),
 ]
 
 urlpatterns += static(settings.STATIC_URL, document_root=settings.STATIC_ROOT)

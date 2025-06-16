@@ -38,22 +38,14 @@ INSTALLED_APPS = [
     "django.contrib.sessions",
     "django.contrib.messages",
     "django.contrib.staticfiles",
-    "django.contrib.sites",
 
     # Third-party apps
     "rest_framework",
     "rest_framework.authtoken",
     "corsheaders",
-    "allauth",
-    "allauth.account",
-    "allauth.socialaccount",
-
-    # Social providers
-    "allauth.socialaccount.providers.google",
-    "allauth.socialaccount.providers.facebook",
-    "allauth.socialaccount.providers.apple",
-    "dj_rest_auth",
-    "dj_rest_auth.registration",
+    'allauth',
+    'allauth.account',
+    'allauth.socialaccount',
 
     "authentication",
     "charging_stations",
@@ -62,7 +54,6 @@ INSTALLED_APPS = [
     "support",
     "docs",
     "ai_recommendations",
-    "telegram_auth",
 ]
 
 JAZZMIN_SETTINGS = {
@@ -401,92 +392,21 @@ DEFAULT_FROM_EMAIL = os.environ.get('DEFAULT_FROM_EMAIL', 'MengedMate <noreply@m
 EMAIL_SUBJECT_PREFIX = '[MengedMate] '
 EMAIL_TIMEOUT = 60
 
-# Frontend URL for email links (will be overridden below)
 
 
-ACCOUNT_LOGIN_METHODS = {'email'}
-ACCOUNT_SIGNUP_FIELDS = ['email*', 'password1*', 'password2*']
-ACCOUNT_UNIQUE_EMAIL = True
+# Django Allauth Configuration
 ACCOUNT_EMAIL_VERIFICATION = 'mandatory'
-ACCOUNT_CONFIRM_EMAIL_ON_GET = True
 ACCOUNT_EMAIL_CONFIRMATION_EXPIRE_DAYS = 1
-ACCOUNT_LOGIN_ON_EMAIL_CONFIRMATION = True
+ACCOUNT_USER_MODEL_USERNAME_FIELD = None
+ACCOUNT_SIGNUP_FIELDS = ['email*', 'first_name*', 'last_name*', 'password1*', 'password2*']
+ACCOUNT_LOGIN_METHODS = {'email'}
 
-
-SOCIALACCOUNT_PROVIDERS = {
-    'google': {
-        'APP': {
-            'client_id': os.environ.get('GOOGLE_CLIENT_ID', ''),
-            'secret': os.environ.get('GOOGLE_CLIENT_SECRET', ''),
-            'key': ''
-        },
-        'SCOPE': [
-            'profile',
-            'email',
-        ],
-        'AUTH_PARAMS': {
-            'access_type': 'online',
-        }
-    },
-    'facebook': {
-        'APP': {
-            'client_id': os.environ.get('FACEBOOK_CLIENT_ID', ''),
-            'secret': os.environ.get('FACEBOOK_CLIENT_SECRET', ''),
-            'key': ''
-        },
-        'SCOPE': [
-            'email',
-            'public_profile',
-        ],
-        'FIELDS': [
-            'id',
-            'email',
-            'name',
-            'first_name',
-            'last_name',
-            'picture',
-        ],
-    },
-    'apple': {
-        'APP': {
-            'client_id': os.environ.get('APPLE_CLIENT_ID', ''),
-            'secret': os.environ.get('APPLE_CLIENT_SECRET', ''),
-            'key': os.environ.get('APPLE_KEY_ID', ''),
-            'certificate_key': os.environ.get('APPLE_CERTIFICATE_KEY', '')
-        },
-        'SCOPE': [
-            'email',
-            'name',
-        ],
-    }
-}
-
-
-SOCIALACCOUNT_EMAIL_VERIFICATION = 'none'
-SOCIALACCOUNT_EMAIL_REQUIRED = True
-SOCIALACCOUNT_QUERY_EMAIL = True
-SOCIALACCOUNT_AUTO_SIGNUP = True
-SOCIALACCOUNT_ADAPTER = 'authentication.adapters.CustomSocialAccountAdapter'
-
-
-REST_USE_JWT = True
-JWT_AUTH_COOKIE = 'mengedmate-auth'
-JWT_AUTH_REFRESH_COOKIE = 'mengedmate-refresh'
-
-
-REST_AUTH = {
+# Custom authentication settings
+CUSTOM_AUTH = {
     'USER_DETAILS_SERIALIZER': 'authentication.serializers.CustomUserDetailsSerializer',
     'REGISTER_SERIALIZER': 'authentication.serializers.CustomRegisterSerializer',
     'LOGIN_SERIALIZER': 'authentication.serializers.CustomLoginSerializer',
 }
-
-ACCOUNT_ADAPTER = 'authentication.adapters.CustomAccountAdapter'
-REST_AUTH_REGISTER_SERIALIZERS = {
-    'REGISTER_SERIALIZER': 'authentication.serializers.CustomRegisterSerializer',
-}
-
-
-ACCOUNT_USER_MODEL_USERNAME_FIELD = None
 
 MEDIA_URL = '/media/'
 MEDIA_ROOT = os.path.join(BASE_DIR, 'media')
@@ -501,21 +421,7 @@ GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '')
 
 API_BASE_URL = os.environ.get('API_BASE_URL', 'https://mengedmate.onrender.com')
 
-# Telegram Bot Configuration
-TELEGRAM_BOT_TOKEN = os.environ.get('TELEGRAM_BOT_TOKEN')
-TELEGRAM_BOT_USERNAME = os.environ.get('TELEGRAM_BOT_USERNAME')
-TELEGRAM_RETURN_URL = os.environ.get('TELEGRAM_RETURN_URL')
 
-# Print Telegram configuration status
-if TELEGRAM_BOT_TOKEN:
-    print("✅ Telegram bot token configured")
-    if TELEGRAM_BOT_USERNAME:
-        print(f"✅ Telegram bot username: @{TELEGRAM_BOT_USERNAME}")
-    else:
-        print("⚠️  TELEGRAM_BOT_USERNAME not set (optional)")
-else:
-    print("⚠️  TELEGRAM_BOT_TOKEN not set - Telegram authentication will not work")
-    print("   Set TELEGRAM_BOT_TOKEN environment variable to enable Telegram login")
 
 CHAPA_SETTINGS = {
     'SECRET_KEY': os.environ.get('CHAPA_SECRET_KEY', 'CHASECK_TEST-BjSm5vKqLLOfYqar7ilo0E1vyz6sagAe'),
