@@ -30,8 +30,12 @@ services:
   - type: static
     name: mengedmate-frontend
     env: node
-    buildCommand: cd frontend && npm install && npm run build
-    staticPublishPath: frontend/build
+    buildCommand: cd web/web_frontend && npm install && npm run build
+    staticPublishPath: web/web_frontend/dist
+    routes:
+      - type: rewrite
+        source: /*
+        destination: /index.html
     envVars:
       - key: REACT_APP_API_URL
         value: "https://<your-backend-domain>.onrender.com"
