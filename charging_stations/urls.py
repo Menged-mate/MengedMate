@@ -86,36 +86,27 @@ urlpatterns = [
     path('notifications/', NotificationsView.as_view(), name='notifications'),
     path('notifications/<int:notification_id>/mark-read/', MarkNotificationReadView.as_view(), name='mark-notification-read'),
     path('notifications/mark-all-read/', MarkAllNotificationsReadView.as_view(), name='mark-all-notifications-read'),
-
     path('app-content/', AppContentView.as_view(), name='app-content-list'),
     path('app-content/<str:content_type>/', AppContentView.as_view(), name='app-content-detail'),
-
     path('stations/<uuid:station_id>/reviews/', StationReviewListCreateView.as_view(), name='station-reviews'),
     path('reviews/<int:id>/', StationReviewDetailView.as_view(), name='review-detail'),
     path('my-reviews/', UserReviewsView.as_view(), name='user-reviews'),
     path('stations/<uuid:station_id>/review-stats/', StationReviewStatsView.as_view(), name='station-review-stats'),
     path('stations/reviews/', StationOwnerReviewsView.as_view(), name='station-owner-reviews'),
-
-    # Review reply endpoints
     path('reviews/reply/', ReviewReplyCreateView.as_view(), name='review-reply-create'),
     path('reviews/reply/<int:id>/', ReviewReplyDetailView.as_view(), name='review-reply-detail'),
     path('my-replies/', StationOwnerRepliesView.as_view(), name='station-owner-replies'),
 
-    # Available stations endpoint
     path('available-stations/', AvailableStationsView.as_view(), name='available-stations'),
     path('mobile/charging-history/', MobileChargingHistoryView.as_view(), name='mobile-charging-history'),
 
-    # Settings endpoints
     path('settings/', StationOwnerSettingsView.as_view(), name='station-owner-settings'),
     path('notification-templates/', NotificationTemplateListView.as_view(), name='notification-templates'),
     path('notification-templates/<str:template_type>/', NotificationTemplateDetailView.as_view(), name='notification-template-detail'),
-
-    # Payout methods endpoints
     path('payout-methods/', PayoutMethodListCreateView.as_view(), name='payout-methods'),
     path('payout-methods/<int:id>/', PayoutMethodDetailView.as_view(), name='payout-method-detail'),
     path('payout-methods/<int:method_id>/set-default/', SetDefaultPayoutMethodView.as_view(), name='set-default-payout-method'),
 
-    # Withdrawal endpoints
     path('withdrawals/', WithdrawalRequestView.as_view(), name='withdrawal-request'),
     path('withdrawals/<uuid:id>/', WithdrawalRequestDetailView.as_view(), name='withdrawal-detail'),
     path('admin/withdrawals/', WithdrawalRequestListView.as_view(), name='admin-withdrawal-list'),

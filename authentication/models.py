@@ -278,16 +278,4 @@ class Vehicle(models.Model):
             return 'Slow'
 
 
-class TelegramAuth(models.Model):
-    user = models.OneToOneField(CustomUser, on_delete=models.CASCADE, related_name='telegram_auth')
-    auth_token = models.CharField(max_length=500)
-    init_data = models.TextField(blank=True, null=True)
-    created_at = models.DateTimeField(auto_now_add=True)
-    updated_at = models.DateTimeField(auto_now=True)
 
-    def __str__(self):
-        return f"Telegram Auth for {self.user.email}"
-
-    class Meta:
-        verbose_name = "Telegram Authentication"
-        verbose_name_plural = "Telegram Authentications"

@@ -2,14 +2,19 @@ from django.test import TestCase
 from django.contrib.auth import get_user_model
 from django.core.exceptions import ValidationError
 from django.urls import reverse
+from django.conf import settings
 from rest_framework.test import APITestCase, APIClient
 from rest_framework import status
 from rest_framework.authtoken.models import Token
 from unittest.mock import patch, Mock
-from .models import CustomUser, Vehicle
+from .models import CustomUser, Vehicle, TelegramAuth
 from .serializers import UserRegistrationSerializer, UserLoginSerializer
-from .views import UserRegistrationView, UserLoginView
+from .views import UserRegistrationView, UserLoginView, TelegramLoginView
 import json
+import hmac
+import hashlib
+import time
+import urllib.parse
 
 User = get_user_model()
 
@@ -374,3 +379,239 @@ class AuthenticationAPITests(APITestCase):
         user = User.objects.get(email='test@example.com')
         self.assertTrue(hasattr(user, 'station_owner_profile'))
         self.assertEqual(user.station_owner_profile.business_name, 'Test Charging Station')
+
+
+class TelegramAuthenticationTests(APITestCase):
+    """Test cases for Telegram authentication"""
+
+    def setUp(self):
+        self.client = APIClient()
+        self.telegram_login_url = reverse('authentication:telegram-login')
+        self.telegram_webapp_url = reverse('authentication:telegram-webapp')
+
+        # Mock bot token for testing
+        self.test_bot_token = "123456789:ABCdefGHIjklMNOpqrsTUVwxyz"
+
+        # Sample Telegram user data
+        self.telegram_user_data = {
+            'id': 123456789,
+            'first_name': 'John',
+            'last_name': 'Doe',
+            'username': 'johndoe',
+            'photo_url': 'https://t.me/i/userpic/320/johndoe.jpg'
+        }
+
+    def generate_telegram_init_data(self, user_data, bot_token):
+        """Generate valid Telegram init data with proper hash"""
+        auth_date = int(time.time())
+
+        # Create data dictionary
+        data_dict = {
+            'user': json.dumps(user_data),
+            'auth_date': str(auth_date),
+            'query_id': 'test_query_id'
+        }
+
+        # Create data check string
+        data_check_string = '\n'.join(f"{k}={v}" for k, v in sorted(data_dict.items()))
+
+        # Calculate hash
+        secret_key = hashlib.sha256(bot_token.encode()).digest()
+        hash_value = hmac.new(
+            secret_key,
+            data_check_string.encode(),
+            hashlib.sha256
+        ).hexdigest()
+
+        # Add hash to data
+        data_dict['hash'] = hash_value
+
+        # Convert to URL-encoded string
+        init_data = '&'.join(f"{k}={urllib.parse.quote(str(v))}" for k, v in data_dict.items())
+
+        return init_data
+
+    @patch.object(settings, 'TELEGRAM_BOT_TOKEN', '123456789:ABCdefGHIjklMNOpqrsTUVwxyz')
+    def test_telegram_login_success(self):
+        """Test successful Telegram login"""
+        init_data = self.generate_telegram_init_data(self.telegram_user_data, self.test_bot_token)
+
+        response = self.client.post(self.telegram_login_url, {
+            'initData': init_data
+        })
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('token', response.data)
+        self.assertIn('user', response.data)
+
+        # Verify user was created
+        user = User.objects.get(telegram_id=str(self.telegram_user_data['id']))
+        self.assertEqual(user.telegram_first_name, 'John')
+        self.assertEqual(user.telegram_last_name, 'Doe')
+        self.assertEqual(user.telegram_username, 'johndoe')
+        self.assertTrue(user.is_verified)
+
+    @patch.object(settings, 'TELEGRAM_BOT_TOKEN', '123456789:ABCdefGHIjklMNOpqrsTUVwxyz')
+    def test_telegram_login_existing_user(self):
+        """Test Telegram login with existing user"""
+        # Create existing user
+        existing_user = User.objects.create_user(
+            email=f"{self.telegram_user_data['id']}@telegram.user",
+            telegram_id=str(self.telegram_user_data['id']),
+            telegram_first_name='Old Name',
+            is_verified=True
+        )
+
+        init_data = self.generate_telegram_init_data(self.telegram_user_data, self.test_bot_token)
+
+        response = self.client.post(self.telegram_login_url, {
+            'initData': init_data
+        })
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+
+        # Verify user data was updated
+        existing_user.refresh_from_db()
+        self.assertEqual(existing_user.telegram_first_name, 'John')
+        self.assertEqual(existing_user.telegram_last_name, 'Doe')
+
+    def test_telegram_login_no_init_data(self):
+        """Test Telegram login without init data"""
+        response = self.client.post(self.telegram_login_url, {})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('error', response.data)
+
+    @patch.object(settings, 'TELEGRAM_BOT_TOKEN', '123456789:ABCdefGHIjklMNOpqrsTUVwxyz')
+    def test_telegram_login_invalid_hash(self):
+        """Test Telegram login with invalid hash"""
+        init_data = self.generate_telegram_init_data(self.telegram_user_data, "wrong_token")
+
+        response = self.client.post(self.telegram_login_url, {
+            'initData': init_data
+        })
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('error', response.data)
+
+    @patch.object(settings, 'TELEGRAM_BOT_TOKEN', '123456789:ABCdefGHIjklMNOpqrsTUVwxyz')
+    def test_telegram_login_expired_auth_date(self):
+        """Test Telegram login with expired auth date"""
+        # Create data with old auth date (more than 24 hours ago)
+        old_auth_date = int(time.time()) - 86401  # 24 hours + 1 second ago
+
+        data_dict = {
+            'user': json.dumps(self.telegram_user_data),
+            'auth_date': str(old_auth_date),
+            'query_id': 'test_query_id'
+        }
+
+        # Create data check string and hash
+        data_check_string = '\n'.join(f"{k}={v}" for k, v in sorted(data_dict.items()))
+        secret_key = hashlib.sha256(self.test_bot_token.encode()).digest()
+        hash_value = hmac.new(secret_key, data_check_string.encode(), hashlib.sha256).hexdigest()
+        data_dict['hash'] = hash_value
+
+        init_data = '&'.join(f"{k}={urllib.parse.quote(str(v))}" for k, v in data_dict.items())
+
+        response = self.client.post(self.telegram_login_url, {
+            'initData': init_data
+        })
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('error', response.data)
+
+    def test_telegram_login_no_bot_token_configured(self):
+        """Test Telegram login when bot token is not configured"""
+        with patch.object(settings, 'TELEGRAM_BOT_TOKEN', ''):
+            init_data = self.generate_telegram_init_data(self.telegram_user_data, self.test_bot_token)
+
+            response = self.client.post(self.telegram_login_url, {
+                'initData': init_data
+            })
+
+            self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+            self.assertIn('error', response.data)
+
+    @patch.object(settings, 'TELEGRAM_BOT_TOKEN', '123456789:ABCdefGHIjklMNOpqrsTUVwxyz')
+    @patch.object(settings, 'TELEGRAM_BOT_USERNAME', 'test_bot')
+    @patch.object(settings, 'TELEGRAM_RETURN_URL', 'https://example.com/telegram/return/')
+    def test_telegram_webapp_get(self):
+        """Test Telegram WebApp GET endpoint"""
+        response = self.client.get(self.telegram_webapp_url)
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertEqual(response.data['bot_username'], 'test_bot')
+        self.assertEqual(response.data['return_url'], 'https://example.com/telegram/return/')
+
+    @patch.object(settings, 'TELEGRAM_BOT_TOKEN', '123456789:ABCdefGHIjklMNOpqrsTUVwxyz')
+    def test_telegram_webapp_post_valid_data(self):
+        """Test Telegram WebApp POST with valid data"""
+        init_data = self.generate_telegram_init_data(self.telegram_user_data, self.test_bot_token)
+
+        response = self.client.post(self.telegram_webapp_url, {
+            'initData': init_data
+        })
+
+        self.assertEqual(response.status_code, status.HTTP_200_OK)
+        self.assertIn('message', response.data)
+        self.assertIn('user_data', response.data)
+
+    def test_telegram_webapp_post_no_data(self):
+        """Test Telegram WebApp POST without init data"""
+        response = self.client.post(self.telegram_webapp_url, {})
+
+        self.assertEqual(response.status_code, status.HTTP_400_BAD_REQUEST)
+        self.assertIn('message', response.data)
+
+
+class TelegramAuthModelTests(TestCase):
+    """Test cases for TelegramAuth model"""
+
+    def setUp(self):
+        self.user = User.objects.create_user(
+            email='test@example.com',
+            telegram_id='123456789',
+            is_verified=True
+        )
+
+    def test_create_telegram_auth(self):
+        """Test creating TelegramAuth instance"""
+        telegram_auth = TelegramAuth.objects.create(
+            user=self.user,
+            auth_token='test_token',
+            init_data='test_init_data'
+        )
+
+        self.assertEqual(telegram_auth.user, self.user)
+        self.assertEqual(telegram_auth.auth_token, 'test_token')
+        self.assertEqual(telegram_auth.init_data, 'test_init_data')
+        self.assertIsNotNone(telegram_auth.created_at)
+        self.assertIsNotNone(telegram_auth.updated_at)
+
+    def test_telegram_auth_string_representation(self):
+        """Test TelegramAuth string representation"""
+        telegram_auth = TelegramAuth.objects.create(
+            user=self.user,
+            auth_token='test_token'
+        )
+
+        expected = f"Telegram Auth for {self.user.email}"
+        self.assertEqual(str(telegram_auth), expected)
+
+    def test_telegram_auth_one_to_one_relationship(self):
+        """Test one-to-one relationship with user"""
+        telegram_auth = TelegramAuth.objects.create(
+            user=self.user,
+            auth_token='test_token'
+        )
+
+        # Access through user
+        self.assertEqual(self.user.telegram_auth, telegram_auth)
+
+        # Verify only one TelegramAuth per user
+        with self.assertRaises(Exception):
+            TelegramAuth.objects.create(
+                user=self.user,
+                auth_token='another_token'
+            )

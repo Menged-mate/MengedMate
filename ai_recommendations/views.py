@@ -40,7 +40,7 @@ class AIRecommendationsView(APIView):
             serializer = NearbyStationSearchSerializer(data=request.data)
             if not serializer.is_valid():
                 return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
-            
+
             data = serializer.validated_data
             user = request.user
 
@@ -68,22 +68,22 @@ class AIRecommendationsView(APIView):
                     {'error': f'AI service error: {str(e)}'},
                     status=status.HTTP_500_INTERNAL_SERVER_ERROR
                 )
-            
+        
             # Enhance recommendations with additional data
             enhanced_recommendations = []
             for rec in recommendations:
                 try:
                     station_data = rec['station']  # This is already a dictionary from the service
-                    
+
                     # Calculate estimated charging time
                     estimated_time = self._calculate_charging_time(user, station_data)
-                    
+
                     # Get compatibility status
                     compatibility_status = self._get_compatibility_status(user, station_data)
-                    
+
                     # Get availability status
                     availability_status = self._get_availability_status(station_data)
-                    
+
                     enhanced_rec = {
                         'station': station_data,
                         'score': float(rec['score']),
@@ -108,14 +108,14 @@ class AIRecommendationsView(APIView):
                     {'error': 'No valid recommendations found'},
                     status=status.HTTP_404_NOT_FOUND
                 )
-            
+
             # Serialize the recommendations
             try:
                 response_serializer = RecommendationResponseSerializer(
                     enhanced_recommendations,
                     many=True
                 )
-                
+
                 return Response({
                     'recommendations': response_serializer.data,
                     'total_found': len(enhanced_recommendations),

@@ -11,14 +11,8 @@ from .views import (
     ChangePasswordView,
     ForgotPasswordView,
     ResetPasswordView,
-    GoogleLoginView,
-    FacebookLoginView,
-    AppleLoginView,
-    SocialAuthCallbackView,
     CheckEmailVerificationView,
-    VehicleViewSet,
-    TelegramLoginView,
-    TelegramWebAppView
+    VehicleViewSet
 )
 from .notification_views import (
     NotificationListView,
@@ -48,21 +42,10 @@ urlpatterns = [
     path('password-reset/', ForgotPasswordView.as_view(), name='password-reset'),
     path('reset-password/', ResetPasswordView.as_view(), name='reset-password'),
 
-   
-    path('social/google/', GoogleLoginView.as_view(), name='google-login'),
-    path('social/facebook/', FacebookLoginView.as_view(), name='facebook-login'),
-    path('social/apple/', AppleLoginView.as_view(), name='apple-login'),
-    path('social/callback/', SocialAuthCallbackView.as_view(), name='social-callback'),
-
-  
     path('notifications/', NotificationListView.as_view(), name='notification-list'),
     path('notifications/mark-read/', NotificationMarkReadView.as_view(), name='notification-mark-all-read'),
     path('notifications/<int:notification_id>/mark-read/', NotificationMarkReadView.as_view(), name='notification-mark-read'),
     path('notifications/<int:notification_id>/delete/', NotificationDeleteView.as_view(), name='notification-delete'),
 
-
     path('', include(router.urls)),
-
-    path('telegram/login/', TelegramLoginView.as_view(), name='telegram-login'),
-    path('telegram/webapp/', TelegramWebAppView.as_view(), name='telegram-webapp'),
 ]

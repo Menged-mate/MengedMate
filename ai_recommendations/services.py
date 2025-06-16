@@ -388,7 +388,7 @@ class AIRecommendationService:
             reasons.append(f"Compatible with your vehicle")
         elif float(compatibility) > 0:
             reasons.append(f"Partially compatible with your vehicle")
-            
+        
         if float(distance) >= 80:
             reasons.append(f"Very close to your location ({station.distance_km:.1f} km)")
         elif float(distance) >= 50:
@@ -401,7 +401,7 @@ class AIRecommendationService:
             reasons.append("Highly rated by users")
         if float(amenities) > 75:
             reasons.append("Good amenities available")
-            
+        
         return " • ".join(reasons)
     
     def _calculate_distance(self, lat1: float, lng1: float, lat2: float, lng2: float) -> float:

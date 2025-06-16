@@ -1,13 +1,5 @@
 from django.contrib import admin
-from .models import PaymentMethod, Transaction, Wallet, WalletTransaction, PaymentSession
-
-
-@admin.register(PaymentMethod)
-class PaymentMethodAdmin(admin.ModelAdmin):
-    list_display = ['user', 'method_type', 'phone_number', 'is_default', 'is_active', 'created_at']
-    list_filter = ['method_type', 'is_default', 'is_active', 'created_at']
-    search_fields = ['user__email', 'phone_number', 'account_name']
-    readonly_fields = ['id', 'created_at', 'updated_at']
+from .models import Transaction, Wallet, WalletTransaction, QRPaymentSession, SimpleChargingSession
 
 
 @admin.register(Transaction)
@@ -34,9 +26,17 @@ class WalletTransactionAdmin(admin.ModelAdmin):
     readonly_fields = ['id', 'created_at']
 
 
-@admin.register(PaymentSession)
-class PaymentSessionAdmin(admin.ModelAdmin):
-    list_display = ['session_id', 'user', 'amount', 'phone_number', 'status', 'created_at']
-    list_filter = ['status', 'currency', 'created_at']
-    search_fields = ['session_id', 'user__email', 'phone_number', 'checkout_request_id']
-    readonly_fields = ['id', 'created_at', 'updated_at']
+@admin.register(QRPaymentSession)
+class QRPaymentSessionAdmin(admin.ModelAdmin):
+    list_display = ['session_token', 'user', 'connector', 'payment_type', 'calculated_amount', 'status', 'created_at']
+    list_filter = ['payment_type', 'status', 'created_at']
+    search_fields = ['session_token', 'user__email', 'phone_number', 'connector__name']
+    readonly_fields = ['id', 'session_token', 'calculated_amount', 'created_at', 'updated_at']
+
+
+@admin.register(SimpleChargingSession)
+class SimpleChargingSessionAdmin(admin.ModelAdmin):
+    list_display = ['transaction_id', 'user', 'connector', 'status', 'energy_delivered_kwh', 'start_time', 'stop_time']
+    list_filter = ['status', 'created_at']
+    search_fields = ['transaction_id', 'user__email', 'connector__name']
+    readonly_fields = ['id', 'transaction_id', 'created_at', 'updated_at']
