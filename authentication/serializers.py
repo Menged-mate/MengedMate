@@ -9,6 +9,7 @@ from dj_rest_auth.registration.serializers import RegisterSerializer as DjRestAu
 from dj_rest_auth.serializers import LoginSerializer as DjRestAuthLoginSerializer
 from dj_rest_auth.serializers import UserDetailsSerializer
 from .models import Vehicle
+from utils.fields.base64_field import Base64ImageField
 import random
 import string
 import uuid
@@ -30,6 +31,8 @@ class UserProfileSerializer(serializers.ModelSerializer):
     active_vehicle = serializers.SerializerMethodField()
     vehicle_count = serializers.SerializerMethodField()
     compatible_connector_types = serializers.SerializerMethodField()
+    # Use Base64ImageField for profile_picture input
+    profile_picture = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
         model = User
@@ -308,6 +311,8 @@ class VehicleSerializer(serializers.ModelSerializer):
     efficiency_rating = serializers.SerializerMethodField()
     charging_speed_category = serializers.SerializerMethodField()
     is_active_vehicle = serializers.SerializerMethodField()
+    # Use Base64ImageField for vehicle_image input
+    vehicle_image = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
         model = Vehicle

@@ -1,3 +1,4 @@
+from datetime import datetime
 from rest_framework import serializers
 from django.contrib.auth import get_user_model
 from django.contrib.auth.password_validation import validate_password
@@ -7,8 +8,10 @@ from .models import (
     FavoriteStation, StationReview, ReviewReply, StationOwnerSettings, NotificationTemplate,
     PayoutMethod, WithdrawalRequest
 )
+from utils.fields.base64_field import Base64ImageField, Base64FileField
 import random
 import string
+from utils import firestore_repo
 
 User = get_user_model()
 
@@ -51,12 +54,16 @@ class StationOwnerRegistrationSerializer(serializers.Serializer):
         user.set_password(validated_data['password'])
         user.save()
 
-        station_owner = StationOwner.objects.create(
-            user=user,
-            company_name=validated_data['company_name'],
-            is_profile_completed=False,
-            verification_status='pending'
-        )
+        user.save()
+
+        # Create Station Owner profile in Firestore
+        owner_data = {
+            'company_name': validated_data['company_name'],
+            'is_profile_completed': False,
+            'verification_status': 'pending',
+            'contact_email': user.email
+        }
+        station_owner = firestore_repo.create_station_owner(user.id, owner_data)
 
         return {
             'user': user,
@@ -69,13 +76,19 @@ class StationOwnerProfileSerializer(serializers.ModelSerializer):
     email = serializers.EmailField(source='user.email', read_only=True)
     first_name = serializers.CharField(source='user.first_name', read_only=True)
     last_name = serializers.CharField(source='user.last_name', read_only=True)
+    
+    # Override file fields with Base64 fields for input
+    business_document = Base64FileField(required=False, allow_null=True)
+    business_license = Base64FileField(required=False, allow_null=True)
+    id_proof = Base64FileField(required=False, allow_null=True)
+    utility_bill = Base64FileField(required=False, allow_null=True)
 
     class Meta:
         model = StationOwner
         fields = [
             'id', 'email', 'first_name', 'last_name', 'company_name',
             'business_registration_number', 'verification_status',
-            'business_license', 'id_proof', 'utility_bill',
+            'business_document', 'business_license', 'id_proof', 'utility_bill',
             'website', 'description', 'is_profile_completed',
             'created_at', 'updated_at', 'verified_at'
         ]
@@ -130,6 +143,8 @@ class ChargingConnectorSerializer(serializers.ModelSerializer):
         return obj.get_qr_code_url()
 
 class StationImageSerializer(serializers.ModelSerializer):
+    # Use Base64ImageField for image input
+    image = Base64ImageField(required=True)
 
     class Meta:
         model = StationImage
@@ -141,6 +156,8 @@ class ChargingStationSerializer(serializers.ModelSerializer):
     images = StationImageSerializer(many=True, read_only=True)
     owner_name = serializers.CharField(source='owner.company_name', read_only=True)
     is_verified_owner = serializers.SerializerMethodField()
+    # Use Base64ImageField for main_image input
+    main_image = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
         model = ChargingStation
@@ -772,3 +789,266 @@ class WithdrawalRequestAdminSerializer(serializers.ModelSerializer):
                     validated_data['processed_at'] = timezone.now()
 
         return super().update(instance, validated_data)
+
+
+# Firestore Serializers
+
+class FirestoreChargingConnectorSerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
+    connector_type = serializers.ChoiceField(choices=ChargingConnector.ConnectorType.choices)
+    connector_type_display = serializers.CharField(read_only=True, required=False)
+    power_kw = serializers.DecimalField(max_digits=6, decimal_places=2)
+    quantity = serializers.IntegerField(default=1)
+    available_quantity = serializers.IntegerField(default=1)
+    price_per_kwh = serializers.DecimalField(max_digits=6, decimal_places=2, required=False, allow_null=True)
+    is_available = serializers.BooleanField(default=True)
+    status = serializers.ChoiceField(choices=ChargingConnector.ConnectorStatus.choices, default='available')
+    status_display = serializers.CharField(read_only=True, required=False)
+    description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    qr_code_token = serializers.CharField(read_only=True)
+    qr_code_url = serializers.SerializerMethodField()
+    
+    def get_qr_code_url(self, obj):
+        # Obj is a dict here
+        return obj.get('qr_code_image')
+
+class FirestoreStationImageSerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
+    image = Base64ImageField(required=True)
+    caption = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    order = serializers.IntegerField(default=0)
+
+class FirestoreChargingStationSerializer(serializers.Serializer):
+    id = serializers.CharField(read_only=True)
+    name = serializers.CharField(max_length=255)
+    address = serializers.CharField(max_length=255)
+    city = serializers.CharField(max_length=100)
+    state = serializers.CharField(max_length=100)
+    zip_code = serializers.CharField(max_length=20)
+    country = serializers.CharField(max_length=100, default='United States')
+    
+    latitude = serializers.DecimalField(max_digits=9, decimal_places=6, required=False, allow_null=True)
+    longitude = serializers.DecimalField(max_digits=9, decimal_places=6, required=False, allow_null=True)
+    
+    description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    opening_hours = serializers.CharField(required=False, allow_blank=True, allow_null=True)
+    
+    has_restroom = serializers.BooleanField(default=False)
+    has_wifi = serializers.BooleanField(default=False)
+    has_restaurant = serializers.BooleanField(default=False)
+    has_shopping = serializers.BooleanField(default=False)
+    
+    is_active = serializers.BooleanField(default=True)
+    is_public = serializers.BooleanField(default=True)
+    status = serializers.ChoiceField(choices=ChargingStation.StationStatus.choices, default='operational')
+    
+    rating = serializers.DecimalField(max_digits=3, decimal_places=2, default=0.0, read_only=True)
+    rating_count = serializers.IntegerField(default=0, read_only=True)
+    
+    price_range = serializers.CharField(max_length=20, required=False, allow_blank=True, allow_null=True)
+    available_connectors = serializers.IntegerField(default=0, read_only=True)
+    total_connectors = serializers.IntegerField(default=0, read_only=True)
+    
+    main_image = Base64ImageField(required=False, allow_null=True)
+    marker_icon = serializers.CharField(max_length=50, required=False, allow_blank=True, default='default')
+    
+    created_at = serializers.DateTimeField(read_only=True)
+    updated_at = serializers.DateTimeField(read_only=True)
+    
+    # Nested fields
+    connectors = FirestoreChargingConnectorSerializer(many=True, read_only=True)
+    images = FirestoreStationImageSerializer(many=True, read_only=True)
+    
+    owner_id = serializers.CharField(read_only=True)
+    owner_name = serializers.CharField(read_only=True)
+    is_verified_owner = serializers.BooleanField(default=False, read_only=True)
+
+    def create(self, validated_data):
+        from utils.firestore_repo import firestore_repo
+        
+        # Add owner info from context
+        request = self.context.get('request')
+        if request and request.user:
+            try:
+                station_owner = StationOwner.objects.get(user=request.user)
+                validated_data['owner_id'] = str(station_owner.id)
+                validated_data['owner_name'] = station_owner.company_name
+                validated_data['is_verified_owner'] = (station_owner.verification_status == 'verified')
+            except StationOwner.DoesNotExist:
+                raise serializers.ValidationError("Station Owner profile not found.")
+        
+        # Initialize lists
+        validated_data['connectors'] = []
+        validated_data['images'] = []
+        
+        return firestore_repo.create_station(validated_data)
+
+    def update(self, instance, validated_data):
+        from utils.firestore_repo import firestore_repo
+        # instance is a dict here containing the current state
+        station_id = instance.get('id')
+        return firestore_repo.update_station(station_id, validated_data)
+
+
+class FirestoreAvailableStationSerializer(serializers.Serializer):
+    """Serializer for available charging stations (read-only)"""
+    id = serializers.CharField(read_only=True)
+    name = serializers.CharField(read_only=True)
+    address = serializers.CharField(read_only=True)
+    city = serializers.CharField(read_only=True)
+    state = serializers.CharField(read_only=True)
+    zip_code = serializers.CharField(read_only=True)
+    country = serializers.CharField(read_only=True)
+    
+    latitude = serializers.DecimalField(max_digits=9, decimal_places=6, read_only=True)
+    longitude = serializers.DecimalField(max_digits=9, decimal_places=6, read_only=True)
+    
+    description = serializers.CharField(read_only=True)
+    opening_hours = serializers.CharField(read_only=True)
+    
+    has_restroom = serializers.BooleanField(read_only=True)
+    has_wifi = serializers.BooleanField(read_only=True)
+    has_restaurant = serializers.BooleanField(read_only=True)
+    has_shopping = serializers.BooleanField(read_only=True)
+    
+    status = serializers.CharField(read_only=True)
+    rating = serializers.DecimalField(max_digits=3, decimal_places=2, read_only=True)
+    rating_count = serializers.IntegerField(read_only=True)
+    price_range = serializers.CharField(read_only=True)
+    available_connectors = serializers.IntegerField(read_only=True)
+    total_connectors = serializers.IntegerField(read_only=True)
+    main_image = Base64ImageField(read_only=True, allow_null=True)
+    created_at = serializers.DateTimeField(read_only=True)
+    
+    owner_name = serializers.CharField(read_only=True)
+    is_verified_owner = serializers.BooleanField(read_only=True)
+    
+    available_connectors_detail = serializers.SerializerMethodField()
+    distance = serializers.SerializerMethodField()
+    estimated_wait_time = serializers.SerializerMethodField()
+    pricing_info = serializers.SerializerMethodField()
+    real_time_availability = serializers.SerializerMethodField()
+    
+    def get_available_connectors_detail(self, obj):
+        # We need to fetch connectors! But doing it here per row is slow.
+        # Ideally passed in obj or handled by view. 
+        # For now, return empty or implement efficient fetch if passed.
+        # If obj has 'connectors' key we use it. Get_queryset in view should populate it if possible.
+        connectors = obj.get('connectors', [])
+        summary = {}
+        for c in connectors:
+            if c.get('is_available') and c.get('status') == 'available':
+                c_type = c.get('connector_type')
+                if c_type not in summary:
+                    summary[c_type] = {
+                        'type': c_type,
+                        'power_kw': c.get('power_kw'),
+                        'available_count': 0,
+                        'price_per_kwh': c.get('price_per_kwh')
+                    }
+                summary[c_type]['available_count'] += c.get('available_quantity', 0)
+        return list(summary.values())
+
+    def get_distance(self, obj):
+        request = self.context.get('request')
+        if request:
+            user_lat = request.query_params.get('user_lat')
+            user_lng = request.query_params.get('user_lng')
+            
+            lat = obj.get('latitude')
+            lng = obj.get('longitude')
+            
+            if user_lat and user_lng and lat and lng:
+                try:
+                    from math import radians, cos, sin, asin, sqrt
+                    lat1, lon1 = radians(float(user_lat)), radians(float(user_lng))
+                    lat2, lon2 = radians(float(lat)), radians(float(lng))
+                    dlat = lat2 - lat1
+                    dlon = lon2 - lon1
+                    a = sin(dlat/2)**2 + cos(lat1) * cos(lat2) * sin(dlon/2)**2
+                    c = 2 * asin(sqrt(a))
+                    return round(c * 6371, 2)
+                except (ValueError, TypeError):
+                    pass
+        return None
+
+    def get_estimated_wait_time(self, obj):
+        if obj.get('available_connectors', 0) > 0:
+            return 0
+        if obj.get('total_connectors', 0) > 0:
+            return 5 # Mock 5 mins
+        return None
+
+    def get_pricing_info(self, obj):
+        # Need connectors
+        connectors = obj.get('connectors', [])
+        prices = [float(c['price_per_kwh']) for c in connectors if c.get('price_per_kwh') and c.get('is_available')]
+        if prices:
+             return {
+                'min_price': min(prices),
+                'max_price': max(prices),
+                'currency': 'ETB',
+                'pricing_model': 'per_kwh'
+             }
+        return {'min_price': None, 'max_price': None}
+
+    def get_real_time_availability(self, obj):
+         if obj.get('status') != 'operational':
+              return {'status': 'unavailable', 'reason': obj.get('status')}
+         if obj.get('available_connectors') == 0:
+              return {'status': 'busy', 'reason': 'All connectors occupied'}
+         return {'status': 'available', 'reason': f"{obj.get('available_connectors')} connectors available"}
+
+
+class FirestoreStationReviewSerializer(serializers.Serializer):
+    """Serializer for Firestore reviews"""
+    id = serializers.CharField(read_only=True)
+    user_id = serializers.CharField(read_only=True)
+    user_name = serializers.CharField(required=False)
+    user_email = serializers.CharField(required=False)
+    station_id = serializers.CharField(read_only=True) # or required if creating independently
+    
+    rating = serializers.IntegerField(min_value=1, max_value=5)
+    review_text = serializers.CharField(required=False, allow_blank=True)
+    charging_speed_rating = serializers.IntegerField(min_value=1, max_value=5, required=False, allow_null=True)
+    location_rating = serializers.IntegerField(min_value=1, max_value=5, required=False, allow_null=True)
+    amenities_rating = serializers.IntegerField(min_value=1, max_value=5, required=False, allow_null=True)
+    
+    is_verified_review = serializers.BooleanField(default=False, read_only=True)
+    created_at = serializers.DateTimeField(read_only=True)
+    
+    reply = serializers.DictField(read_only=True, required=False, allow_null=True)
+
+    def create(self, validated_data):
+        from utils.firestore_repo import firestore_repo
+        
+        request = self.context.get('request')
+        station_id = self.context.get('station_id')
+        
+        if request and request.user:
+            validated_data['user_id'] = str(request.user.id)
+            validated_data['user_name'] = f"{request.user.first_name} {request.user.last_name}".strip() or request.user.email.split('@')[0]
+            # Mask email
+            email = request.user.email
+            if '@' in email:
+                 u, d = email.split('@', 1)
+                 validated_data['user_email'] = f"{u[:2]}***@{d}"
+            
+        validated_data['created_at'] = datetime.now()
+        
+        # We need station owner id for filtering by owner
+        # Fetch station
+        station = firestore_repo.get_station(station_id)
+        if station:
+             validated_data['station_owner_id'] = station.get('owner_id')
+             validated_data['station_name'] = station.get('name')
+        
+        return firestore_repo.create_review(station_id, validated_data)
+
+    def update(self, instance, validated_data):
+        from utils.firestore_repo import firestore_repo
+        # instance is dict
+        station_id = instance.get('station_id')
+        review_id = instance.get('id')
+        return firestore_repo.update_review(station_id, review_id, validated_data)
+

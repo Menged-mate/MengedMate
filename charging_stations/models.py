@@ -23,10 +23,11 @@ class StationOwner(models.Model):
         default=VerificationStatus.PENDING
     )
 
-    business_document = models.FileField(upload_to='station_owner_docs/business_docs/', blank=True, null=True)
-    business_license = models.FileField(upload_to='station_owner_docs/licenses/', blank=True, null=True)
-    id_proof = models.FileField(upload_to='station_owner_docs/id_proofs/', blank=True, null=True)
-    utility_bill = models.FileField(upload_to='station_owner_docs/utility_bills/', blank=True, null=True)
+    # Base64 encoded document fields
+    business_document = models.TextField(blank=True, null=True, help_text='Base64 encoded business document')
+    business_license = models.TextField(blank=True, null=True, help_text='Base64 encoded business license')
+    id_proof = models.TextField(blank=True, null=True, help_text='Base64 encoded ID proof')
+    utility_bill = models.TextField(blank=True, null=True, help_text='Base64 encoded utility bill')
 
     contact_phone = models.CharField(max_length=20, blank=True, null=True)
     contact_email = models.EmailField(blank=True, null=True)
@@ -89,7 +90,7 @@ class ChargingStation(models.Model):
     available_connectors = models.PositiveIntegerField(default=0)
     total_connectors = models.PositiveIntegerField(default=0)
 
-    main_image = models.ImageField(upload_to='station_images/', blank=True, null=True)
+    main_image = models.TextField(blank=True, null=True, help_text='Base64 encoded main station image')
     marker_icon = models.CharField(max_length=50, blank=True, null=True, default='default')
 
     created_at = models.DateTimeField(auto_now_add=True)
@@ -111,7 +112,7 @@ class ChargingStation(models.Model):
 class StationImage(models.Model):
 
     station = models.ForeignKey(ChargingStation, on_delete=models.CASCADE, related_name='images')
-    image = models.ImageField(upload_to='station_images/')
+    image = models.TextField(help_text='Base64 encoded station image')
     caption = models.CharField(max_length=255, blank=True, null=True)
     order = models.PositiveIntegerField(default=0)
 
@@ -150,7 +151,7 @@ class ChargingConnector(models.Model):
     description = models.TextField(blank=True, null=True)
 
     qr_code_token = models.CharField(max_length=255, unique=True, blank=True, null=True)
-    qr_code_image = models.ImageField(upload_to='qr_codes/', blank=True, null=True)
+    qr_code_image = models.TextField(blank=True, null=True, help_text='Base64 encoded QR code image')
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)
 
@@ -172,7 +173,7 @@ class ChargingConnector(models.Model):
         return hashlib.sha256(unique_string.encode()).hexdigest()[:32]
 
     def generate_qr_code(self):
-        """Generate QR code for this connector"""
+        """Generate QR code for this connector and store as Base64"""
         if not self.qr_code_token:
             return
 
@@ -193,15 +194,17 @@ class ChargingConnector(models.Model):
         img.save(buffer, format='PNG')
         buffer.seek(0)
 
-        filename = f"qr_connector_{self.qr_code_token}.png"
-        self.qr_code_image.save(filename, File(buffer), save=False)
+        # Encode to Base64
+        import base64
+        base64_image = base64.b64encode(buffer.read()).decode('utf-8')
+        self.qr_code_image = f"data:image/png;base64,{base64_image}"
 
         ChargingConnector.objects.filter(id=self.id).update(qr_code_image=self.qr_code_image)
 
     def get_qr_code_url(self):
-        """Get the QR code image URL"""
+        """Get the QR code image as Base64 data URI"""
         if self.qr_code_image:
-            return self.qr_code_image.url
+            return self.qr_code_image  # Already a Base64 data URI
         return None
 
     def update_availability(self):

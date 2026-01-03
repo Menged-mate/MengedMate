@@ -1,3 +1,4 @@
+from utils import firestore_repo
 from rest_framework import status, generics, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
@@ -46,6 +47,8 @@ from .serializers import (
 User = get_user_model()
 
 
+from .serializers_firestore import FirestoreUserSerializer, FirestoreVehicleSerializer
+
 class RegisterView(generics.CreateAPIView):
     queryset = User.objects.all()
     permission_classes = [AllowAny]
@@ -53,9 +56,23 @@ class RegisterView(generics.CreateAPIView):
     serializer_class = RegisterSerializer
 
     def create(self, request, *args, **kwargs):
+        # 1. Create SQL User (Auth)
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
         user = serializer.save()
+        
+        # 2. Create Firestore Profile
+        profile_data = {
+            'email': user.email,
+            'first_name': request.data.get('first_name', ''),
+            'last_name': request.data.get('last_name', ''),
+            'phone_number': request.data.get('phone_number', ''),
+            'created_at': datetime.now().isoformat(),
+            'updated_at': datetime.now().isoformat(),
+            'is_verified': False
+        }
+        firestore_repo.create_user_profile(user.id, profile_data)
+        
         self.send_verification_email(user)
 
         return Response({
@@ -101,6 +118,9 @@ class VerifyEmailView(APIView):
             user.is_verified = True
             user.verification_code = None
             user.save()
+            
+            # Sync verification status to Firestore
+            firestore_repo.update_user_profile(user.id, {'is_verified': True})
 
             token, created = Token.objects.get_or_create(user=user)
 
@@ -166,9 +186,20 @@ class LoginView(APIView):
                 token, created = Token.objects.get_or_create(user=user)
 
                 is_station_owner = StationOwner.objects.filter(user=user).exists()
+                
+                # Fetch profile from Firestore
+                profile = firestore_repo.get_user_profile(user.id)
+                if not profile:
+                    # Lazy create if missing (migration path)
+                    profile = {
+                        'email': user.email,
+                        'first_name': user.first_name,
+                        'last_name': user.last_name,
+                        'is_verified': True
+                    }
+                    firestore_repo.create_user_profile(user.id, profile)
 
-                user_data = UserSerializer(user).data
-
+                user_data = FirestoreUserSerializer(profile).data
                 user_data['is_station_owner'] = is_station_owner
 
                 return Response({
@@ -252,18 +283,25 @@ class LogoutView(APIView):
 class UserProfileView(generics.RetrieveUpdateAPIView):
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication, SessionAuthentication]
-    serializer_class = UserProfileSerializer
+    serializer_class = FirestoreUserSerializer
 
     def get_object(self):
-        return self.request.user
+        # Get from Firestore
+        profile = firestore_repo.get_user_profile(self.request.user.id)
+        if not profile:
+             # Just in case
+             return {}
+        return profile
 
     def update(self, request, *args, **kwargs):
-        partial = kwargs.pop('partial', False)
-        instance = self.get_object()
-        serializer = self.get_serializer(instance, data=request.data, partial=partial)
-        serializer.is_valid(raise_exception=True)
-        self.perform_update(serializer)
-
+        # Update Firestore
+        updated_profile = firestore_repo.update_user_profile(request.user.id, request.data)
+        serializer = self.get_serializer(updated_profile)
+        return Response(serializer.data)
+    
+    def retrieve(self, request, *args, **kwargs):
+        profile = self.get_object()
+        serializer = self.get_serializer(profile)
         return Response(serializer.data)
 
 
@@ -349,9 +387,6 @@ class ResetPasswordView(APIView):
         return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
 
 
-
-
-
 class CheckEmailVerificationView(APIView):
     permission_classes = [AllowAny]
     authentication_classes = [AnonymousAuthentication]
@@ -408,137 +443,108 @@ class CheckEmailVerificationView(APIView):
             }, status=status.HTTP_404_NOT_FOUND)
 
 
-class VehicleViewSet(viewsets.ModelViewSet):
+class VehicleViewSet(viewsets.ViewSet):
+    """ViewSet for managing vehicles in Firestore"""
     permission_classes = [IsAuthenticated]
     authentication_classes = [TokenAuthentication, SessionAuthentication]
-    serializer_class = VehicleSerializer
+    serializer_class = FirestoreVehicleSerializer
 
-    def get_queryset(self):
-        queryset = Vehicle.objects.filter(user=self.request.user)
-
-        is_active = self.request.query_params.get('is_active')
-        if is_active is not None:
-            queryset = queryset.filter(is_active=is_active.lower() == 'true')
-
-        return queryset
-
-    def perform_create(self, serializer):
-        serializer.save(user=self.request.user)
-
-    def get_serializer_class(self):
-        if self.action == 'list':
-            return VehicleListSerializer
-        elif self.action == 'stats':
-            return VehicleStatsSerializer
-        return VehicleSerializer
+    def list(self, request):
+        vehicles = firestore_repo.list_vehicles(request.user.id)
+        serializer = FirestoreVehicleSerializer(vehicles, many=True)
+        return Response(serializer.data)
+    
+    def create(self, request):
+        serializer = FirestoreVehicleSerializer(data=request.data)
+        serializer.is_valid(raise_exception=True)
+        vehicle = firestore_repo.create_vehicle(request.user.id, serializer.validated_data)
+        
+        # Check if first vehicle, if so make active?
+        # Logic: If no active vehicle in profile, set this one.
+        profile = firestore_repo.get_user_profile(request.user.id)
+        if not profile.get('active_vehicle_id'):
+            firestore_repo.update_user_profile(request.user.id, {'active_vehicle_id': vehicle['id']})
+            
+        return Response(vehicle, status=status.HTTP_201_CREATED)
+        
+    def retrieve(self, request, pk=None):
+        vehicle = firestore_repo.get_vehicle(request.user.id, pk)
+        if not vehicle:
+             return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(vehicle)
+        
+    def update(self, request, pk=None):
+        serializer = FirestoreVehicleSerializer(data=request.data, partial=True)
+        serializer.is_valid(raise_exception=True)
+        vehicle = firestore_repo.update_vehicle(request.user.id, pk, serializer.validated_data)
+        if not vehicle:
+             return Response(status=status.HTTP_404_NOT_FOUND)
+        return Response(vehicle)
+        
+    def destroy(self, request, pk=None):
+        firestore_repo.delete_vehicle(request.user.id, pk)
+        return Response(status=status.HTTP_204_NO_CONTENT)
 
     @action(detail=True, methods=['post'])
     def set_active(self, request, pk=None):
-        vehicle = self.get_object()
-        success = request.user.set_active_vehicle(vehicle)
-
-        if success:
-            return Response({
-                'message': f'{vehicle.get_display_name()} is now your active vehicle',
-                'active_vehicle_id': vehicle.id
-            })
-        else:
-            return Response({
-                'error': 'Failed to set active vehicle'
-            }, status=status.HTTP_400_BAD_REQUEST)
+        vehicle = firestore_repo.get_vehicle(request.user.id, pk)
+        if not vehicle:
+             return Response({"error": "Vehicle not found"}, status=404)
+        
+        firestore_repo.update_user_profile(request.user.id, {'active_vehicle_id': pk})
+        return Response({
+            'message': f'{vehicle.get("name", "Vehicle")} is now your active vehicle',
+            'active_vehicle_id': pk
+        })
 
     @action(detail=True, methods=['post'])
     def set_primary(self, request, pk=None):
-        vehicle = self.get_object()
-
-        Vehicle.objects.filter(user=request.user, is_primary=True).update(is_primary=False)
-
-        vehicle.is_primary = True
-        vehicle.save(update_fields=['is_primary'])
-
+        # "Primary" might just be a boolean flag on vehicles.
+        # We need to unset others and set this one.
+        vehicles = firestore_repo.list_vehicles(request.user.id)
+        for v in vehicles:
+            if v['id'] == pk:
+                 firestore_repo.update_vehicle(request.user.id, v['id'], {'is_primary': True})
+            elif v.get('is_primary'):
+                 firestore_repo.update_vehicle(request.user.id, v['id'], {'is_primary': False})
+        
         return Response({
-            'message': f'{vehicle.get_display_name()} is now your primary vehicle',
-            'primary_vehicle_id': vehicle.id
+            'message': 'Primary vehicle updated',
+            'primary_vehicle_id': pk
         })
-
-    @action(detail=True, methods=['get'])
-    def charging_estimate(self, request, pk=None):
-        vehicle = self.get_object()
-
-        current_percentage = int(request.query_params.get('current_percentage', 20))
-        target_percentage = int(request.query_params.get('target_percentage', 80))
-
-        charging_time = vehicle.get_estimated_charging_time(target_percentage, current_percentage)
-        range_at_target = vehicle.get_range_at_percentage(target_percentage)
-
-        return Response({
-            'vehicle_id': vehicle.id,
-            'vehicle_name': vehicle.get_display_name(),
-            'current_percentage': current_percentage,
-            'target_percentage': target_percentage,
-            'estimated_charging_time_minutes': charging_time,
-            'estimated_range_at_target_km': range_at_target,
-            'battery_capacity_kwh': float(vehicle.battery_capacity_kwh),
-            'usable_battery_kwh': float(vehicle.usable_battery_kwh) if vehicle.usable_battery_kwh else None,
-            'max_charging_speed_kw': float(vehicle.max_charging_speed_kw) if vehicle.max_charging_speed_kw else None
-        })
-
-    @action(detail=True, methods=['get'])
-    def stats(self, request, pk=None):
-        vehicle = self.get_object()
-        serializer = VehicleStatsSerializer(vehicle)
-        return Response(serializer.data)
 
     @action(detail=False, methods=['get'])
     def active(self, request):
-        active_vehicle = request.user.get_active_vehicle()
-
-        if active_vehicle:
-            serializer = VehicleSerializer(active_vehicle, context={'request': request})
-            return Response(serializer.data)
-        else:
-            return Response({
-                'message': 'No active vehicle set',
-                'active_vehicle': None
-            })
-
-    @action(detail=False, methods=['post'])
-    def switch_active(self, request):
-        serializer = VehicleSwitchSerializer(data=request.data, context={'request': request})
-
-        if serializer.is_valid():
-            vehicle_id = serializer.validated_data['vehicle_id']
-            vehicle = Vehicle.objects.get(id=vehicle_id, user=request.user)
-
-            success = request.user.set_active_vehicle(vehicle)
-
-            if success:
-                vehicle.update_usage_stats()
-
-                return Response({
-                    'message': f'Switched to {vehicle.get_display_name()}',
-                    'active_vehicle': VehicleSerializer(vehicle, context={'request': request}).data
-                })
-            else:
-                return Response({
-                    'error': 'Failed to switch active vehicle'
-                }, status=status.HTTP_400_BAD_REQUEST)
-
-        return Response(serializer.errors, status=status.HTTP_400_BAD_REQUEST)
+        profile = firestore_repo.get_user_profile(request.user.id)
+        active_id = profile.get('active_vehicle_id')
+        
+        if active_id:
+            vehicle = firestore_repo.get_vehicle(request.user.id, active_id)
+            if vehicle:
+                return Response(vehicle)
+                
+        return Response({
+            'message': 'No active vehicle set',
+            'active_vehicle': None
+        })
 
     @action(detail=False, methods=['get'])
     def summary(self, request):
-        vehicles = self.get_queryset()
-        active_vehicle = request.user.get_active_vehicle()
-
+        vehicles = firestore_repo.list_vehicles(request.user.id)
+        profile = firestore_repo.get_user_profile(request.user.id)
+        active_id = profile.get('active_vehicle_id')
+        
+        active_count = sum(1 for v in vehicles if v.get('is_active', True))
+        primary = next((v for v in vehicles if v.get('is_primary')), None)
+        
         return Response({
-            'total_vehicles': vehicles.count(),
-            'active_vehicles': vehicles.filter(is_active=True).count(),
-            'primary_vehicle': vehicles.filter(is_primary=True).first().id if vehicles.filter(is_primary=True).exists() else None,
-            'active_vehicle': active_vehicle.id if active_vehicle else None,
-            'connector_types': request.user.get_compatible_connector_types(),
-            'vehicles': VehicleListSerializer(vehicles, many=True, context={'request': request}).data
+            'total_vehicles': len(vehicles),
+            'active_vehicles': active_count,
+            'primary_vehicle': primary['id'] if primary else None,
+            'active_vehicle': active_id,
+            'vehicles': FirestoreVehicleSerializer(vehicles, many=True).data
         })
+
 
 
 

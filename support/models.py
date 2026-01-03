@@ -23,7 +23,7 @@ class SupportTicket(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE, related_name='support_tickets')
     subject = models.CharField(max_length=255)
     description = models.TextField()
-    screenshot = models.ImageField(upload_to='support_screenshots/', blank=True, null=True)
+    screenshot = models.TextField(blank=True, null=True, help_text='Base64 encoded screenshot')
     status = models.CharField(max_length=20, choices=STATUS_CHOICES, default='open')
     priority = models.CharField(max_length=10, choices=PRIORITY_CHOICES, default='medium')
 

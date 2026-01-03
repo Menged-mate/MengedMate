@@ -56,7 +56,7 @@ class CustomUser(AbstractUser):
     city = models.CharField(max_length=100, blank=True, null=True)
     state = models.CharField(max_length=100, blank=True, null=True)
     zip_code = models.CharField(max_length=20, blank=True, null=True)
-    profile_picture = models.ImageField(upload_to='profile_pictures/', blank=True, null=True)
+    profile_picture = models.TextField(blank=True, null=True, help_text='Base64 encoded profile picture')
 
     
     ev_battery_capacity_kwh = models.DecimalField(max_digits=6, decimal_places=2, blank=True, null=True,
@@ -186,7 +186,7 @@ class Vehicle(models.Model):
     color = models.CharField(max_length=50, blank=True, null=True)
     license_plate = models.CharField(max_length=20, blank=True, null=True)
     notes = models.TextField(blank=True, null=True, help_text=_('Personal notes about the vehicle'))
-    vehicle_image = models.ImageField(upload_to='vehicle_images/', blank=True, null=True)
+    vehicle_image = models.TextField(blank=True, null=True, help_text='Base64 encoded vehicle image')
 
     created_at = models.DateTimeField(auto_now_add=True)
     updated_at = models.DateTimeField(auto_now=True)

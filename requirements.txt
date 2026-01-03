@@ -37,3 +37,6 @@ requests>=2.31.0
 qrcode[PIL]
 markdown>=3.4.0
 telegram-webapp-auth==0.1.0
+
+# Firebase
+firebase-admin>=6.2.0

@@ -1,5 +1,6 @@
 from rest_framework import serializers
 from .models import SupportTicket, FAQ
+from utils.fields.base64_field import Base64ImageField
 
 
 class SupportTicketSerializer(serializers.ModelSerializer):
@@ -7,6 +8,8 @@ class SupportTicketSerializer(serializers.ModelSerializer):
     user_name = serializers.SerializerMethodField()
     status_display = serializers.CharField(source='get_status_display', read_only=True)
     priority_display = serializers.CharField(source='get_priority_display', read_only=True)
+    # Use Base64ImageField for screenshot input
+    screenshot = Base64ImageField(required=False, allow_null=True)
 
     class Meta:
         model = SupportTicket

@@ -104,8 +104,8 @@ urlpatterns = [
     path('notification-templates/', NotificationTemplateListView.as_view(), name='notification-templates'),
     path('notification-templates/<str:template_type>/', NotificationTemplateDetailView.as_view(), name='notification-template-detail'),
     path('payout-methods/', PayoutMethodListCreateView.as_view(), name='payout-methods'),
-    path('payout-methods/<int:id>/', PayoutMethodDetailView.as_view(), name='payout-method-detail'),
-    path('payout-methods/<int:method_id>/set-default/', SetDefaultPayoutMethodView.as_view(), name='set-default-payout-method'),
+    path('payout-methods/<str:id>/', PayoutMethodDetailView.as_view(), name='payout-method-detail'),
+    path('payout-methods/<str:method_id>/set-default/', SetDefaultPayoutMethodView.as_view(), name='set-default-payout-method'),
 
     path('withdrawals/', WithdrawalRequestView.as_view(), name='withdrawal-request'),
     path('withdrawals/<uuid:id>/', WithdrawalRequestDetailView.as_view(), name='withdrawal-detail'),

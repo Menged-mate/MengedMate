@@ -12,7 +12,7 @@ class StationImageInline(admin.TabularInline):
 
     def image_preview(self, obj):
         if obj.image:
-            return format_html('<img src="{}" width="150" height="auto" />', obj.image.url)
+            return format_html('<img src="{}" width="150" height="auto" />', obj.image)
         return "No Image"
     image_preview.short_description = 'Preview'
 
@@ -92,81 +92,62 @@ class StationOwnerAdmin(admin.ModelAdmin):
 
     def business_document_preview(self, obj):
         if obj.business_document:
-            if obj.business_document.name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+            # Check if it's an image (data:image/...)
+            if obj.business_document.startswith('data:image/'):
                 return format_html(
                     '<div style="margin: 10px 0;">'
                     '<img src="{}" style="max-width: 300px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;" /><br>'
-                    '<a href="{}" target="_blank" style="margin-top: 5px; display: inline-block;">📄 View Full Size</a>'
                     '</div>',
-                    obj.business_document.url, obj.business_document.url
+                    obj.business_document
                 )
             else:
                 return format_html(
                     '<div style="margin: 10px 0;">'
-                    '<a href="{}" target="_blank" style="background: #007cba; color: white; padding: 8px 12px; text-decoration: none; border-radius: 4px;">📄 Download Document</a>'
-                    '</div>',
-                    obj.business_document.url
+                    '<span style="color: #666;">Base64 Document stored (Binary/PDF)</span>'
+                    '</div>'
                 )
         return format_html('<span style="color: #999;">No business document uploaded</span>')
     business_document_preview.short_description = 'Business Document Preview'
 
     def business_license_preview(self, obj):
         if obj.business_license:
-            if obj.business_license.name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+            if obj.business_license.startswith('data:image/'):
                 return format_html(
                     '<div style="margin: 10px 0;">'
                     '<img src="{}" style="max-width: 300px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;" /><br>'
-                    '<a href="{}" target="_blank" style="margin-top: 5px; display: inline-block;">📄 View Full Size</a>'
                     '</div>',
-                    obj.business_license.url, obj.business_license.url
+                    obj.business_license
                 )
             else:
-                return format_html(
-                    '<div style="margin: 10px 0;">'
-                    '<a href="{}" target="_blank" style="background: #007cba; color: white; padding: 8px 12px; text-decoration: none; border-radius: 4px;">📄 Download License</a>'
-                    '</div>',
-                    obj.business_license.url
-                )
+                return format_html('<div style="margin: 10px 0;"><span style="color: #666;">Base64 Document stored</span></div>')
         return format_html('<span style="color: #999;">No business license uploaded</span>')
     business_license_preview.short_description = 'Business License Preview'
 
     def id_proof_preview(self, obj):
         if obj.id_proof:
-            if obj.id_proof.name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+            if obj.id_proof.startswith('data:image/'):
                 return format_html(
                     '<div style="margin: 10px 0;">'
                     '<img src="{}" style="max-width: 300px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;" /><br>'
-                    '<a href="{}" target="_blank" style="margin-top: 5px; display: inline-block;">📄 View Full Size</a>'
                     '</div>',
-                    obj.id_proof.url, obj.id_proof.url
+                    obj.id_proof
                 )
             else:
-                return format_html(
-                    '<div style="margin: 10px 0;">'
-                    '<a href="{}" target="_blank" style="background: #007cba; color: white; padding: 8px 12px; text-decoration: none; border-radius: 4px;">📄 Download ID Proof</a>'
-                    '</div>',
-                    obj.id_proof.url
-                )
+                return format_html('<div style="margin: 10px 0;"><span style="color: #666;">Base64 Document stored</span></div>')
         return format_html('<span style="color: #999;">No ID proof uploaded</span>')
     id_proof_preview.short_description = 'ID Proof Preview'
 
     def utility_bill_preview(self, obj):
         if obj.utility_bill:
-            if obj.utility_bill.name.lower().endswith(('.png', '.jpg', '.jpeg', '.gif')):
+            if obj.utility_bill.startswith('data:image/'):
                 return format_html(
                     '<div style="margin: 10px 0;">'
                     '<img src="{}" style="max-width: 300px; max-height: 200px; border: 1px solid #ddd; border-radius: 4px;" /><br>'
-                    '<a href="{}" target="_blank" style="margin-top: 5px; display: inline-block;">📄 View Full Size</a>'
                     '</div>',
-                    obj.utility_bill.url, obj.utility_bill.url
+                    obj.utility_bill
                 )
             else:
-                return format_html(
-                    '<div style="margin: 10px 0;">'
-                    '<a href="{}" target="_blank" style="background: #007cba; color: white; padding: 8px 12px; text-decoration: none; border-radius: 4px;">📄 Download Utility Bill</a>'
-                    '</div>',
-                    obj.utility_bill.url
-                )
+                return format_html('<div style="margin: 10px 0;"><span style="color: #666;">Base64 Document stored</span></div>')
         return format_html('<span style="color: #999;">No utility bill uploaded</span>')
     utility_bill_preview.short_description = 'Utility Bill Preview'
 

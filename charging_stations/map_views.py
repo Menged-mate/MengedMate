@@ -14,6 +14,7 @@ from .serializers import (
 )
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 import math
+from utils import firestore_repo
 
 User = get_user_model()
 
@@ -143,14 +144,16 @@ class PublicStationDetailView(generics.RetrieveAPIView):
     lookup_field = 'id'
     queryset = ChargingStation.objects.filter(is_active=True, is_public=True)
 
-class FavoriteStationListView(generics.ListAPIView):
-    
-    serializer_class = FavoriteStationSerializer
+class FavoriteStationListView(APIView):
     permission_classes = [permissions.IsAuthenticated]
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     
-    def get_queryset(self):
-        return FavoriteStation.objects.filter(user=self.request.user)
+    def get(self, request):
+        favorites = firestore_repo.list_favorites(request.user.id)
+        # Assuming favorites stored in Firestore match the serializer expectation or we return dicts
+        # The frontend likely expects a list of station objects. 
+        # FirestoreRepo stores a 'snapshot' in the favorite doc.
+        return Response(favorites)
 
 class FavoriteStationToggleView(APIView):
    
@@ -158,24 +161,29 @@ class FavoriteStationToggleView(APIView):
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     
     def post(self, request, station_id):
-        try:
-            station = ChargingStation.objects.get(id=station_id, is_active=True, is_public=True)
-        except ChargingStation.DoesNotExist:
-            return Response({"detail": "Station not found."}, status=status.HTTP_404_NOT_FOUND)
-
-        favorite, created = FavoriteStation.objects.get_or_create(
-            user=request.user,
-            station=station
-        )
-
-        if not created:
-            favorite.delete()
+        user_id = request.user.id
+        
+        # Check if already favorite
+        existing = firestore_repo.get_favorite(user_id, station_id)
+        
+        if existing:
+            # Remove
+            firestore_repo.remove_favorite(user_id, station_id)
             return Response({
                 "detail": "Station removed from favorites.",
                 "is_favorite": False
             }, status=status.HTTP_200_OK)
+        else:
+            # Add
+            # We need station details to store the snapshot.
+            # Convert UUID to string for Firestore lookup
+            station = firestore_repo.get_station(str(station_id))
+            if not station:
+                 return Response({"detail": "Station not found."}, status=status.HTTP_404_NOT_FOUND)
+                 
+            firestore_repo.add_favorite(user_id, station)
+            return Response({
+                "detail": "Station added to favorites.",
+                "is_favorite": True
+            }, status=status.HTTP_200_OK)
 
-        return Response({
-            "detail": "Station added to favorites.",
-            "is_favorite": True
-        }, status=status.HTTP_200_OK)

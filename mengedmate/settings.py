@@ -18,6 +18,10 @@ from dotenv import load_dotenv
 
 load_dotenv()
 
+# Initialize Firebase
+from .firebase_config import initialize_firebase
+initialize_firebase()
+
 BASE_DIR = Path(__file__).resolve().parent.parent
 
 
@@ -418,6 +422,11 @@ if DEBUG:
 ADMIN_EMAIL = 'admin@example.com'
 
 GOOGLE_MAPS_API_KEY = os.environ.get('GOOGLE_MAPS_API_KEY', '')
+
+# Base64 Image Settings
+MAX_IMAGE_SIZE_MB = float(os.environ.get('MAX_IMAGE_SIZE_MB', '1'))
+IMAGE_COMPRESSION_QUALITY = int(os.environ.get('IMAGE_COMPRESSION_QUALITY', '85'))
+MAX_IMAGE_DIMENSION = int(os.environ.get('MAX_IMAGE_DIMENSION', '1920'))
 
 API_BASE_URL = os.environ.get('API_BASE_URL', 'https://mengedmate.onrender.com')
 
