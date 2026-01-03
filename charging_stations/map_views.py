@@ -14,7 +14,7 @@ from .serializers import (
 )
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
 import math
-from utils import firestore_repo
+from utils.firestore_repo import firestore_repo
 
 User = get_user_model()
 

@@ -29,7 +29,7 @@ SECRET_KEY = os.environ.get('SECRET_KEY', "django-insecure-y!$8furov9c90*rxcky-y
 
 DEBUG = os.environ.get('DEBUG', 'True').lower() == 'true'
 
-ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com').split(',')
+ALLOWED_HOSTS = os.environ.get('ALLOWED_HOSTS', 'localhost,127.0.0.1,.onrender.com,.fly.dev').split(',')
 
 
 
@@ -361,6 +361,7 @@ CSRF_TRUSTED_ORIGINS = [
     'https://*.vercel.app',
     'https://mengedmate-pf4ncgtkj-mengedmate.vercel.app',
     'https://*.mengedmate.com',
+    'https://*.fly.dev',
     'http://localhost:3000',
     'http://localhost:8000'
 ]

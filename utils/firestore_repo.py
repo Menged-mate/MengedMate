@@ -236,7 +236,7 @@ class FirestoreRepository:
     # --- User Management ---
     
     def _get_users_collection(self):
-        return self.client.collection('users')
+        return self.db.collection('users')
 
     def _get_user_ref(self, user_id):
         return self._get_users_collection().document(str(user_id))
@@ -265,7 +265,7 @@ class FirestoreRepository:
     # Station Owner Management
     # ---------------------------------------------------------
     def _get_station_owners_collection(self):
-        return self.client.collection('station_owners')
+        return self.db.collection('station_owners')
 
     def create_station_owner(self, user_id, data):
         """Create station owner profile keyed by user_id."""
@@ -331,10 +331,10 @@ class FirestoreRepository:
     # --- Support Management ---
 
     def _get_tickets_collection(self):
-        return self.client.collection('support_tickets')
+        return self.db.collection('support_tickets')
         
     def _get_faqs_collection(self):
-        return self.client.collection('faqs')
+        return self.db.collection('faqs')
 
     def create_ticket(self, data):
         data['created_at'] = datetime.now().isoformat()
@@ -533,7 +533,7 @@ class FirestoreRepository:
     # Withdrawal Management
     # ---------------------------------------------------------
     def _get_withdrawals_collection(self):
-        return self.client.collection('withdrawals')
+        return self.db.collection('withdrawals')
 
     def create_withdrawal(self, data):
         data['created_at'] = datetime.utcnow().isoformat()

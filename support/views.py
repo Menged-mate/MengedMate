@@ -1,4 +1,4 @@
-from utils import firestore_repo
+from utils.firestore_repo import firestore_repo
 from rest_framework import status, permissions
 from rest_framework.views import APIView
 from rest_framework.response import Response

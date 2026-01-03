@@ -3,7 +3,7 @@ from rest_framework.response import Response
 from rest_framework import status, permissions
 from rest_framework.decorators import api_view, permission_classes
 from datetime import datetime
-from utils import firestore_repo
+from utils.firestore_repo import firestore_repo
 
 from .services import AIRecommendationService, SentimentAnalysisService
 from .serializers_firestore import (

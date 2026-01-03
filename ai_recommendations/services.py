@@ -1,5 +1,4 @@
-from utils import firestore_repo
-from utils import firestore_repo
+from utils.firestore_repo import firestore_repo
 import math
 import json
 import re
