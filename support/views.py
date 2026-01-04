@@ -19,6 +19,10 @@ class SupportTicketCreateView(APIView):
         try:
             # Prepare data
             data = request.data.dict() if hasattr(request.data, 'dict') else request.data.copy()
+            # Auto-populate email from user
+            if not data.get('email'):
+                data['email'] = request.user.email
+            
             # Handle serializer validation
             serializer = FirestoreSupportTicketSerializer(data=data)
             if serializer.is_valid():

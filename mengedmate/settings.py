@@ -429,16 +429,14 @@ MAX_IMAGE_SIZE_MB = float(os.environ.get('MAX_IMAGE_SIZE_MB', '1'))
 IMAGE_COMPRESSION_QUALITY = int(os.environ.get('IMAGE_COMPRESSION_QUALITY', '85'))
 MAX_IMAGE_DIMENSION = int(os.environ.get('MAX_IMAGE_DIMENSION', '1920'))
 
-API_BASE_URL = os.environ.get('API_BASE_URL', 'https://mengedmate.onrender.com')
-
-
+API_BASE_URL = 'https://evmeri.fly.dev'
 
 CHAPA_SETTINGS = {
     'SECRET_KEY': os.environ.get('CHAPA_SECRET_KEY', 'CHASECK_TEST-BjSm5vKqLLOfYqar7ilo0E1vyz6sagAe'),
     'PUBLIC_KEY': os.environ.get('CHAPA_PUBLIC_KEY', 'CHAPUBK_TEST-5FVf5w5JfADqLQsB4xk3b6jXQEdeb7EF'),
-    'CALLBACK_URL': os.environ.get('CHAPA_CALLBACK_URL', f'{API_BASE_URL}/payments/callback/'),
-    'RETURN_URL': os.environ.get('CHAPA_RETURN_URL', f'{API_BASE_URL}/api/payments/mobile-return/'),
-    'WEB_RETURN_URL': os.environ.get('CHAPA_WEB_RETURN_URL', f'{FRONTEND_URL}/payment/success'),
+    'CALLBACK_URL': f'{API_BASE_URL}/payments/callback/',
+    'RETURN_URL': f'{API_BASE_URL}/api/payments/mobile-return/',
+    'WEB_RETURN_URL': f'{FRONTEND_URL}/payment/success',
     'SANDBOX_URL': 'https://api.chapa.co',
     'PRODUCTION_URL': 'https://api.chapa.co',
     'USE_SANDBOX': os.environ.get('CHAPA_USE_SANDBOX', 'True').lower() == 'true',
@@ -446,8 +444,8 @@ CHAPA_SETTINGS = {
 
 OCPP_SETTINGS = {
     'BASE_URL': os.environ.get('OCPP_BASE_URL', 'http://localhost:8000'),
-    'WEBSOCKET_URL': os.environ.get('OCPP_WEBSOCKET_URL', 'ws://localhost:8000/ws/ev-locator/'),
-    'WEBHOOK_URL': os.environ.get('OCPP_WEBHOOK_URL', f'{API_BASE_URL}/api/ocpp/webhook/'),
+    'WEBSOCKET_URL': os.environ.get('OCPP_WEBSOCKET_URL', 'wss://evmeri.fly.dev/ws/ev-locator/'),
+    'WEBHOOK_URL': f'{API_BASE_URL}/api/ocpp/webhook/',
     'API_KEY': os.environ.get('OCPP_API_KEY', ''),
     'TIMEOUT': int(os.environ.get('OCPP_TIMEOUT', '30')),
     'RETRY_ATTEMPTS': int(os.environ.get('OCPP_RETRY_ATTEMPTS', '3')),

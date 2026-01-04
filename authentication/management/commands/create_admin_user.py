@@ -44,7 +44,7 @@ class Command(BaseCommand):
                 )
                 self.stdout.write(f'📧 Email: {email}')
                 self.stdout.write(f'🔑 Password: {password}')
-                self.stdout.write(f'🌐 Admin URL: https://mengedmate.onrender.com/admin/')
+                self.stdout.write(f'🌐 Admin URL: https://evmeri.fly.dev/admin/')
                 return
             else:
                 self.stdout.write(f'🗑️ Deleting existing admin user: {email}')
@@ -68,7 +68,7 @@ class Command(BaseCommand):
             )
             self.stdout.write(f'📧 Email: {email}')
             self.stdout.write(f'🔑 Password: {password}')
-            self.stdout.write(f'🌐 Admin URL: https://mengedmate.onrender.com/admin/')
+            self.stdout.write(f'🌐 Admin URL: https://evmeri.fly.dev/admin/')
             self.stdout.write(f'🚀 You can now access the Django admin interface!')
 
         except IntegrityError as e:

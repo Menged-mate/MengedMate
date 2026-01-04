@@ -177,7 +177,7 @@ class ChargingConnector(models.Model):
         if not self.qr_code_token:
             return
 
-        qr_data = f"https://mengedmate.onrender.com/api/payments/qr-initiate/{self.qr_code_token}/"
+        qr_data = f"{settings.API_BASE_URL}/api/payments/qr-initiate/{self.qr_code_token}/"
 
         qr = qrcode.QRCode(
             version=1,

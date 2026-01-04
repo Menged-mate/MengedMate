@@ -11,7 +11,7 @@ from .models import (
 from utils.fields.base64_field import Base64ImageField, Base64FileField
 import random
 import string
-from utils import firestore_repo
+from utils.firestore_repo import firestore_repo
 
 User = get_user_model()
 
@@ -807,10 +807,102 @@ class FirestoreChargingConnectorSerializer(serializers.Serializer):
     description = serializers.CharField(required=False, allow_blank=True, allow_null=True)
     qr_code_token = serializers.CharField(read_only=True)
     qr_code_url = serializers.SerializerMethodField()
+    qr_payment_url = serializers.SerializerMethodField()
     
     def get_qr_code_url(self, obj):
         # Obj is a dict here
         return obj.get('qr_code_image')
+        
+    def get_qr_payment_url(self, obj):
+        token = obj.get('qr_code_token')
+        if token:
+            from django.conf import settings
+            return f"{settings.API_BASE_URL}/api/payments/qr-initiate/{token}/"
+        return None
+
+    def create(self, validated_data):
+        from utils.firestore_repo import firestore_repo
+        from decimal import Decimal
+        from utils.qr_generator import generate_qr_code_base64, generate_unique_token
+        
+        station_id = self.context.get('station_id')
+        if not station_id:
+             view = self.context.get('view')
+             if view and hasattr(view, 'kwargs'):
+                 station_id = view.kwargs.get('station_id')
+        
+        if not station_id:
+            raise serializers.ValidationError("Station ID required for connector creation")
+
+        # Convert Decimal fields
+        if 'power_kw' in validated_data and isinstance(validated_data['power_kw'], Decimal):
+            validated_data['power_kw'] = float(validated_data['power_kw'])
+        if 'price_per_kwh' in validated_data and isinstance(validated_data['price_per_kwh'], Decimal):
+            validated_data['price_per_kwh'] = float(validated_data['price_per_kwh'])
+
+        # Generate QR Code Token if not present
+        if 'qr_code_token' not in validated_data:
+            connector_type = validated_data.get('connector_type', 'unknown')
+            power_kw = validated_data.get('power_kw', 0)
+            unique_string = f"{station_id}-{connector_type}-{power_kw}"
+            validated_data['qr_code_token'] = generate_unique_token(unique_string)
+
+        # Generate QR Code Image
+        qr_token = validated_data.get('qr_code_token')
+        if qr_token:
+            from django.conf import settings
+            qr_data = f"{settings.API_BASE_URL}/api/payments/qr-initiate/{qr_token}/"
+            qr_image = generate_qr_code_base64(qr_data)
+            if qr_image:
+                validated_data['qr_code_image'] = qr_image
+
+        return firestore_repo.create_connector(station_id, validated_data)
+
+    def update(self, instance, validated_data):
+        from utils.firestore_repo import firestore_repo
+        from decimal import Decimal
+        from utils.qr_generator import generate_qr_code_base64, generate_unique_token
+        
+        # instance is a dict here since it comes from Firestore
+        connector_id = instance.get('id')
+        station_id = self.context.get('station_id')
+        
+        if not station_id:
+             view = self.context.get('view')
+             if view and hasattr(view, 'kwargs'):
+                 station_id = view.kwargs.get('station_id')
+        
+        if not station_id and 'station_id' in instance:
+             station_id = instance['station_id']
+             
+        if not station_id:
+             raise serializers.ValidationError("Station ID required for connector update")
+
+        # Convert Decimal fields
+        if 'power_kw' in validated_data and isinstance(validated_data['power_kw'], Decimal):
+            validated_data['power_kw'] = float(validated_data['power_kw'])
+        if 'price_per_kwh' in validated_data and isinstance(validated_data['price_per_kwh'], Decimal):
+            validated_data['price_per_kwh'] = float(validated_data['price_per_kwh'])
+
+        # Check if we need to regenerate QR (e.g. if token is missing or forced)
+        if not instance.get('qr_code_token') and 'qr_code_token' not in validated_data:
+             connector_type = validated_data.get('connector_type', instance.get('connector_type', 'unknown'))
+             power_kw = validated_data.get('power_kw', instance.get('power_kw', 0))
+             unique_string = f"{station_id}-{connector_type}-{power_kw}"
+             validated_data['qr_code_token'] = generate_unique_token(unique_string)
+             
+        # Generate Image if we have token but no image, or if token changed
+        current_token = validated_data.get('qr_code_token', instance.get('qr_code_token'))
+        current_image = instance.get('qr_code_image')
+        
+        if current_token and (not current_image or 'qr_code_token' in validated_data):
+            from django.conf import settings
+            qr_data = f"{settings.API_BASE_URL}/api/payments/qr-initiate/{current_token}/"
+            qr_image = generate_qr_code_base64(qr_data)
+            if qr_image:
+                validated_data['qr_code_image'] = qr_image
+
+        return firestore_repo.update_connector(station_id, connector_id, validated_data)
 
 class FirestoreStationImageSerializer(serializers.Serializer):
     id = serializers.CharField(read_only=True)
@@ -862,21 +954,41 @@ class FirestoreChargingStationSerializer(serializers.Serializer):
     owner_id = serializers.CharField(read_only=True)
     owner_name = serializers.CharField(read_only=True)
     is_verified_owner = serializers.BooleanField(default=False, read_only=True)
+    amenities = serializers.SerializerMethodField()
+
+    def get_amenities(self, obj):
+        amenities_list = []
+        if obj.get('has_restroom'): amenities_list.append('has_restroom')
+        if obj.get('has_wifi'): amenities_list.append('has_wifi')
+        if obj.get('has_restaurant'): amenities_list.append('has_restaurant')
+        if obj.get('has_shopping'): amenities_list.append('has_shopping')
+        return amenities_list
 
     def create(self, validated_data):
         from utils.firestore_repo import firestore_repo
+        from decimal import Decimal
         
         # Add owner info from context
         request = self.context.get('request')
         if request and request.user:
             try:
-                station_owner = StationOwner.objects.get(user=request.user)
-                validated_data['owner_id'] = str(station_owner.id)
-                validated_data['owner_name'] = station_owner.company_name
-                validated_data['is_verified_owner'] = (station_owner.verification_status == 'verified')
-            except StationOwner.DoesNotExist:
-                raise serializers.ValidationError("Station Owner profile not found.")
+                station_owner = firestore_repo.get_station_owner(request.user.id)
+                if not station_owner:
+                    raise serializers.ValidationError("Station Owner profile not found.")
+                    
+                validated_data['owner_id'] = str(station_owner.get('id')) or str(request.user.id)
+                validated_data['owner_name'] = station_owner.get('company_name')
+                validated_data['is_verified_owner'] = (station_owner.get('verification_status') == 'verified')
+            except Exception as e:
+                # If checking fails, assume not found
+                raise serializers.ValidationError(f"Station Owner profile not found: {str(e)}")
         
+        # Convert Decimal fields to float for Firestore
+        if 'latitude' in validated_data and isinstance(validated_data['latitude'], Decimal):
+            validated_data['latitude'] = float(validated_data['latitude'])
+        if 'longitude' in validated_data and isinstance(validated_data['longitude'], Decimal):
+            validated_data['longitude'] = float(validated_data['longitude'])
+
         # Initialize lists
         validated_data['connectors'] = []
         validated_data['images'] = []
@@ -885,6 +997,14 @@ class FirestoreChargingStationSerializer(serializers.Serializer):
 
     def update(self, instance, validated_data):
         from utils.firestore_repo import firestore_repo
+        from decimal import Decimal
+        
+        # Convert Decimal fields to float for Firestore
+        if 'latitude' in validated_data and isinstance(validated_data['latitude'], Decimal):
+            validated_data['latitude'] = float(validated_data['latitude'])
+        if 'longitude' in validated_data and isinstance(validated_data['longitude'], Decimal):
+            validated_data['longitude'] = float(validated_data['longitude'])
+
         # instance is a dict here containing the current state
         station_id = instance.get('id')
         return firestore_repo.update_station(station_id, validated_data)
@@ -1051,4 +1171,70 @@ class FirestoreStationReviewSerializer(serializers.Serializer):
         station_id = instance.get('station_id')
         review_id = instance.get('id')
         return firestore_repo.update_review(station_id, review_id, validated_data)
+
+
+class FirestoreMapStationSerializer(serializers.Serializer):
+    """
+    Serializer for listing stations on the map using Firestore data.
+    """
+    id = serializers.CharField(read_only=True)
+    name = serializers.CharField(read_only=True)
+    latitude = serializers.DecimalField(max_digits=9, decimal_places=6, read_only=True)
+    longitude = serializers.DecimalField(max_digits=9, decimal_places=6, read_only=True)
+    rating = serializers.DecimalField(max_digits=3, decimal_places=2, read_only=True)
+    status = serializers.CharField(read_only=True)
+    price_range = serializers.CharField(read_only=True)
+    available_connectors = serializers.IntegerField(read_only=True)
+    total_connectors = serializers.IntegerField(read_only=True)
+    marker_icon = serializers.CharField(read_only=True)
+    
+    owner_name = serializers.CharField(read_only=True)
+    is_verified_owner = serializers.BooleanField(read_only=True)
+    
+    city = serializers.CharField(read_only=True)
+    country = serializers.CharField(read_only=True)
+    
+    # Computed fields
+    connector_types = serializers.SerializerMethodField()
+    marker_color = serializers.SerializerMethodField()
+    availability_status = serializers.SerializerMethodField()
+
+    def get_connector_types(self, obj):
+        # obj is a dict
+        connectors = obj.get('connectors', [])
+        if connectors:
+            types = set(c.get('connector_type') for c in connectors)
+            return list(types)
+        return obj.get('connector_types', [])
+
+    def get_marker_color(self, obj):
+        status = obj.get('status')
+        avail = obj.get('available_connectors', 0)
+        total = obj.get('total_connectors', 0)
+        
+        if status in ['closed', 'under_maintenance']:
+            return 'red'
+        elif avail == 0:
+            return 'red'
+        elif avail < total:
+            return 'yellow'
+        else:
+            return 'green'
+
+    def get_availability_status(self, obj):
+        status = obj.get('status')
+        avail = obj.get('available_connectors', 0)
+        total = obj.get('total_connectors', 0)
+        
+        if status == 'closed':
+            return 'Closed'
+        elif status == 'under_maintenance':
+            return 'Under Maintenance'
+        elif avail == 0:
+            return 'All Connectors Busy'
+        elif avail < total:
+            return f'{avail}/{total} Available'
+        else:
+            return 'Available'
+
 

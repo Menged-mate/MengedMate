@@ -196,16 +196,16 @@ class ChargingStationListCreateView(generics.ListCreateAPIView):
         return ChargingStation.objects.none()
 
     def list(self, request, *args, **kwargs):
-        try:
-            station_owner = StationOwner.objects.get(user=request.user)
-            # Filter by owner_id in Firestore
-            filters = {'owner_id': str(station_owner.id)}
-            stations = firestore_repo.list_stations(filters=filters)
-            
-            serializer = self.get_serializer(stations, many=True)
-            return Response(serializer.data)
-        except StationOwner.DoesNotExist:
+        station_owner = firestore_repo.get_station_owner(request.user.id)
+        if not station_owner:
             return Response([], status=status.HTTP_200_OK)
+            
+        # Filter by owner_id in Firestore (owner_id is user_id)
+        filters = {'owner_id': str(request.user.id)}
+        stations = firestore_repo.list_stations(filters=filters)
+        
+        serializer = self.get_serializer(stations, many=True)
+        return Response(serializer.data)
 
     def create(self, request, *args, **kwargs):
         serializer = self.get_serializer(data=request.data)
@@ -232,12 +232,8 @@ class ChargingStationDetailView(generics.RetrieveUpdateDestroyAPIView):
             self.permission_denied(self.request, message="Station not found", code=404)
             
         # Verify ownership
-        try:
-            station_owner = StationOwner.objects.get(user=self.request.user)
-            if station.get('owner_id') != str(station_owner.id):
-                self.permission_denied(self.request, message="You do not own this station")
-        except StationOwner.DoesNotExist:
-             self.permission_denied(self.request, message="Not a station owner")
+        if station.get('owner_id') != str(self.request.user.id):
+            self.permission_denied(self.request, message="You do not own this station")
         
         # Populate subcollections for detail view
         station['connectors'] = firestore_repo.list_connectors(station_id)
@@ -284,12 +280,9 @@ class ConnectorCreateView(generics.CreateAPIView):
              return Response({"error": "Station not found"}, status=status.HTTP_404_NOT_FOUND)
              
         # Check ownership
-        try:
-            station_owner = StationOwner.objects.get(user=request.user)
-            if station.get('owner_id') != str(station_owner.id):
-                 return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
-        except StationOwner.DoesNotExist:
-             return Response({"error": "Not a station owner"}, status=status.HTTP_403_FORBIDDEN)
+        # Check ownership
+        if station.get('owner_id') != str(request.user.id):
+             return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
 
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -299,7 +292,7 @@ class ConnectorCreateView(generics.CreateAPIView):
         # The logic "existing_connector" in original view was checking duplicates. 
         # We'll skip complex dup check for now or rely on client.
         
-        connector = firestore_repo.create_connector(station_id, serializer.validated_data)
+        connector = serializer.save()
         
         return Response({
             'success': True,
@@ -324,12 +317,8 @@ class ConnectorDetailView(generics.RetrieveUpdateDestroyAPIView):
         if not station:
              self.permission_denied(self.request, message="Station not found", code=404)
              
-        try:
-            station_owner = StationOwner.objects.get(user=self.request.user)
-            if station.get('owner_id') != str(station_owner.id):
-                self.permission_denied(self.request, message="You do not own this station")
-        except StationOwner.DoesNotExist:
-             self.permission_denied(self.request, message="Not a station owner")
+        if station.get('owner_id') != str(self.request.user.id):
+             self.permission_denied(self.request, message="You do not own this station")
 
         connector = firestore_repo.get_connector(station_id, connector_id)
         if not connector:
@@ -376,12 +365,9 @@ class StationImageCreateView(generics.CreateAPIView):
              return Response({"error": "Station not found"}, status=status.HTTP_404_NOT_FOUND)
              
         # Check ownership
-        try:
-            station_owner = StationOwner.objects.get(user=request.user)
-            if station.get('owner_id') != str(station_owner.id):
-                 return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
-        except StationOwner.DoesNotExist:
-             return Response({"error": "Not a station owner"}, status=status.HTTP_403_FORBIDDEN)
+        # Check ownership
+        if station.get('owner_id') != str(request.user.id):
+             return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
              
         serializer = self.get_serializer(data=request.data)
         serializer.is_valid(raise_exception=True)
@@ -398,13 +384,11 @@ class StationQRCodesView(APIView):
 
     def get(self, request, station_id):
         try:
-            station_owner = StationOwner.objects.get(user=request.user)
             station = firestore_repo.get_station(station_id)
-            
             if not station:
                  return Response({"error": "Station not found"}, status=status.HTTP_404_NOT_FOUND)
-            
-            if station.get('owner_id') != str(station_owner.id):
+
+            if station.get('owner_id') != str(request.user.id):
                  return Response({"error": "Permission denied"}, status=status.HTTP_403_FORBIDDEN)
 
             connectors = firestore_repo.list_connectors(station_id)
@@ -422,7 +406,7 @@ class StationQRCodesView(APIView):
                     'price_per_kwh': connector.get('price_per_kwh'),
                     'qr_code_token': qr_token,
                     'qr_code_url': connector.get('qr_code_image'), # We store base64 as 'qr_code_image' or URL? Serializer said 'qr_code_image'
-                    'qr_payment_url': f"https://mengedmate.onrender.com/api/payments/qr-initiate/{qr_token}/" if qr_token else None,
+                    'qr_payment_url': f"{settings.API_BASE_URL}/api/payments/qr-initiate/{qr_token}/" if qr_token else None,
                     'is_available': connector.get('is_available'),
                     'status': connector.get('status'),
                     'status_display': connector.get('status_display')
@@ -438,11 +422,11 @@ class StationQRCodesView(APIView):
                 'connectors': qr_data
             })
 
-        except StationOwner.DoesNotExist:
+        except Exception as e:
             return Response({
                 'success': False,
-                'error': 'Station owner profile not found'
-            }, status=status.HTTP_404_NOT_FOUND)
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ConnectorQRCodeView(APIView):
@@ -471,11 +455,9 @@ class ConnectorQRCodeView(APIView):
             pass
             # I will use a helper to find station by connector_id
             
-            station_owner = StationOwner.objects.get(user=request.user)
-            
             # Temporary: search matching connector in ALL stations owned by user (filtered list)
             # This is slow but safe for now.
-            filters = {'owner_id': str(station_owner.id)}
+            filters = {'owner_id': str(request.user.id)}
             all_stations = firestore_repo.list_stations(filters=filters)
             
             found_connector = None
@@ -506,24 +488,22 @@ class ConnectorQRCodeView(APIView):
                     'price_per_kwh': connector.get('price_per_kwh'),
                     'qr_code_token': connector.get('qr_code_token'),
                     'qr_code_url': connector.get('qr_code_image'),
-                    'qr_payment_url': f"https://mengedmate.onrender.com/api/payments/qr-initiate/{connector.get('qr_code_token')}/" if connector.get('qr_code_token') else None,
+                    'qr_payment_url': f"{settings.API_BASE_URL}/api/payments/qr-initiate/{connector.get('qr_code_token')}/" if connector.get('qr_code_token') else None,
                     'station_name': found_station.get('name')
                 }
             })
 
-        except StationOwner.DoesNotExist:
+        except Exception as e:
             return Response({
                 'success': False,
-                'error': 'Station owner profile not found'
-            }, status=status.HTTP_404_NOT_FOUND)
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
     def post(self, request, connector_id):
         """Regenerate QR code for connector"""
         # Similar logic to find connector
         try:
-            station_owner = StationOwner.objects.get(user=request.user)
-            
-            filters = {'owner_id': str(station_owner.id)}
+            filters = {'owner_id': str(request.user.id)}
             all_stations = firestore_repo.list_stations(filters=filters)
             
             found_connector = None
@@ -540,20 +520,24 @@ class ConnectorQRCodeView(APIView):
                  return Response({"error": "Connector not found"}, status=status.HTTP_404_NOT_FOUND)
             
             # Logic to regenerate QR
-            import secrets
-            token = secrets.token_urlsafe(32)
+            from utils.qr_generator import generate_qr_code_base64, generate_unique_token
+            
+            # Generate new token
+            unique_string = f"{found_station.get('id')}-{connector_id}"
+            token = generate_unique_token(unique_string)
             
             # Generate QR image
-            # Assume we have utils for this
-            from utils.qr_generator import generate_qr_code_base64 # Hypothetical
-            # If not exist, we just skip image GEN for now or use placeholder
-            # The existing model did it in save()
+            from django.conf import settings
+            qr_data = f"{settings.API_BASE_URL}/api/payments/qr-initiate/{token}/"
+            qr_image = generate_qr_code_base64(qr_data)
             
             # Update Firestore
             updates = {
                 'qr_code_token': token,
-                # 'qr_code_image': ... 
             }
+            if qr_image:
+                updates['qr_code_image'] = qr_image
+
             updated = firestore_repo.update_connector(found_station.get('id'), connector_id, updates)
             
             return Response({
@@ -563,15 +547,15 @@ class ConnectorQRCodeView(APIView):
                     'id': updated.get('id'),
                     'qr_code_token': updated.get('qr_code_token'),
                     'qr_code_url': updated.get('qr_code_image'),
-                    'qr_payment_url': f"https://mengedmate.onrender.com/api/payments/qr-initiate/{updated.get('qr_code_token')}/"
+                    'qr_payment_url': f"{settings.API_BASE_URL}/api/payments/qr-initiate/{updated.get('qr_code_token')}/"
                 }
             })
             
-        except StationOwner.DoesNotExist:
+        except Exception as e:
             return Response({
                 'success': False,
-                'error': 'Station owner profile not found'
-            }, status=status.HTTP_404_NOT_FOUND)
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class DownloadQRCodeView(APIView):
@@ -581,10 +565,8 @@ class DownloadQRCodeView(APIView):
 
     def get(self, request, connector_id):
         try:
-            station_owner = StationOwner.objects.get(user=request.user)
-            
             # Same search logic
-            filters = {'owner_id': str(station_owner.id)}
+            filters = {'owner_id': str(request.user.id)}
             all_stations = firestore_repo.list_stations(filters=filters)
             
             found_connector = None
@@ -627,11 +609,11 @@ class DownloadQRCodeView(APIView):
                     'error': f'Failed to decode QR code: {str(e)}'
                 }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
-        except StationOwner.DoesNotExist:
+        except Exception as e:
             return Response({
                 'success': False,
-                'error': 'Station owner profile not found'
-            }, status=status.HTTP_404_NOT_FOUND)
+                'error': str(e)
+            }, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class AppContentView(APIView):
@@ -682,7 +664,7 @@ class AppContentView(APIView):
 class StationReviewListCreateView(generics.ListCreateAPIView):
     """View to list and create station reviews"""
 
-    permission_classes = [permissions.IsAuthenticated]
+    permission_classes = [permissions.IsAuthenticatedOrReadOnly]
     authentication_classes = [TokenAuthentication, SessionAuthentication]
     serializer_class = FirestoreStationReviewSerializer
 
@@ -929,21 +911,20 @@ class StationOwnerReviewsView(generics.ListAPIView):
 
     def list(self, request, *args, **kwargs):
         try:
-            station_owner = StationOwner.objects.get(user=request.user)
             # Use efficiently query by owner_id if possible
             # We didn't add 'owner_id' to review yet? 
             # Check serializer: yes we added 'station_owner_id' in Create!
             # So we can query collection group.
             
-            reviews = firestore_repo.list_reviews_by_owner(station_owner.id)
+            reviews = firestore_repo.list_reviews_by_owner(str(request.user.id))
             serializer = self.get_serializer(reviews, many=True)
             return Response({
                 'results': serializer.data,
                 'count': len(reviews)
             })
 
-        except StationOwner.DoesNotExist:
-            return Response({'results': [], 'count': 0})
+        except Exception as e:
+            return Response({'results': [], 'count': 0, 'error': str(e)})
 
 
 class MobileChargingHistoryView(APIView):
@@ -1066,10 +1047,14 @@ class StationOwnerSettingsView(generics.RetrieveUpdateAPIView):
 
     def get_object(self):
         try:
-            station_owner = StationOwner.objects.get(user=self.request.user)
-            settings_obj, created = StationOwnerSettings.objects.get_or_create(
-                owner=station_owner,
-                defaults={
+            # We store settings in Firestore as separate document or field in Profile?
+            # Model says OneToOne.
+            # In Firestore, we should put it in 'station_owner_settings' collection with ID = user_id
+            
+            settings_data = firestore_repo.get_station_owner_settings(self.request.user.id)
+            if not settings_data:
+                 # Return default structure if not found (lazy create)
+                 return {
                     'default_pricing_per_kwh': 5.50,
                     'auto_accept_bookings': True,
                     'max_session_duration_hours': 4,
@@ -1083,10 +1068,9 @@ class StationOwnerSettingsView(generics.RetrieveUpdateAPIView):
                     'station_updates': True,
                     'brand_color': '#3B82F6',
                     'display_company_info': True
-                }
-            )
-            return settings_obj
-        except StationOwner.DoesNotExist:
+                 }
+            return settings_data
+        except Exception:
             from django.http import Http404
             raise Http404("Station owner profile not found")
 
@@ -1097,11 +1081,13 @@ class StationOwnerSettingsView(generics.RetrieveUpdateAPIView):
             serializer = self.get_serializer(instance, data=request.data, partial=partial)
 
             if serializer.is_valid():
-                self.perform_update(serializer)
+                # self.perform_update(serializer) # serializer.save() usually
+                # We need to call repo
+                updated = firestore_repo.update_station_owner_settings(request.user.id, serializer.validated_data)
                 return Response({
                     'success': True,
                     'message': 'Settings updated successfully',
-                    'data': serializer.data
+                    'data': updated
                 })
             else:
                 return Response({
@@ -1146,7 +1132,6 @@ class ReviewReplyCreateView(generics.CreateAPIView):
     
     def post(self, request, *args, **kwargs):
         try:
-            station_owner = StationOwner.objects.get(user=self.request.user)
             review_id = request.data.get('review') or request.data.get('review_id')
             reply_text = request.data.get('reply_text')
             
@@ -1162,7 +1147,7 @@ class ReviewReplyCreateView(generics.CreateAPIView):
             # Efficient search: Collection Group 'reviews' where 'station_owner_id' == owner.id AND 'id' == review_id
             # Or iterate.
             
-            reviews = firestore_repo.list_reviews_by_owner(station_owner.id)
+            reviews = firestore_repo.list_reviews_by_owner(str(request.user.id))
             review = next((r for r in reviews if r['id'] == review_id), None)
             
             if not review:
@@ -1178,7 +1163,7 @@ class ReviewReplyCreateView(generics.CreateAPIView):
                 'reply_text': reply_text,
                 'created_at': datetime.now().isoformat(),
                 'updated_at': datetime.now().isoformat(),
-                'station_owner_id': str(station_owner.id),
+                'station_owner_id': str(request.user.id),
                 'is_active': True
             }
             
@@ -1188,8 +1173,8 @@ class ReviewReplyCreateView(generics.CreateAPIView):
             
             return Response(reply_data, status=status.HTTP_201_CREATED)
 
-        except StationOwner.DoesNotExist:
-            return Response({"error": "Not a station owner"}, status=status.HTTP_403_FORBIDDEN)
+        except Exception as e:
+            return Response({"error": str(e)}, status=status.HTTP_500_INTERNAL_SERVER_ERROR)
 
 
 class ReviewReplyDetailView(generics.RetrieveUpdateDestroyAPIView):
@@ -1209,10 +1194,10 @@ class ReviewReplyDetailView(generics.RetrieveUpdateDestroyAPIView):
         # If reply_id, we must search.
         
         reply_id = self.kwargs.get('id')
-        station_owner = StationOwner.objects.get(user=self.request.user)
+        # station_owner = StationOwner.objects.get(user=self.request.user) # No SQL
         
         # Search all reviews by owner to find the one having this reply_id
-        reviews = firestore_repo.list_reviews_by_owner(station_owner.id)
+        reviews = firestore_repo.list_reviews_by_owner(str(self.request.user.id))
         
         target_review = None
         for r in reviews:
@@ -1271,8 +1256,7 @@ class StationOwnerRepliesView(generics.ListAPIView):
 
     def list(self, request, *args, **kwargs):
         try:
-            station_owner = StationOwner.objects.get(user=self.request.user)
-            reviews = firestore_repo.list_reviews_by_owner(station_owner.id)
+            reviews = firestore_repo.list_reviews_by_owner(str(self.request.user.id))
             
             replies = []
             for r in reviews:
@@ -1299,8 +1283,8 @@ class StationOwnerRepliesView(generics.ListAPIView):
                 'results': replies
             })
             
-        except StationOwner.DoesNotExist:
-             return Response({'results': [], 'count': 0})
+        except Exception as e:
+             return Response({'results': [], 'count': 0, 'error': str(e)})
 
 
 from .serializers import FirestoreAvailableStationSerializer

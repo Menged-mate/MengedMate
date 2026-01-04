@@ -3,6 +3,7 @@ from rest_framework import status, generics, viewsets
 from rest_framework.response import Response
 from rest_framework.views import APIView
 from rest_framework.decorators import action
+from decimal import Decimal
 from rest_framework.permissions import AllowAny, IsAuthenticated
 from rest_framework.authtoken.models import Token
 from rest_framework.authentication import TokenAuthentication, SessionAuthentication
@@ -457,7 +458,14 @@ class VehicleViewSet(viewsets.ViewSet):
     def create(self, request):
         serializer = FirestoreVehicleSerializer(data=request.data)
         serializer.is_valid(raise_exception=True)
-        vehicle = firestore_repo.create_vehicle(request.user.id, serializer.validated_data)
+        
+        # Convert Decimal to float for Firestore
+        validated_data = serializer.validated_data
+        for key, value in validated_data.items():
+            if isinstance(value, Decimal):
+                validated_data[key] = float(value)
+                
+        vehicle = firestore_repo.create_vehicle(request.user.id, validated_data)
         
         # Check if first vehicle, if so make active?
         # Logic: If no active vehicle in profile, set this one.
@@ -476,7 +484,14 @@ class VehicleViewSet(viewsets.ViewSet):
     def update(self, request, pk=None):
         serializer = FirestoreVehicleSerializer(data=request.data, partial=True)
         serializer.is_valid(raise_exception=True)
-        vehicle = firestore_repo.update_vehicle(request.user.id, pk, serializer.validated_data)
+        
+        # Convert Decimal to float for Firestore
+        validated_data = serializer.validated_data
+        for key, value in validated_data.items():
+            if isinstance(value, Decimal):
+                validated_data[key] = float(value)
+
+        vehicle = firestore_repo.update_vehicle(request.user.id, pk, validated_data)
         if not vehicle:
              return Response(status=status.HTTP_404_NOT_FOUND)
         return Response(vehicle)
