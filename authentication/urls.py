@@ -19,6 +19,7 @@ from .notification_views import (
     NotificationMarkReadView,
     NotificationDeleteView
 )
+from .social_auth_views import GoogleAuthView, AppleAuthView
 
 app_name = 'authentication'
 
@@ -46,6 +47,10 @@ urlpatterns = [
     path('notifications/mark-read/', NotificationMarkReadView.as_view(), name='notification-mark-all-read'),
     path('notifications/<int:notification_id>/mark-read/', NotificationMarkReadView.as_view(), name='notification-mark-read'),
     path('notifications/<int:notification_id>/delete/', NotificationDeleteView.as_view(), name='notification-delete'),
+
+    # Social authentication
+    path('social/google/', GoogleAuthView.as_view(), name='google-auth'),
+    path('social/apple/', AppleAuthView.as_view(), name='apple-auth'),
 
     path('', include(router.urls)),
 ]
