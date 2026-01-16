@@ -269,12 +269,12 @@ class QRPaymentInitiateView(APIView):
                     qr_session.status = 'payment_initiated'
                     qr_session.save()
 
-                    session_serializer = QRPaymentSessionSerializer(qr_session)
                     return Response({
                         'success': True,
                         'message': 'Payment initiated successfully',
-                        'qr_session': session_serializer.data,
-                        'payment_data': result
+                        'checkout_url': result['data']['checkout_url'],
+                        'session_token': qr_session.session_token,
+                        'transaction_id': transaction.id,
                     }, status=status.HTTP_200_OK)
                 else:
                     qr_session.status = 'failed'
