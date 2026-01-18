@@ -34,10 +34,16 @@ class GoogleAuthView(APIView):
     GOOGLE_USER_INFO_URL = 'https://www.googleapis.com/oauth2/v3/userinfo'
 
     def post(self, request):
+        import logging
+        logger = logging.getLogger(__name__)
+        
         access_token = request.data.get('access_token')
         id_token = request.data.get('id_token')
         
+        logger.info(f"Google auth request received - has access_token: {access_token is not None}, has id_token: {id_token is not None}")
+        
         if not id_token and not access_token:
+            logger.error("Google auth failed - no tokens provided")
             return Response(
                 {'error': 'Either access_token or id_token is required'},
                 status=status.HTTP_400_BAD_REQUEST
@@ -45,16 +51,21 @@ class GoogleAuthView(APIView):
         
         try:
             # Verify the token and get user info
+            logger.info("Verifying Google token...")
             google_user_info = self._verify_google_token(id_token, access_token)
             
             if not google_user_info:
+                logger.error("Google token verification failed")
                 return Response(
                     {'error': 'Invalid Google token'},
                     status=status.HTTP_401_UNAUTHORIZED
                 )
             
+            logger.info(f"Google token verified for user: {google_user_info.get('email')}")
+            
             # Get or create user
             user, created = self._get_or_create_user(google_user_info)
+            logger.info(f"User {'created' if created else 'found'}: {user.email}")
             
             # Create or get auth token
             token, _ = Token.objects.get_or_create(user=user)
@@ -63,6 +74,7 @@ class GoogleAuthView(APIView):
             profile = firestore_repo.get_user_profile(user.id)
             if not profile:
                 # Create profile if it doesn't exist
+                logger.info(f"Creating Firestore profile for user {user.id}")
                 profile = {
                     'email': user.email,
                     'first_name': user.first_name,
@@ -75,6 +87,7 @@ class GoogleAuthView(APIView):
             
             user_data = FirestoreUserSerializer(profile).data
             
+            logger.info(f"Google authentication successful for {user.email}")
             return Response({
                 'message': 'Google authentication successful',
                 'token': token.key,
@@ -83,9 +96,7 @@ class GoogleAuthView(APIView):
             }, status=status.HTTP_200_OK)
             
         except Exception as e:
-            import logging
-            logger = logging.getLogger(__name__)
-            logger.error(f"Google authentication error: {str(e)}")
+            logger.error(f"Google authentication error: {str(e)}", exc_info=True)
             return Response(
                 {'error': f'Authentication failed: {str(e)}'},
                 status=status.HTTP_500_INTERNAL_SERVER_ERROR
